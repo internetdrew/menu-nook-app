@@ -10,7 +10,7 @@
     "build": "tsc -b tsconfig.api.json && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "gen:types": "dotenv -e .env.local -- cross-env supabase gen types typescript --project-id=$SUPABASE_PROJECT_ID > shared/database.types.ts"
+    "gen:types": "dotenv -e .env -- cross-env supabase gen types typescript --project-id=$SUPABASE_PROJECT_ID > shared/database.types.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist-mono": "^5.2.7",
