@@ -8,7 +8,6 @@ export const restaurantRouter = router({
     .input(
       z.object({
         name: z.string().min(1),
-        streetAddress: z.string().min(1),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -16,7 +15,6 @@ export const restaurantRouter = router({
         .from("restaurants")
         .insert({
           name: input.name,
-          street_address: input.streetAddress,
           user_id: ctx.user.id,
         })
         .select()
