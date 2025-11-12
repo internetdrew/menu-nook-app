@@ -37,7 +37,7 @@ export function RestaurantSwitcher() {
                   {activeRestaurant?.name ?? "No restaurant"}
                 </span>
                 <span className="truncate text-xs">
-                  {activeRestaurant?.street_address}
+                  {/* {activeRestaurant?.street_address} */}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
