@@ -43,6 +43,38 @@ export type Database = {
           },
         ]
       }
+      restaurant_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          name: string
+          restaurant_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name: string
+          restaurant_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           created_at: string
