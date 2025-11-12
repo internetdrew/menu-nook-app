@@ -1,4 +1,4 @@
-import { Outlet } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import {
   SidebarInset,
   SidebarProvider,
@@ -29,7 +29,19 @@ import { useState } from "react";
 import { Spinner } from "./components/ui/spinner";
 
 function App() {
-  const { restaurants, loading } = useRestaurantContext();
+  const { restaurants, activeRestaurant, loading } = useRestaurantContext();
+
+  const location = useLocation();
+
+  const getRouteName = () => {
+    const path = location.pathname.split("/").filter(Boolean);
+    if (path.length === 0) return "Dashboard";
+    const lastSegment = path[path.length - 1];
+    return lastSegment
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   return (
     <SidebarProvider>
@@ -44,14 +56,16 @@ function App() {
             />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/dashboard">
+                      {activeRestaurant?.name || "No Restaurant"}
+                    </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                  <BreadcrumbPage>{getRouteName()}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
