@@ -24,9 +24,12 @@ import {
   CardTitle,
 } from "./components/ui/card";
 import { Button } from "./components/ui/button";
+import CreateRestaurantDialog from "./components/dialogs/CreateRestaurantDialog";
+import { useState } from "react";
+import { Spinner } from "./components/ui/spinner";
 
 function App() {
-  const { restaurants } = useRestaurantContext();
+  const { restaurants, loading } = useRestaurantContext();
 
   return (
     <SidebarProvider>
@@ -55,20 +58,12 @@ function App() {
           </div>
         </header>
         <div className="p-4 pt-0">
-          {restaurants.length > 0 ? (
+          {loading ? (
+            <Spinner className="mx-auto mt-36 size-6 text-pink-600" />
+          ) : restaurants.length > 0 ? (
             <Outlet />
           ) : (
-            <Card className="mx-auto mt-28 max-w-sm text-center">
-              <CardHeader className="text-center">
-                <CardTitle>No Restaurants Found</CardTitle>
-                <CardDescription>
-                  Get started by creating your first restaurant.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button className="w-full">Create Restaurant</Button>
-              </CardFooter>
-            </Card>
+            <CreateRestaurantCard />
           )}
           <Toaster />
         </div>
@@ -78,3 +73,29 @@ function App() {
 }
 
 export default App;
+
+const CreateRestaurantCard = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  return (
+    <>
+      <Card className="mx-auto mt-28 max-w-sm text-center">
+        <CardHeader className="text-center">
+          <CardTitle>No Restaurants Found</CardTitle>
+          <CardDescription>
+            Get started by creating your first restaurant.
+          </CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button className="w-full" onClick={() => setIsDialogOpen(true)}>
+            Create Restaurant
+          </Button>
+        </CardFooter>
+      </Card>
+      <CreateRestaurantDialog
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+      />
+    </>
+  );
+};
