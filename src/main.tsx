@@ -9,6 +9,7 @@ import Login from "./routes/Login.tsx";
 import { AuthProvider } from "./contexts/auth.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { RestaurantProvider } from "./contexts/ActiveRestaurantContext.tsx";
+import MenuPage from "./routes/MenuPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -40,7 +41,7 @@ const router = createBrowserRouter([
           },
           {
             path: "menu",
-            element: <h1>Dashboard Menu</h1>,
+            element: <MenuPage />,
           },
           {
             path: "settings",

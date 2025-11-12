@@ -24,13 +24,13 @@ import {
   CardTitle,
 } from "./components/ui/card";
 import { Button } from "./components/ui/button";
-import CreateRestaurantDialog from "./components/dialogs/CreateRestaurantDialog";
 import { useState } from "react";
 import { Spinner } from "./components/ui/spinner";
+import FormDialog from "./components/dialogs/FormDialog";
+import CreateRestaurantForm from "./components/forms/CreateRestaurantForm";
 
 function App() {
   const { restaurants, activeRestaurant, loading } = useRestaurantContext();
-
   const location = useLocation();
 
   const getRouteName = () => {
@@ -106,9 +106,14 @@ const CreateRestaurantCard = () => {
           </Button>
         </CardFooter>
       </Card>
-      <CreateRestaurantDialog
+      <FormDialog
         isDialogOpen={isDialogOpen}
         setIsDialogOpen={setIsDialogOpen}
+        title="Create Restaurant"
+        description="Fill out the form below to create a new restaurant."
+        formComponent={
+          <CreateRestaurantForm onSuccess={() => setIsDialogOpen(false)} />
+        }
       />
     </>
   );

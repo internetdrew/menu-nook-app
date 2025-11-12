@@ -1,4 +1,3 @@
-import CreateRestaurantForm from "../forms/CreateRestaurantForm";
 import {
   Dialog,
   DialogContent,
@@ -8,27 +7,31 @@ import {
 } from "../ui/dialog";
 
 interface DialogProps {
+  title: string;
+  description?: string;
   isDialogOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
+  formComponent?: React.JSX.Element;
 }
 
-const CreateRestaurantDialog = ({
+const FormDialog = ({
+  title,
+  description,
   isDialogOpen,
   setIsDialogOpen,
+  formComponent,
 }: DialogProps) => {
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Create Restaurant</DialogTitle>
-          <DialogDescription>
-            Create a new restaurant to manage menus for.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <CreateRestaurantForm onSuccess={() => setIsDialogOpen(false)} />
+        {formComponent}
       </DialogContent>
     </Dialog>
   );
 };
 
-export default CreateRestaurantDialog;
+export default FormDialog;

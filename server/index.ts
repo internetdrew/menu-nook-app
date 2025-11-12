@@ -10,12 +10,16 @@ import cookieParser from "cookie-parser";
 import { createServerSupabaseClient } from "./supabase";
 import { restaurantRouter } from "./routers/restaurantRouter";
 import { qrCodeRouter } from "./routers/qrRouter";
+import { categoryRouter } from "./routers/categoryRouter";
+import { itemRouter } from "./routers/itemRouter";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 export const appRouter = router({
   restaurant: restaurantRouter,
   qr: qrCodeRouter,
+  category: categoryRouter,
+  item: itemRouter,
 });
 
 const corsOptions = {
