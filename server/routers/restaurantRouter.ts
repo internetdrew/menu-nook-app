@@ -11,7 +11,7 @@ export const restaurantRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { data, error } = await supabaseAdminClient
+      const { data: restaurant, error } = await supabaseAdminClient
         .from("restaurants")
         .insert({
           name: input.name,
@@ -27,7 +27,7 @@ export const restaurantRouter = router({
         });
       }
 
-      return data;
+      return restaurant;
     }),
   getAll: protectedProcedure.query(async () => {
     const { data, error } = await supabaseAdminClient
@@ -43,4 +43,27 @@ export const restaurantRouter = router({
 
     return data;
   }),
+  delete: protectedProcedure
+    .input(
+      z.object({
+        id: z.uuid(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { data, error } = await supabaseAdminClient
+        .from("restaurants")
+        .delete()
+        .eq("id", input.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
+
+      return data;
+    }),
 });
