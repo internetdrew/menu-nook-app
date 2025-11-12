@@ -84,11 +84,11 @@ const MenuPage = () => {
           </p>
         ) : (
           <>
-            <div className="flex items-center justify-between">
+            <div className="mt-8 mb-4 flex items-center justify-between">
               <Tabs
                 defaultValue="all"
                 onValueChange={setActiveTab}
-                className="mt-8 mb-4"
+                className="flex items-center"
               >
                 <Label htmlFor="view-selector" className="sr-only">
                   View
