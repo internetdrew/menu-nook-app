@@ -16,11 +16,14 @@ export const qrCodeRouter = router({
     .mutation(async ({ input }) => {
       const { baseUrl, placeId } = input;
 
-      const qrCodeDataUrl = await QRCode.toDataURL(`${baseUrl}/r/${placeId}`, {
-        width: 400,
-        margin: 2,
-        color: { dark: "#000000", light: "#FFFFFF" },
-      });
+      const qrCodeDataUrl = await QRCode.toDataURL(
+        `${baseUrl}/menu/${placeId}`,
+        {
+          width: 400,
+          margin: 2,
+          color: { dark: "#000000", light: "#FFFFFF" },
+        },
+      );
 
       const base64Data = qrCodeDataUrl.split(",")[1];
       const buffer = Buffer.from(base64Data, "base64");
