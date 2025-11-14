@@ -92,7 +92,7 @@ const ItemsPage = () => {
           className="ml-auto"
           onClick={() => setIsCategoryDialogOpen(true)}
         >
-          Add Item Category
+          Add Category
         </Button>
       </div>
       <div>
@@ -162,8 +162,8 @@ const ItemsPage = () => {
       </div>
 
       <FormDialog
-        title="Add Item Category"
-        description="Add a new item category to your menu. You can add items to this category later."
+        title="Add Category"
+        description="Add a new category to your menu. You can add items to this category later."
         isDialogOpen={isCategoryDialogOpen}
         setIsDialogOpen={setIsCategoryDialogOpen}
         formComponent={
