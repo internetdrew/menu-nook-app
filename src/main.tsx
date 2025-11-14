@@ -11,11 +11,16 @@ import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { PlaceProvider } from "./contexts/ActivePlaceContext.tsx";
 import ItemsPage from "./routes/ItemsPage.tsx";
 import Menu from "./routes/Menu.tsx";
+import PublicMenu from "./routes/PublicMenu.tsx";
 
 const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/menu/:placeId",
+    element: <PublicMenu />,
   },
   {
     path: "/",
