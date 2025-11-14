@@ -44,7 +44,7 @@ export const categoryRouter = router({
       const { placeId } = input;
       const { data, error } = await supabaseAdminClient
         .from("place_categories")
-        .select("*")
+        .select("*, items:place_items(*)")
         .eq("place_id", placeId)
         .order("created_at", { ascending: true });
 
