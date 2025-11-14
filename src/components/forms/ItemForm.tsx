@@ -91,7 +91,7 @@ const ItemForm = (props: ItemFormProps) => {
         {
           onSuccess: () => {
             queryClient.invalidateQueries({
-              queryKey: trpc.item.getAllByRestaurant.queryKey(),
+              queryKey: trpc.item.getAllByPlace.queryKey(),
             });
             toast.success("Item updated successfully!");
             onSuccess();
@@ -112,12 +112,12 @@ const ItemForm = (props: ItemFormProps) => {
         description: values.description,
         price: values.price,
         categoryId: values.categoryId,
-        restaurantId: activeRestaurant?.id || "",
+        placeId: activePlace?.id || "",
       },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({
-            queryKey: trpc.item.getAllByRestaurant.queryKey(),
+            queryKey: trpc.item.getAllByPlace.queryKey(),
           });
           toast.success("Item created successfully!");
           onSuccess();

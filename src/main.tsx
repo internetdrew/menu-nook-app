@@ -22,9 +22,9 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <QueryClientProvider client={queryClient}>
-          <RestaurantProvider>
+          <PlaceProvider>
             <App />
-          </RestaurantProvider>
+          </PlaceProvider>
         </QueryClientProvider>
       </ProtectedRoute>
     ),
