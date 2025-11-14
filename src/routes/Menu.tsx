@@ -34,7 +34,7 @@ const Menu = () => {
             to={`/menu/${activePlace?.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-auto text-sm text-pink-600 hover:text-pink-700 hover:underline hover:underline-offset-4"
+            className="ml-auto text-xs text-pink-600 hover:text-pink-700 hover:underline hover:underline-offset-4"
           >
             View Public Menu
           </Link>
