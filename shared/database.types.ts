@@ -14,13 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      category_sort_indexes: {
+        Row: {
+          category_id: number
+          created_at: string
+          id: number
+          order_index: number | null
+          place_id: string
+        }
+        Insert: {
+          category_id: number
+          created_at?: string
+          id?: number
+          order_index?: number | null
+          place_id: string
+        }
+        Update: {
+          category_id?: number
+          created_at?: string
+          id?: number
+          order_index?: number | null
+          place_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_orders_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "place_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_orders_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_sort_indexes: {
+        Row: {
+          category_id: number
+          created_at: string
+          id: number
+          order_index: number | null
+        }
+        Insert: {
+          category_id: number
+          created_at?: string
+          id?: number
+          order_index?: number | null
+        }
+        Update: {
+          category_id?: number
+          created_at?: string
+          id?: number
+          order_index?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_items_indexes_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "place_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       place_categories: {
         Row: {
           created_at: string
           description: string | null
           id: number
           name: string
-          order: number | null
           place_id: string
         }
         Insert: {
@@ -28,7 +95,6 @@ export type Database = {
           description?: string | null
           id?: number
           name: string
-          order?: number | null
           place_id: string
         }
         Update: {
@@ -36,7 +102,6 @@ export type Database = {
           description?: string | null
           id?: number
           name?: string
-          order?: number | null
           place_id?: string
         }
         Relationships: [
@@ -155,7 +220,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_category_with_index: {
+        Args: { p_description?: string; p_name: string; p_place_id: string }
+        Returns: {
+          category_id: number
+          description: string
+          name: string
+          order_index: number
+          place_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
