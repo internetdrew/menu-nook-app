@@ -320,16 +320,18 @@ const SortableMenuItem = ({ itemIndex }: { itemIndex: ItemIndex }) => {
   return (
     <div ref={setNodeRef} style={style}>
       <Item variant="outline" size="sm">
-        <button
-          className="cursor-grab px-2 active:cursor-grabbing"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="text-muted-foreground h-4 w-4" />
-        </button>
         <ItemContent>
           <ItemTitle>{itemIndex?.item?.name}</ItemTitle>
         </ItemContent>
+        <ItemActions>
+          <button
+            className="cursor-grab px-2 active:cursor-grabbing"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="text-muted-foreground h-4 w-4" />
+          </button>
+        </ItemActions>
       </Item>
     </div>
   );
