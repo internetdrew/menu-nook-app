@@ -5,28 +5,28 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
-import { trpc } from "@/utils/trpc";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { AppRouter } from "../../server";
 import type { inferRouterOutputs } from "@trpc/server";
 import FormDialog from "./dialogs/FormDialog";
 import CategoryForm from "./forms/CategoryForm";
 
 import DeleteCategoryAlertDialog from "./dialogs/DeleteCategoryAlertDialog";
+import { MoreHorizontal } from "lucide-react";
 
 export type CategoryIndex =
   inferRouterOutputs<AppRouter>["category"]["getAllSortedByIndex"][number];
 
-const ManageCategoriesDropdown = () => {
+interface ManageCategoriesDropdownProps {
+  category: CategoryIndex["category"];
+}
+
+const ManageCategoriesDropdown = ({
+  category,
+}: ManageCategoriesDropdownProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<
     CategoryIndex["category"] | null
@@ -35,28 +35,15 @@ const ManageCategoriesDropdown = () => {
   const [categoryForEdit, setCategoryForEdit] = useState<
     CategoryIndex["category"] | null
   >(null);
-  const [categoryIndexes, setCategoryIndexes] = useState<CategoryIndex[]>([]);
+  // const [categoryIndexes, setCategoryIndexes] = useState<CategoryIndex[]>([]);
 
-  const { activePlace } = usePlaceContext();
+  // useEffect(() => {
+  //   if (indexedCategories) {
+  //     setCategoryIndexes(indexedCategories);
+  //   }
+  // }, [indexedCategories]);
 
-  const { data: indexedCategories } = useQuery(
-    trpc.category.getAllSortedByIndex.queryOptions(
-      {
-        placeId: activePlace?.id ?? "",
-      },
-      {
-        enabled: !!activePlace,
-      },
-    ),
-  );
-
-  useEffect(() => {
-    if (indexedCategories) {
-      setCategoryIndexes(indexedCategories);
-    }
-  }, [indexedCategories]);
-
-  const promptCategoryDelete = (category: CategoryIndex["category"]) => {
+  const handleDelete = (category: CategoryIndex["category"]) => {
     setCategoryToDelete(category);
     setIsDeleteDialogOpen(true);
   };
@@ -70,46 +57,21 @@ const ManageCategoriesDropdown = () => {
     <>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button className="ml-auto">Manage Categories</Button>
+          <Button variant={"ghost"} className="ml-auto">
+            <MoreHorizontal />
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
-          <DropdownMenuLabel>My Categories</DropdownMenuLabel>
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            {categoryIndexes?.map((index) => (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="flex-1">
-                  {index.category.name}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuItem
-                      onClick={() => handleEdit(index.category)}
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => promptCategoryDelete(index.category)}
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
-            ))}
+            <DropdownMenuItem onClick={() => handleEdit(category)}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDelete(category)}>
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuGroup>
-
-          <DropdownMenuSeparator />
-          <Button
-            variant="ghost"
-            className="w-full"
-            onClick={() => {
-              setCategoryForEdit(null);
-              setRenderCategoryDialog(true);
-            }}
-          >
-            + Add New Category
-          </Button>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -127,7 +89,9 @@ const ManageCategoriesDropdown = () => {
         formComponent={
           <CategoryForm
             category={categoryForEdit}
-            onSuccess={() => setRenderCategoryDialog(false)}
+            onSuccess={() => {
+              setRenderCategoryDialog(false);
+            }}
           />
         }
       />

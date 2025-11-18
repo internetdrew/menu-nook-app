@@ -45,8 +45,6 @@ const PublicMenu = () => {
     ),
   );
 
-  console.log(menu, isLoading, error);
-
   if (isLoading) {
     return (
       <div className="container mx-auto space-y-4 py-8">
@@ -65,29 +63,27 @@ const PublicMenu = () => {
   }
 
   return (
-    <div>
-      <nav className="bg-background fixed top-0 w-full">
-        <div className="mx-auto flex max-w-screen-sm items-center justify-between px-4 py-4">
-          <h1 className="text-lg font-semibold">{menu.place.name}</h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Menu Categories">
-              <Menu />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Categories</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {menu.categories.map((category) => (
-                <DropdownMenuItem asChild key={category.id}>
-                  <Link to={{ hash: `#${createSlug(category.name)}` }}>
-                    {category.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <div className="flex min-h-screen flex-col">
+      <nav className="bg-background fixed top-0 right-0 left-0 mx-auto flex w-full max-w-screen-sm items-center justify-between px-4 py-4">
+        <h1 className="text-lg font-semibold">{menu.place.name}</h1>
+        <DropdownMenu>
+          <DropdownMenuTrigger aria-label="Menu Categories">
+            <Menu />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Categories</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {menu.categories.map((category) => (
+              <DropdownMenuItem asChild key={category.id}>
+                <Link to={{ hash: `#${createSlug(category.name)}` }}>
+                  {category.name}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </nav>
-      <main className="mx-auto max-w-screen-sm px-4 py-8">
+      <main className="mx-auto w-full max-w-screen-sm px-4 py-8">
         {menu.categories.length === 0 ? (
           <p>No categories available.</p>
         ) : (
@@ -124,7 +120,7 @@ const PublicMenu = () => {
           ))
         )}
       </main>
-      <footer>
+      <footer className="mt-auto">
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-sm">
           <span>
             Powered by{" "}

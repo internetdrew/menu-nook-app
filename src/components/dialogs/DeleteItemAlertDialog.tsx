@@ -9,12 +9,16 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "../ui/alert-dialog";
-import { type Item } from "@/components/table-columns/getItemColumns";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "server";
+
+type ItemIndex =
+  inferRouterOutputs<AppRouter>["item"]["getAllForCategorySortedByIndex"][number];
 
 interface DeleteItemAlertDialogProps {
-  item: Item;
+  item: ItemIndex["item"];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -36,7 +40,7 @@ const DeleteItemAlertDialog = ({
           onOpenChange(false);
           toast.success(`${item.name} has been deleted.`);
           queryClient.invalidateQueries({
-            queryKey: trpc.item.getAllByPlace.queryKey(),
+            queryKey: trpc.item.getAllForCategorySortedByIndex.queryKey(),
           });
         },
         onError: () => {
