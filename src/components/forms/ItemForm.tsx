@@ -26,13 +26,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { type Item } from "@/components/table-columns/getItemColumns";
 
-type Categories = inferRouterOutputs<AppRouter>["category"]["getAllByPlace"];
+type Category =
+  inferRouterOutputs<AppRouter>["category"]["getAllSortedByIndex"][number]["category"];
+type Item =
+  inferRouterOutputs<AppRouter>["item"]["getAllForCategorySortedByIndex"][number]["item"];
 
 interface ItemFormProps {
   onSuccess: () => void;
-  categories: Categories;
+  categories: Category[];
   item?: Item | null;
 }
 
@@ -91,7 +93,7 @@ const ItemForm = (props: ItemFormProps) => {
         {
           onSuccess: () => {
             queryClient.invalidateQueries({
-              queryKey: trpc.item.getAllByPlace.queryKey(),
+              queryKey: trpc.item.getAllForCategorySortedByIndex.queryKey(),
             });
             toast.success("Item updated successfully!");
             onSuccess();
