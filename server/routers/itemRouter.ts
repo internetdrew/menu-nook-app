@@ -180,7 +180,7 @@ export const itemRouter = router({
 
       const { data, error } = await supabaseAdminClient
         .from("item_sort_indexes")
-        .select("*, item:place_items(*)")
+        .select("*, item:place_items(*, category:place_categories(id,name))")
         .eq("category_id", categoryId)
         .order("order_index", { ascending: true });
 
