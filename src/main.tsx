@@ -9,10 +9,8 @@ import Login from "./routes/Login.tsx";
 import { AuthProvider } from "./contexts/auth.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { PlaceProvider } from "./contexts/ActivePlaceContext.tsx";
-// import Menu from "./routes/Menu.tsx"; Remove this once PublicMenu is confirmed working
 import PublicMenu from "./routes/PublicMenu.tsx";
 import { MenuPage } from "./routes/MenuPage.tsx";
-import { SettingsPage } from "./routes/SettingsPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -50,7 +48,7 @@ const router = createBrowserRouter([
           },
           {
             path: "settings",
-            element: <SettingsPage />,
+            element: <h1>Settings</h1>,
           },
         ],
       },
