@@ -19,13 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "server";
 import { usePlaceContext } from "@/contexts/ActivePlaceContext";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 
 type Category =
   inferRouterOutputs<AppRouter>["category"]["getAllSortedByIndex"][number]["category"];
@@ -34,8 +27,8 @@ type Item =
 
 interface ItemFormProps {
   onSuccess: () => void;
-  categories: Category[];
   item?: Item | null;
+  chosenCategory: Category;
 }
 
 const formSchema = z.object({
@@ -63,7 +56,7 @@ const formSchema = z.object({
 });
 
 const ItemForm = (props: ItemFormProps) => {
-  const { onSuccess, categories, item } = props;
+  const { onSuccess, item, chosenCategory } = props;
   const createItem = useMutation(trpc.item.create.mutationOptions());
   const { activePlace } = usePlaceContext();
 
@@ -73,7 +66,7 @@ const ItemForm = (props: ItemFormProps) => {
       name: item?.name ?? "",
       description: item?.description ?? "",
       price: item?.price ?? 0,
-      categoryId: item?.category?.id ?? categories?.[0]?.id,
+      categoryId: item?.category?.id ?? chosenCategory?.id,
     },
   });
 
@@ -87,7 +80,7 @@ const ItemForm = (props: ItemFormProps) => {
           name: values.name,
           description: values.description,
           price: values.price,
-          categoryId: values.categoryId,
+          categoryId: chosenCategory?.id,
           placeId: activePlace?.id || "",
         },
         {
@@ -113,13 +106,13 @@ const ItemForm = (props: ItemFormProps) => {
         name: values.name,
         description: values.description,
         price: values.price,
-        categoryId: values.categoryId,
+        categoryId: chosenCategory.id,
         placeId: activePlace?.id || "",
       },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({
-            queryKey: trpc.item.getAllByPlace.queryKey(),
+            queryKey: trpc.item.getAllForCategorySortedByIndex.queryKey(),
           });
           toast.success("Item created successfully!");
           onSuccess();
@@ -167,39 +160,6 @@ const ItemForm = (props: ItemFormProps) => {
               <FormDescription>
                 A brief (optional) description of the item. This will be
                 displayed to customers.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="categoryId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <Select
-                onValueChange={(v) => field.onChange(Number(v))}
-                value={field.value.toString()}
-              >
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem
-                      key={category.id}
-                      value={category.id.toString()}
-                    >
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                This is the current status of the item.
               </FormDescription>
               <FormMessage />
             </FormItem>
