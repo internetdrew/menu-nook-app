@@ -20,8 +20,7 @@ import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "server";
 import { usePlaceContext } from "@/contexts/ActivePlaceContext";
 
-type Category =
-  inferRouterOutputs<AppRouter>["category"]["getAllSortedByIndex"][number]["category"];
+type Category = inferRouterOutputs<AppRouter>["category"]["getById"];
 type Item =
   inferRouterOutputs<AppRouter>["item"]["getAllForCategorySortedByIndex"][number]["item"];
 
