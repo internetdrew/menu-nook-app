@@ -28,6 +28,13 @@ import { useState } from "react";
 import { Spinner } from "./components/ui/spinner";
 import FormDialog from "./components/dialogs/FormDialog";
 import CreatePlaceForm from "./components/forms/CreatePlaceForm";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemTitle,
+} from "./components/ui/item";
+import { Eye } from "lucide-react";
 
 function App() {
   const { places, activePlace, loading } = usePlaceContext();
@@ -47,7 +54,7 @@ function App() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="sticky flex h-16 shrink-0 items-center gap-2 pr-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator
@@ -70,6 +77,25 @@ function App() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          <Item
+            variant={"outline"}
+            size={"sm"}
+            asChild
+            className="my-4 ml-auto flex w-fit"
+          >
+            <Link
+              to={`/menu/${activePlace?.id}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <ItemActions>
+                <Eye className="size-4 text-pink-600" />
+              </ItemActions>
+              <ItemContent>
+                <ItemTitle>Live menu</ItemTitle>
+              </ItemContent>
+            </Link>
+          </Item>
         </header>
         <div className="p-4 pt-0">
           {loading ? (
