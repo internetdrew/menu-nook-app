@@ -15,8 +15,8 @@ import { AuthProvider } from "./contexts/auth.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { PlaceProvider } from "./contexts/ActivePlaceContext.tsx";
 import PublicMenu from "./routes/PublicMenu.tsx";
-import { MenuPage } from "./routes/MenuPage.tsx";
 import { CategoriesPage } from "./routes/CategoriesPage.tsx";
+import { CategoryItemsPage } from "./routes/CategoryItemsPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -49,8 +49,18 @@ const router = createBrowserRouter([
             element: <h1>Dashboard Home</h1>,
           },
           {
-            path: "menu/:categorySlug?",
-            element: <MenuPage />,
+            path: "categories",
+            element: <Outlet />,
+            children: [
+              {
+                index: true,
+                element: <CategoriesPage />,
+              },
+              {
+                path: ":categoryId",
+                element: <CategoryItemsPage />,
+              },
+            ],
           },
           {
             path: "settings",
@@ -63,10 +73,6 @@ const router = createBrowserRouter([
               {
                 path: "general",
                 element: <h1>General Settings</h1>,
-              },
-              {
-                path: "categories",
-                element: <CategoriesPage />,
               },
             ],
           },
