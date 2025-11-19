@@ -199,4 +199,26 @@ export const categoryRouter = router({
 
       return { success: true };
     }),
+  getById: protectedProcedure
+    .input(
+      z.object({
+        categoryId: z.number(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { categoryId } = input;
+      const { data, error } = await supabaseAdminClient
+        .from("place_categories")
+        .select("*")
+        .eq("id", categoryId)
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch category: ${error.message}`,
+        });
+      }
+      return data;
+    }),
 });
