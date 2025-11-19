@@ -228,7 +228,7 @@ export const MenuPage = () => {
   };
 
   return (
-    <div>
+    <div className="pb-10">
       <main>
         <Item
           variant={"outline"}
