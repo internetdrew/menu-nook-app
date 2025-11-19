@@ -116,7 +116,7 @@ export const MenuPage = () => {
 
     const el = document.getElementById(key);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [params]);
 
