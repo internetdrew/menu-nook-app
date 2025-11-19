@@ -48,12 +48,13 @@ import type { AppRouter } from "../../server";
 import type { inferRouterOutputs } from "@trpc/server";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import FormDialog from "@/components/dialogs/FormDialog";
 import ItemForm from "@/components/forms/ItemForm";
 import ManageCategoriesDropdown from "@/components/ManageCategoriesDropdown";
 import DeleteItemAlertDialog from "@/components/dialogs/DeleteItemAlertDialog";
 import CategoryForm from "@/components/forms/CategoryForm";
+import { createSlug } from "@/utils/createSlug";
 
 type CategoryIndex =
   inferRouterOutputs<AppRouter>["category"]["getAllSortedByIndex"][number];
@@ -62,6 +63,8 @@ type ItemIndex =
 
 export const MenuPage = () => {
   const { activePlace } = usePlaceContext();
+  const [params, setParams] = useSearchParams();
+
   const [categoryIndexes, setCategoryIndexes] = useState<CategoryIndex[]>([]);
   const [chosenCategory, setChosenCategory] = useState<
     CategoryIndex["category"] | null
@@ -106,6 +109,16 @@ export const MenuPage = () => {
       },
     ),
   );
+
+  useEffect(() => {
+    const key = params.get("category");
+    if (!key) return;
+
+    const el = document.getElementById(key);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [params]);
 
   useEffect(() => {
     if (indexedCategories) {
@@ -261,6 +274,7 @@ export const MenuPage = () => {
                         key={categoryIndex.id}
                         categoryIndex={categoryIndex}
                         setChosenCategory={setChosenCategory}
+                        setParams={setParams}
                       />
                     ))}
                   </SortableContext>
@@ -293,7 +307,9 @@ export const MenuPage = () => {
             <>
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle>{chosenCategory?.name}</CardTitle>
+                  <CardTitle id={createSlug(chosenCategory?.name)}>
+                    {chosenCategory?.name}
+                  </CardTitle>
                   <CardDescription>
                     Reorder your {chosenCategory?.name} as you want them to
                     appear on your menu.
@@ -371,11 +387,13 @@ export const MenuPage = () => {
 const SortableCategoryItem = ({
   categoryIndex,
   setChosenCategory,
+  setParams,
 }: {
   categoryIndex: CategoryIndex;
   setChosenCategory: React.Dispatch<
     React.SetStateAction<CategoryIndex["category"] | null>
   >;
+  setParams: React.Dispatch<React.SetStateAction<URLSearchParams>>;
 }) => {
   const {
     attributes,
@@ -406,11 +424,17 @@ const SortableCategoryItem = ({
           <ItemTitle>{categoryIndex?.category?.name}</ItemTitle>
         </ItemContent>
         <ItemActions>
-          {/* Add an icon here that will reveal the chosen categories items */}
           <Button
             size={"icon-sm"}
             variant={"ghost"}
-            onClick={() => setChosenCategory(categoryIndex.category)}
+            className="relative"
+            onClick={() => {
+              setChosenCategory(categoryIndex.category);
+              setParams((prev) => {
+                prev.set("category", createSlug(categoryIndex.category.name));
+                return prev;
+              });
+            }}
           >
             <ChevronRight />
           </Button>
@@ -464,7 +488,9 @@ const SortableMenuItem = ({
             </span>
           </span>
           {itemIndex?.item?.description && (
-            <ItemDescription>{itemIndex?.item?.description}</ItemDescription>
+            <ItemDescription className="line-clamp-1">
+              {itemIndex?.item?.description}
+            </ItemDescription>
           )}
         </ItemContent>
         <ItemActions>

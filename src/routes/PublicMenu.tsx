@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Menu } from "lucide-react";
@@ -25,10 +26,6 @@ const PublicMenu = () => {
       }
     }
   }, [hash]);
-
-  const createSlug = (text: string) => {
-    return text.toLowerCase().replace(/\s+/g, "-");
-  };
 
   const {
     data: menu,
