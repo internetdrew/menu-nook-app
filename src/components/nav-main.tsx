@@ -10,13 +10,21 @@ import {
 import { usePlaceContext } from "@/contexts/ActivePlaceContext";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { List, Settings } from "lucide-react";
+import { Eye, List, Settings } from "lucide-react";
 import { Link } from "react-router";
 import { Skeleton } from "./ui/skeleton";
 
 const settingsItems = [
-  { title: "General", url: "/dashboard/settings/general", icon: Settings },
-  { title: "Categories", url: "/dashboard/categories", icon: List },
+  {
+    title: "General",
+    url: "/dashboard/settings/general",
+    icon: Settings,
+  },
+  {
+    title: "Categories",
+    url: "/dashboard/categories",
+    icon: List,
+  },
 ];
 
 export function NavMain() {
@@ -34,6 +42,15 @@ export function NavMain() {
       },
     ),
   );
+
+  const viewItems = [
+    {
+      title: "Live Menu",
+      url: `/menu/${activePlace?.id}`,
+      icon: Eye,
+      newTab: true,
+    },
+  ];
 
   if (!places.length) {
     return null;
@@ -76,6 +93,28 @@ export function NavMain() {
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton tooltip={item.title} asChild>
                   <Link to={item.url} onClick={() => setOpenMobile(false)}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+      <SidebarGroup>
+        <SidebarGroupLabel>View</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {viewItems?.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton tooltip={item.title} asChild>
+                  <Link
+                    to={item.url}
+                    target={item.newTab ? "_blank" : undefined}
+                    rel={item.newTab ? "noreferrer" : undefined}
+                    onClick={() => setOpenMobile(false)}
+                  >
                     <item.icon />
                     <span>{item.title}</span>
                   </Link>
