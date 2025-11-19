@@ -305,7 +305,7 @@ export const MenuPage = () => {
           </>
           {chosenCategory && (
             <>
-              <Card className="scroll-mt-20 lg:col-span-2">
+              <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle id={createSlug(chosenCategory?.name)}>
                     {chosenCategory?.name}
