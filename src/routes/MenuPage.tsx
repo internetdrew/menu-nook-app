@@ -115,10 +115,10 @@ export const MenuPage = () => {
     if (!key) return;
 
     const el = document.getElementById(key);
-    if (el && !isLoadingItems) {
+    if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [params, isLoadingItems]);
+  }, [params]);
 
   useEffect(() => {
     if (indexedCategories) {
@@ -305,7 +305,7 @@ export const MenuPage = () => {
           </>
           {chosenCategory && (
             <>
-              <Card className="lg:col-span-2">
+              <Card className="scroll-mt-20 lg:col-span-2">
                 <CardHeader>
                   <CardTitle id={createSlug(chosenCategory?.name)}>
                     {chosenCategory?.name}
