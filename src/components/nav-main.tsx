@@ -66,7 +66,7 @@ export function NavMain() {
                   to={`/dashboard/categories`}
                   onClick={() => setOpenMobile(false)}
                 >
-                  Categories
+                  <span>Categories</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
