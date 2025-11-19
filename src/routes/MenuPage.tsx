@@ -351,7 +351,7 @@ export const MenuPage = () => {
                       setIsItemDialogOpen(true);
                     }}
                   >
-                    Add Item
+                    Add item to {chosenCategory?.name}
                   </Button>
                 </CardFooter>
               </Card>
