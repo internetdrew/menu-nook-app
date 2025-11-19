@@ -122,7 +122,7 @@ export const CategoriesPage = () => {
 
   return (
     <>
-      <div className="my-4 flex items-start">
+      <div className="my-4 flex items-center">
         <h1 className="font-medium">Categories</h1>
         <Popover>
           <PopoverTrigger>
@@ -224,7 +224,7 @@ const SortableCategoryItem = ({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Item variant="outline" size="sm" className="max-w-full sm:max-w-1/2">
+      <Item variant="outline" size="sm" className="max-w-full lg:max-w-1/2">
         <button
           className="cursor-grab px-2 active:cursor-grabbing"
           {...attributes}
@@ -233,7 +233,9 @@ const SortableCategoryItem = ({
           <GripVertical className="text-muted-foreground h-4 w-4" />
         </button>
         <ItemContent>
-          <ItemTitle>{categoryIndex?.category?.name}</ItemTitle>
+          <ItemTitle className="select-none">
+            {categoryIndex?.category?.name}
+          </ItemTitle>
         </ItemContent>
         <ItemActions>
           <Button
