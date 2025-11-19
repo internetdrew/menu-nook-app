@@ -1,16 +1,7 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { Menu } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useLocation, useParams } from "react-router";
 
@@ -61,34 +52,30 @@ const PublicMenu = () => {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="bg-background fixed top-0 right-0 left-0 mx-auto flex w-full max-w-screen-sm items-center justify-between px-4 py-4">
-        <h1 className="text-lg">{menu.place.name}</h1>
-        <DropdownMenu>
-          <DropdownMenuTrigger aria-label="Menu Categories">
-            <Menu />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Categories</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+      <main className="mx-auto w-full max-w-screen-sm px-4 py-8">
+        <h1 className="text-center text-xl font-medium">{menu.place.name}</h1>
+        <nav className="my-8 flex flex-wrap items-center justify-center gap-4">
+          <ul className="flex flex-wrap items-center justify-center gap-4">
             {menu.categories.map((category) => (
-              <DropdownMenuItem asChild key={category.id}>
-                <Link to={{ hash: `#${createSlug(category.name)}` }}>
+              <li>
+                <Link
+                  to={{ hash: `#${createSlug(category.name)}` }}
+                  className="underline-offset-4 duration-300 hover:underline"
+                >
                   {category.name}
                 </Link>
-              </DropdownMenuItem>
+              </li>
             ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </nav>
-      <main className="mx-auto w-full max-w-screen-sm px-4 py-8">
+          </ul>
+        </nav>
         {menu.categories.length === 0 ? (
           <p>No categories available.</p>
         ) : (
           menu.categories.map((category) => (
-            <section key={category.id} className="mt-12">
+            <section key={category.id} className="mt-16">
               <h2
                 id={createSlug(category.name)}
-                className="mb-4 scroll-mt-20 border-b pb-3 text-lg font-semibold"
+                className="mb-4 scroll-mt-20 border-b pb-3 text-lg font-medium"
               >
                 {category.name}
               </h2>
@@ -99,10 +86,8 @@ const PublicMenu = () => {
                   {category.items.map((item) => (
                     <li key={item.id} className="">
                       <div className="flex justify-between">
-                        <span className="font-medium">{item.name}</span>
-                        <span className="font-medium">
-                          ${item.price.toFixed(2)}
-                        </span>
+                        <span className="">{item.name}</span>
+                        <span className="">${item.price.toFixed(2)}</span>
                       </div>
                       {item.description && (
                         <p className="text-muted-foreground max-w-md text-sm">
