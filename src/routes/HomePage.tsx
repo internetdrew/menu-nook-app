@@ -10,7 +10,7 @@ export const HomePage = () => {
           What you're managing, at a glance.
         </p>
 
-        <div className="my-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="my-4 grid grid-cols-1 items-start gap-4 sm:grid-cols-2 md:grid-cols-3">
           <CategoriesCard />
           <ItemsCard />
         </div>
