@@ -17,6 +17,7 @@ import { PlaceProvider } from "./contexts/ActivePlaceContext.tsx";
 import PublicMenu from "./routes/PublicMenu.tsx";
 import { CategoriesPage } from "./routes/CategoriesPage.tsx";
 import { CategoryItemsPage } from "./routes/CategoryItemsPage.tsx";
+import { SettingsPage } from "./routes/SettingsPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -72,7 +73,7 @@ const router = createBrowserRouter([
               },
               {
                 path: "general",
-                element: <h1>General Settings</h1>,
+                element: <SettingsPage />,
               },
             ],
           },
