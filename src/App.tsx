@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from "react-router";
+import { Link, Outlet } from "react-router";
 import {
   SidebarInset,
   SidebarProvider,
@@ -11,8 +11,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "./components/ui/breadcrumb";
 import { Toaster } from "./components/ui/sonner";
 import { usePlaceContext } from "./contexts/ActivePlaceContext";
@@ -31,17 +29,6 @@ import CreatePlaceForm from "./components/forms/CreatePlaceForm";
 
 function App() {
   const { places, activePlace, loading } = usePlaceContext();
-  const location = useLocation();
-
-  const getRouteName = () => {
-    const path = location.pathname.split("/").filter(Boolean);
-    if (path.length === 0) return "Dashboard";
-    const lastSegment = path[path.length - 1];
-    return lastSegment
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
 
   return (
     <SidebarProvider>
@@ -62,10 +49,6 @@ function App() {
                       {activePlace?.name || "No Place Selected"}
                     </Link>
                   </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{getRouteName()}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
