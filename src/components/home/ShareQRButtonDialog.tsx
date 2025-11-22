@@ -137,7 +137,7 @@ const ShareQRButtonDialog = () => {
               onClick={handleDownload}
               disabled={isDownloading}
             >
-              <Download /> Download
+              <Download /> Save QR Code
             </Button>
           </div>
         </DialogFooter>
