@@ -116,7 +116,7 @@ const PublicMenu = () => {
               to="https://menulink.com"
               className="text-pink-600 underline-offset-4 transition-all duration-200 hover:underline"
             >
-              MenuLink
+              The QR Menu Link
             </Link>
           </span>
         </div>
