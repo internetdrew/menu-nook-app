@@ -156,7 +156,10 @@ export const CategoriesPage = () => {
           <div className="space-y-2">
             {isLoadingCategories
               ? Array.from({ length: 3 }).map((_, index) => (
-                  <Skeleton key={index} className="h-12" />
+                  <Skeleton
+                    key={index}
+                    className="h-12 max-w-full lg:max-w-1/2"
+                  />
                 ))
               : indexedCategories.map((index) => (
                   <SortableCategoryItem
