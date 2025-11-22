@@ -61,6 +61,7 @@ const PublicMenu = () => {
             {menu.categories.map((category) => (
               <li key={category.id}>
                 <Link
+                  replace
                   to={{ hash: `#${createSlug(category.name)}` }}
                   className="underline-offset-4 duration-300 hover:underline"
                 >
@@ -71,7 +72,7 @@ const PublicMenu = () => {
           </ul>
         </nav>
         {menu.categories.length === 0 ? (
-          <p>No categories available.</p>
+          <p className="mt-16 text-center">No categories available.</p>
         ) : (
           menu.categories.map((category) => (
             <section key={category.id} className="mt-16">

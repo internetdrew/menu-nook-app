@@ -12,12 +12,23 @@ import { usePlaceContext } from "@/contexts/ActivePlaceContext";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Copy, Download } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Skeleton } from "../ui/skeleton";
 
 const ShareQRButtonDialog = () => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    const timeout = copyTimeoutRef.current;
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, []);
 
   const { activePlace } = usePlaceContext();
 
@@ -62,9 +73,12 @@ const ShareQRButtonDialog = () => {
       await navigator.clipboard.writeText(
         `${window.location.origin}/menu/${activePlace?.id}`,
       );
-      toast.success(
-        "Your menu link has been copied to your device's clipboard",
-      );
+
+      setCopied(true);
+
+      copyTimeoutRef.current = window.setTimeout(() => {
+        setCopied(false);
+      }, 2000);
     } catch (error) {
       console.error("Failed to copy link:", error);
       toast.error("Copy failed", {
@@ -91,7 +105,11 @@ const ShareQRButtonDialog = () => {
         </DialogHeader>
         <div className="my-4 flex justify-center">
           {data?.public_url ? (
-            <img src={data.public_url} alt="QR Code" className="scale-80" />
+            isLoading ? (
+              <Skeleton className="h-48 w-48" />
+            ) : (
+              <img src={data.public_url} alt="QR Code" className="scale-80" />
+            )
           ) : (
             <p className="text-muted-foreground text-center text-sm">
               Unable to generate QR code.
@@ -99,20 +117,27 @@ const ShareQRButtonDialog = () => {
           )}
         </div>
         <DialogFooter>
-          <div className="flex w-full flex-col gap-2 sm:flex-row sm:gap-4">
+          <div className="flex w-full gap-2 sm:flex-row sm:gap-4">
+            <Button
+              variant={"outline"}
+              className="flex-1"
+              onClick={handleCopyLink}
+              disabled={copied}
+            >
+              {copied ? (
+                "Link copied!"
+              ) : (
+                <span className="flex items-center gap-1">
+                  <Copy /> Copy Link
+                </span>
+              )}
+            </Button>
             <Button
               className="flex-1"
               onClick={handleDownload}
               disabled={isDownloading}
             >
-              <Download /> Download
-            </Button>
-            <Button
-              variant={"outline"}
-              className="flex-1"
-              onClick={handleCopyLink}
-            >
-              <Copy /> Copy Link
+              <Download /> Save QR Code
             </Button>
           </div>
         </DialogFooter>

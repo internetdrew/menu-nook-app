@@ -155,14 +155,16 @@ export const CategoryItemsPage = () => {
           ) : (
             <>
               <h1 className="font-medium">{category?.name}</h1>
-              <Popover>
-                <PopoverTrigger>
-                  <Info className="ml-1 size-3" />
-                </PopoverTrigger>
-                <PopoverContent className="text-sm">
-                  {category?.description}
-                </PopoverContent>
-              </Popover>
+              {category?.description && (
+                <Popover>
+                  <PopoverTrigger>
+                    <Info className="ml-1 size-3" />
+                  </PopoverTrigger>
+                  <PopoverContent className="text-sm">
+                    {category?.description}
+                  </PopoverContent>
+                </Popover>
+              )}
             </>
           )}
           {isLoadingCategory ? (
