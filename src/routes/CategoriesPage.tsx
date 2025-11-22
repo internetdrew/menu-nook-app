@@ -129,8 +129,8 @@ export const CategoriesPage = () => {
             <Info className="ml-1 size-3" />
           </PopoverTrigger>
           <PopoverContent className="text-sm">
-            You can reorder your categories as you'd like them to show up on
-            your public menu.
+            Add categories and drag to reorder how they appear on your public
+            menu.
           </PopoverContent>
         </Popover>
         <Button
