@@ -61,6 +61,7 @@ const PublicMenu = () => {
             {menu.categories.map((category) => (
               <li key={category.id}>
                 <Link
+                  replace
                   to={{ hash: `#${createSlug(category.name)}` }}
                   className="underline-offset-4 duration-300 hover:underline"
                 >
