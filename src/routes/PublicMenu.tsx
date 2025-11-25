@@ -74,38 +74,38 @@ const PublicMenu = () => {
         {menu.categories.length === 0 ? (
           <p className="mt-16 text-center">No categories available.</p>
         ) : (
-          menu.categories.map((category) => (
-            <section key={category.id} className="mt-16">
-              <h2
-                id={createSlug(category.name)}
-                className="scroll-mt-20 text-lg font-medium"
-              >
-                {category.name}
-              </h2>
-              <p className="text-muted-foreground mb-4 border-b pb-3 text-sm">
-                {category.description}
-              </p>
-              {category.items.length === 0 ? (
-                <p>No items in this category.</p>
-              ) : (
-                <ul className="space-y-6">
-                  {category.items.map((item) => (
-                    <li key={item.id} className="">
-                      <div className="flex justify-between">
-                        <span className="">{item.name}</span>
-                        <span className="">${item.price.toFixed(2)}</span>
-                      </div>
-                      {item.description && (
-                        <p className="text-muted-foreground max-w-md text-sm">
-                          {item.description}
-                        </p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          ))
+          menu.categories.map((category) => {
+            if (category.items.length > 0)
+              return (
+                <section key={category.id} className="mt-16">
+                  <h2
+                    id={createSlug(category.name)}
+                    className="scroll-mt-20 text-lg font-medium"
+                  >
+                    {category.name}
+                  </h2>
+                  <p className="text-muted-foreground mb-4 border-b pb-3 text-sm">
+                    {category.description}
+                  </p>
+
+                  <ul className="space-y-6">
+                    {category.items.map((item) => (
+                      <li key={item.id} className="">
+                        <div className="flex justify-between">
+                          <span className="">{item.name}</span>
+                          <span className="">${item.price.toFixed(2)}</span>
+                        </div>
+                        {item.description && (
+                          <p className="text-muted-foreground max-w-md text-sm">
+                            {item.description}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+          })
         )}
       </main>
       <footer className="mt-auto">
