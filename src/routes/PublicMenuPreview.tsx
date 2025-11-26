@@ -1,11 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { linkClasses } from "@/constants";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Link, useLocation, useParams } from "react-router";
 
-const PublicMenu = () => {
+export const PublicMenuPreview = () => {
   const { placeId } = useParams<{ placeId: string }>();
   const { hash } = useLocation();
 
@@ -54,6 +55,22 @@ const PublicMenu = () => {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <div className="sticky top-0 z-10 border-b border-yellow-300 bg-yellow-100 py-2 text-center text-sm text-yellow-800">
+        Preview Mode
+        {menu.place.is_live ? (
+          <a
+            href={`https://app.domain/${menu.place.id}`}
+            className={linkClasses}
+          >
+            View Live Menu
+          </a>
+        ) : (
+          <Link to="/subscribe" className={linkClasses}>
+            Subscribe to Publish
+          </Link>
+        )}
+      </div>
+
       <main className="mx-auto w-full max-w-screen-sm px-4 py-8">
         <h1 className="text-center text-xl font-medium">{menu.place.name}</h1>
         <nav className="my-8 flex flex-wrap items-center justify-center gap-4">
@@ -117,7 +134,7 @@ const PublicMenu = () => {
             Powered by{" "}
             <Link
               to="https://menulink.com"
-              className="text-pink-600 underline-offset-4 transition-all duration-200 hover:underline"
+              className="text-pink-600 underline-offset-4 hover:text-pink-800 hover:underline"
             >
               MenuNook
             </Link>
@@ -127,5 +144,3 @@ const PublicMenu = () => {
     </div>
   );
 };
-
-export default PublicMenu;

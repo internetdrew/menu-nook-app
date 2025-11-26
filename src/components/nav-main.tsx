@@ -11,7 +11,7 @@ import { usePlaceContext } from "@/contexts/ActivePlaceContext";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
-import { Link } from "react-router";
+import { Link, NavLink } from "react-router";
 import { Skeleton } from "./ui/skeleton";
 
 export function NavMain() {
@@ -32,8 +32,8 @@ export function NavMain() {
 
   const viewItems = [
     {
-      title: "Live Menu",
-      url: `/menu/${activePlace?.id}`,
+      title: "Menu Preview",
+      url: `/preview/menu/${activePlace?.id}`,
       icon: Eye,
     },
   ];
@@ -54,12 +54,17 @@ export function NavMain() {
                 tooltip={"Categories"}
                 asChild
               >
-                <Link
+                <NavLink
                   to={`/dashboard/categories`}
+                  end
                   onClick={() => setOpenMobile(false)}
                 >
-                  <span>Categories</span>
-                </Link>
+                  {({ isActive }) => (
+                    <span className={isActive ? "font-semibold" : ""}>
+                      Categories
+                    </span>
+                  )}
+                </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
             {isLoadingCategories
@@ -73,12 +78,16 @@ export function NavMain() {
                       tooltip={index.category.name}
                       asChild
                     >
-                      <Link
+                      <NavLink
                         to={`/dashboard/categories/${index.category.id}`}
                         onClick={() => setOpenMobile(false)}
                       >
-                        <span>{index.category.name}</span>
-                      </Link>
+                        {({ isActive }) => (
+                          <span className={isActive ? "font-semibold" : ""}>
+                            {index.category.name}
+                          </span>
+                        )}
+                      </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
