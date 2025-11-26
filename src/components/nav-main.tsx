@@ -32,8 +32,8 @@ export function NavMain() {
 
   const viewItems = [
     {
-      title: "Live Menu",
-      url: `/menu/${activePlace?.id}`,
+      title: "Menu Preview",
+      url: `/preview/menu/${activePlace?.id}`,
       icon: Eye,
     },
   ];
