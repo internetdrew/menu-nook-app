@@ -1,12 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { linkClasses } from "@/constants";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Link, useLocation, useParams } from "react-router";
-
-const linkClasses =
-  "ml-2 text-pink-600 underline-offset-4 hover:text-pink-800 hover:underline";
 
 export const PublicMenuPreview = () => {
   const { placeId } = useParams<{ placeId: string }>();
