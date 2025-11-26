@@ -89,10 +89,6 @@ const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <Navigate to="/404" replace />,
-  },
-  {
-    path: "/404",
     element: <NotFound />,
   },
 ]);
