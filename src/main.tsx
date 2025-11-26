@@ -14,7 +14,7 @@ import Login from "./routes/Login.tsx";
 import { AuthProvider } from "./contexts/auth.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { PlaceProvider } from "./contexts/ActivePlaceContext.tsx";
-import PublicMenu from "./routes/PublicMenu.tsx";
+import { PublicMenuPreview } from "./routes/PublicMenuPreview.tsx";
 import { CategoriesPage } from "./routes/CategoriesPage.tsx";
 import { CategoryItemsPage } from "./routes/CategoryItemsPage.tsx";
 import { SettingsPage } from "./routes/SettingsPage.tsx";
@@ -26,8 +26,8 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: "/menu/:placeId",
-    element: <PublicMenu />,
+    path: "/preview/menu/:placeId",
+    element: <PublicMenuPreview />,
   },
   {
     path: "/",
