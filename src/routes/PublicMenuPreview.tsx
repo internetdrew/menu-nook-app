@@ -56,7 +56,7 @@ export const PublicMenuPreview = () => {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="sticky top-0 z-10 border-b border-yellow-300 bg-yellow-100 py-2 text-center text-sm text-yellow-800">
-        Preview Mode
+        <span>Preview Mode</span>{" "}
         {menu.place.is_live ? (
           <a href={`${liveSiteUrl}/${menu.place.id}`} className={linkClasses}>
             View Live Menu
@@ -129,10 +129,7 @@ export const PublicMenuPreview = () => {
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-sm">
           <span>
             Powered by{" "}
-            <Link
-              to="https://menulink.com"
-              className="text-pink-600 underline-offset-4 hover:text-pink-800 hover:underline"
-            >
+            <Link to="https://menulink.com" className={linkClasses}>
               MenuNook
             </Link>
           </span>
