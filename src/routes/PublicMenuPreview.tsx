@@ -1,14 +1,35 @@
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { linkClasses, liveSiteUrl } from "@/constants";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Link, useLocation, useParams } from "react-router";
+import { toast } from "sonner";
 
 export const PublicMenuPreview = () => {
   const { placeId } = useParams<{ placeId: string }>();
   const { hash } = useLocation();
+
+  const stripeCheckoutMutation = useMutation(
+    trpc.stripe.createCheckoutSession.mutationOptions(),
+  );
+  const { data: subscription } = useQuery(
+    trpc.subscription.getForPlace.queryOptions(
+      {
+        placeId: placeId ?? "",
+      },
+      {
+        enabled: !!placeId,
+      },
+    ),
+  );
+
+  const subscriptionIsActive =
+    subscription?.status === "active" &&
+    new Date(subscription.current_period_end) > new Date();
 
   useEffect(() => {
     if (hash) {
@@ -53,19 +74,44 @@ export const PublicMenuPreview = () => {
     );
   }
 
+  const handleSubscribe = async () => {
+    await stripeCheckoutMutation.mutateAsync(
+      {
+        placeId: menu.place.id,
+        baseUrl: window.location.origin,
+      },
+      {
+        onSuccess: (data) => {
+          window.location.assign(data.url);
+        },
+        onError: (error) => {
+          console.error("Error creating checkout session:", error);
+          toast.error("Error creating checkout session: ");
+        },
+      },
+    );
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <div className="sticky top-0 z-10 border-b border-yellow-300 bg-yellow-100 py-2 text-center text-sm text-yellow-800">
-        <span>Preview Mode</span>{" "}
-        {menu.place.is_live ? (
-          <a href={`${liveSiteUrl}/${menu.place.id}`} className={linkClasses}>
-            View Live Menu
-          </a>
-        ) : (
-          <Link to="/subscribe" className={linkClasses}>
-            Subscribe to Publish
-          </Link>
-        )}
+        <div className="mx-auto flex max-w-screen-sm items-center justify-center">
+          {subscriptionIsActive ? (
+            <a href={`${liveSiteUrl}/${menu.place.id}`} className={linkClasses}>
+              View Live Menu
+            </a>
+          ) : (
+            <Button
+              type="submit"
+              variant="outline"
+              onClick={handleSubscribe}
+              disabled={stripeCheckoutMutation.isPending}
+            >
+              {stripeCheckoutMutation.isPending && <Spinner />} Subscribe to
+              Publish
+            </Button>
+          )}
+        </div>
       </div>
 
       <main className="mx-auto w-full max-w-screen-sm px-4 py-8">
