@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { createServerSupabaseClient } from "../supabase";
 import { stripe } from "../utils/stripe";
 import { protectedProcedure, router } from "../trpc";
+import { TRPCError } from "@trpc/server";
 
 const APP_DOMAIN = process.env.APP_DOMAIN;
 
@@ -43,6 +44,13 @@ export const stripeRouter = router({
           userId: user!.id,
         },
       });
+
+      if (!session.url) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to create Stripe checkout session`,
+        });
+      }
 
       return { url: session.url };
     }),
