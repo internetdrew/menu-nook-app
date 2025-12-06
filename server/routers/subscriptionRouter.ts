@@ -11,7 +11,7 @@ export const subscriptionRouter = router({
         .from("subscriptions")
         .select("*")
         .eq("place_id", input.placeId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         throw new TRPCError({
