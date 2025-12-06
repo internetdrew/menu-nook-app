@@ -16,6 +16,7 @@ export const PublicMenuPreview = () => {
   const stripeCheckoutMutation = useMutation(
     trpc.stripe.createCheckoutSession.mutationOptions(),
   );
+
   const { data: subscription } = useQuery(
     trpc.subscription.getForPlace.queryOptions(
       {
@@ -95,7 +96,8 @@ export const PublicMenuPreview = () => {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="sticky top-0 z-10 border-b border-yellow-300 bg-yellow-100 py-2 text-center text-sm text-yellow-800">
-        <div className="mx-auto flex max-w-screen-sm items-center justify-center">
+        <div className="mx-auto flex max-w-screen-sm items-center justify-center gap-2">
+          <span>This is a preview.</span>
           {subscriptionIsActive ? (
             <a href={`${liveSiteUrl}/${menu.place.id}`} className={linkClasses}>
               View Live Menu
@@ -105,10 +107,12 @@ export const PublicMenuPreview = () => {
               type="submit"
               variant="outline"
               onClick={handleSubscribe}
-              disabled={stripeCheckoutMutation.isPending}
+              disabled={
+                stripeCheckoutMutation.isPending ||
+                stripeCheckoutMutation.isSuccess
+              }
             >
-              {stripeCheckoutMutation.isPending && <Spinner />} Subscribe to
-              Publish
+              {stripeCheckoutMutation.isPending && <Spinner />} Enable Live Menu
             </Button>
           )}
         </div>
