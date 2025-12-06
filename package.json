@@ -11,7 +11,8 @@
     "build": "tsc -b tsconfig.api.json && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "gen:types": "dotenv -e .env -- cross-env supabase gen types typescript --project-id=$SUPABASE_PROJECT_ID > shared/database.types.ts"
+    "gen:types": "dotenv -e .env -- cross-env supabase gen types typescript --project-id=$SUPABASE_PROJECT_ID > shared/database.types.ts",
+    "stripe:webhook": "stripe listen --forward-to localhost:3000/api/stripe/webhook"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
