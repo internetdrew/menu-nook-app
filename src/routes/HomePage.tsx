@@ -7,8 +7,46 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Info } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { usePlaceContext } from "@/contexts/ActivePlaceContext";
 
 export const HomePage = () => {
+  const [params, setSearchParams] = useSearchParams();
+  const [showToast, setShowToast] = useState(false);
+  const navigate = useNavigate();
+  const { activePlace } = usePlaceContext();
+
+  useEffect(() => {
+    const successfulSubscription = params.get("success") === "true";
+
+    if (successfulSubscription) {
+      setShowToast(true);
+
+      const newParams = new URLSearchParams(params);
+      newParams.delete("success");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [params, setSearchParams]);
+
+  useEffect(() => {
+    if (!showToast) return;
+
+    toast("Your menu is live!", {
+      position: "top-center",
+      duration: 5000,
+      action: (
+        <Link
+          className="ml-auto text-pink-600 underline underline-offset-4"
+          to={`/menu/${activePlace?.id}`}
+        >
+          View Menu
+        </Link>
+      ),
+    });
+  }, [showToast, navigate, activePlace?.id]);
+
   return (
     <div>
       <main>
@@ -19,7 +57,7 @@ export const HomePage = () => {
               <Info className="ml-1 size-3" />
             </PopoverTrigger>
             <PopoverContent className="text-sm">
-              What you're managing, at a glance.
+              Everything you need to know about your menu, at a glance.
             </PopoverContent>
           </Popover>
           <ShareQRButtonDialog />
