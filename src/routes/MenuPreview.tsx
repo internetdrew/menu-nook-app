@@ -107,6 +107,7 @@ export const MenuPreview = () => {
               type="submit"
               variant="outline"
               onClick={handleSubscribe}
+              className="text-xs"
               disabled={
                 stripeCheckoutMutation.isPending ||
                 stripeCheckoutMutation.isSuccess
