@@ -19,6 +19,17 @@ export function NavMain() {
   const { setOpenMobile } = useSidebar();
   const { activePlace } = usePlaceContext();
 
+  const { data: subscription } = useQuery(
+    trpc.subscription.getForPlace.queryOptions(
+      {
+        placeId: activePlace?.id ?? "",
+      },
+      {
+        enabled: !!activePlace,
+      },
+    ),
+  );
+
   const { data: indexedCategories, isLoading: isLoadingCategories } = useQuery(
     trpc.category.getAllSortedByIndex.queryOptions(
       {
@@ -32,8 +43,10 @@ export function NavMain() {
 
   const viewItems = [
     {
-      title: "Menu Preview",
-      url: `/preview/menu/${activePlace?.id}`,
+      title: subscription ? "Live Menu" : "Menu Preview",
+      url: subscription
+        ? `/menu/${activePlace?.id}`
+        : `/preview/menu/${activePlace?.id}`,
       icon: Eye,
     },
   ];
