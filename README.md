@@ -1,7 +1,8 @@
 # MenuNook
 
-A simple, lightweight menu app built for pop-up sellers and small batch makers.  
-Customers get a clean, always up-to-date view of what you're offering, accessibly via QR code or link.
+A simple, lightweight menu app built for pop-up sellers and small batch makers.
+
+Customers get a clean, always up-to-date view of what you're offering, accessible via QR code or link.
 
 ## Features
 

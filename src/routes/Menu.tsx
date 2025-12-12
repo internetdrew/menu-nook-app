@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { toast } from "sonner";
 
-export const PublicMenuPreview = () => {
+export const Menu = ({ isPreview }: { isPreview: boolean }) => {
   const { placeId } = useParams<{ placeId: string }>();
   const { hash } = useLocation();
 
@@ -95,28 +95,35 @@ export const PublicMenuPreview = () => {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="sticky top-0 z-10 border-b border-yellow-300 bg-yellow-100 py-2 text-center text-sm text-yellow-800">
-        <div className="mx-auto flex max-w-screen-sm items-center justify-center gap-2">
-          <span>This is a preview.</span>
-          {subscriptionIsActive ? (
-            <a href={`${liveSiteUrl}/${menu.place.id}`} className={linkClasses}>
-              View Live Menu
-            </a>
-          ) : (
-            <Button
-              type="submit"
-              variant="outline"
-              onClick={handleSubscribe}
-              disabled={
-                stripeCheckoutMutation.isPending ||
-                stripeCheckoutMutation.isSuccess
-              }
-            >
-              {stripeCheckoutMutation.isPending && <Spinner />} Enable Live Menu
-            </Button>
-          )}
+      {isPreview && (
+        <div className="sticky top-0 z-10 border-b border-yellow-300 bg-yellow-100 py-2 text-center text-sm text-yellow-800">
+          <div className="mx-auto flex max-w-screen-sm items-center justify-center gap-2">
+            <span>This is a preview.</span>
+            {subscriptionIsActive ? (
+              <a
+                href={`${liveSiteUrl}/${menu.place.id}`}
+                className={linkClasses}
+              >
+                View Live Menu
+              </a>
+            ) : (
+              <Button
+                type="submit"
+                variant="outline"
+                onClick={handleSubscribe}
+                className="text-xs"
+                disabled={
+                  stripeCheckoutMutation.isPending ||
+                  stripeCheckoutMutation.isSuccess
+                }
+              >
+                {stripeCheckoutMutation.isPending && <Spinner />} Enable Live
+                Menu
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <main className="mx-auto w-full max-w-screen-sm px-4 py-8">
         <h1 className="text-center text-xl font-medium">{menu.place.name}</h1>
@@ -179,7 +186,7 @@ export const PublicMenuPreview = () => {
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-sm">
           <span>
             Powered by{" "}
-            <Link to="https://menulink.com" className={linkClasses}>
+            <Link to="https://menunook.com" className={linkClasses}>
               MenuNook
             </Link>
           </span>
