@@ -19,7 +19,7 @@ import { CategoriesPage } from "./routes/CategoriesPage.tsx";
 import { CategoryItemsPage } from "./routes/CategoryItemsPage.tsx";
 import { SettingsPage } from "./routes/SettingsPage.tsx";
 import { HomePage } from "./routes/HomePage.tsx";
-import NotFound from "./routes/NotFound.tsx";
+import { NotFound } from "./routes/NotFound.tsx";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +33,10 @@ const router = createBrowserRouter([
   {
     path: "/preview/menu/:placeId",
     element: <Menu isPreview={true} />,
+  },
+  {
+    path: "/menu/:placeId",
+    element: <Menu />,
   },
   {
     path: "/",
@@ -89,7 +93,14 @@ const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <NotFound />,
+    element: (
+      <NotFound
+        title="Page Not Found"
+        message="The page you're looking for does not exist."
+        href="/"
+        hrefText="Go back to Home"
+      />
+    ),
   },
 ]);
 
