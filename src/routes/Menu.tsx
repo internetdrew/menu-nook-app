@@ -8,8 +8,14 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { toast } from "sonner";
+import { NotFound } from "./NotFound";
+import MenuUnavailable from "./MenuUnavailable";
 
-export const Menu = ({ isPreview }: { isPreview: boolean }) => {
+interface MenuProps {
+  isPreview?: boolean;
+}
+
+export const Menu = ({ isPreview = false }: MenuProps) => {
   const { placeId } = useParams<{ placeId: string }>();
   const { hash } = useLocation();
 
@@ -69,10 +75,17 @@ export const Menu = ({ isPreview }: { isPreview: boolean }) => {
 
   if (error || !menu) {
     return (
-      <div className="container mx-auto py-8">
-        <p>Menu not found</p>
-      </div>
+      <NotFound
+        title="Menu Not Found"
+        message="The menu you're looking for does not exist."
+        href="/"
+        hrefText="Go back to Home"
+      />
     );
+  }
+
+  if (!isPreview && menu && !subscription) {
+    return <MenuUnavailable placeName={menu.place.name} />;
   }
 
   const handleSubscribe = async () => {
@@ -186,9 +199,9 @@ export const Menu = ({ isPreview }: { isPreview: boolean }) => {
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-sm">
           <span>
             Powered by{" "}
-            <Link to="https://menunook.com" className={linkClasses}>
+            <a href="https://menunook.com" className={linkClasses}>
               MenuNook
-            </Link>
+            </a>
           </span>
         </div>
       </footer>
