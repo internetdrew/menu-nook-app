@@ -10,12 +10,12 @@ import { Info } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
 export const HomePage = () => {
   const [params, setSearchParams] = useSearchParams();
   const [showToast, setShowToast] = useState(false);
-  const { activePlace } = usePlaceContext();
+  const { activeMenu } = useMenuContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,13 +39,13 @@ export const HomePage = () => {
       action: (
         <Link
           className="ml-auto text-pink-600 underline underline-offset-4"
-          to={`/menu/${activePlace?.id}`}
+          to={`/menu/${activeMenu?.id}`}
         >
           View Menu
         </Link>
       ),
     });
-  }, [showToast, navigate, activePlace?.id]);
+  }, [showToast, navigate, activeMenu?.id]);
 
   return (
     <div>
