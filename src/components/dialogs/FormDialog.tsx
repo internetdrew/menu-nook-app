@@ -11,7 +11,7 @@ interface DialogProps {
   description?: string;
   isDialogOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
-  formComponent?: React.JSX.Element;
+  formComponent: React.JSX.Element;
 }
 
 const FormDialog = ({
