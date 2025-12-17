@@ -13,27 +13,31 @@ import {
   BreadcrumbList,
 } from "./components/ui/breadcrumb";
 import { Toaster } from "./components/ui/sonner";
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./components/ui/card";
-import { Button } from "./components/ui/button";
+
 import { useState } from "react";
 import { Spinner } from "./components/ui/spinner";
-import FormDialog from "./components/dialogs/FormDialog";
 import { CreateBusinessForm } from "./components/forms/CreateBusinessForm";
 import { UserFeedbackTrigger } from "./components/UserFeedbackTrigger";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "./utils/trpc";
+import { CreateMenuForm } from "./components/forms/CreateMenuForm";
+import EmptyStatePrompt from "./components/EmptyStatePrompt";
 
 function App() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: business, isLoading } = useQuery(
     trpc.business.getForUser.queryOptions(),
   );
-
+  const { data: menus, isLoading: menusLoading } = useQuery(
+    trpc.menu.getAllForBusiness.queryOptions(
+      {
+        businessId: business?.id || "",
+      },
+      {
+        enabled: !!business,
+      },
+    ),
+  );
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -62,12 +66,32 @@ function App() {
           </div>
         </header>
         <div className="p-4 pt-0">
-          {isLoading ? (
+          {isLoading || menusLoading ? (
             <Spinner className="mx-auto mt-36 size-6 text-pink-600" />
-          ) : business ? (
-            <Outlet />
+          ) : !business ? (
+            <EmptyStatePrompt
+              cardTitle="No Business Found"
+              cardDescription="Add your business to start managing your menus."
+              buttonText="Create Business"
+              isDialogOpen={isDialogOpen}
+              setIsDialogOpen={setIsDialogOpen}
+              formComponent={CreateBusinessForm}
+              formDialogTitle="Create Business"
+              formDialogDescription="Add your business to start managing your menus."
+            />
+          ) : menus?.length === 0 ? (
+            <EmptyStatePrompt
+              cardTitle="No Menus Found"
+              cardDescription="Add your first menu to get started."
+              buttonText="Create Menu"
+              isDialogOpen={isDialogOpen}
+              setIsDialogOpen={setIsDialogOpen}
+              formComponent={CreateMenuForm}
+              formDialogTitle="Create Menu"
+              formDialogDescription="Add your first menu to get started."
+            />
           ) : (
-            <CreateBusinessPrompt />
+            <Outlet />
           )}
           <Toaster />
         </div>
@@ -77,34 +101,3 @@ function App() {
 }
 
 export default App;
-
-const CreateBusinessPrompt = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  return (
-    <>
-      <Card className="mx-auto mt-28 max-w-sm text-center">
-        <CardHeader className="text-center">
-          <CardTitle>No Business Found</CardTitle>
-          <CardDescription>
-            Add your business to start managing your menus.
-          </CardDescription>
-        </CardHeader>
-        <CardFooter>
-          <Button className="w-full" onClick={() => setIsDialogOpen(true)}>
-            Create Business
-          </Button>
-        </CardFooter>
-      </Card>
-      <FormDialog
-        isDialogOpen={isDialogOpen}
-        setIsDialogOpen={setIsDialogOpen}
-        title="Create Business"
-        description="Fill out the form below to create your business."
-        formComponent={
-          <CreateBusinessForm onSuccess={() => setIsDialogOpen(false)} />
-        }
-      />
-    </>
-  );
-};
