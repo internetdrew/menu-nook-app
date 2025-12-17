@@ -16,6 +16,7 @@ import { menuRouter } from "./routers/menuRouter";
 import { stripeRouter } from "./routers/stripeRouter";
 import { subscriptionRouter } from "./routers/subscriptionRouter";
 import { stripeWebhookHandler } from "./utils/stripe";
+import { feedbackRouter } from "./routers/feedbackRouter";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -26,6 +27,7 @@ export const appRouter = router({
   item: itemRouter,
   menu: menuRouter,
   stripe: stripeRouter,
+  feedback: feedbackRouter,
   subscription: subscriptionRouter,
 });
 
