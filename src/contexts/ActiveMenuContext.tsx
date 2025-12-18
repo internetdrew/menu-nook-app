@@ -24,10 +24,19 @@ const MenuContext = createContext<MenuContextValue | undefined>(undefined);
 export const MenuProvider: React.FC<React.PropsWithChildren> = ({
   children,
 }) => {
+  const { data: business, isLoading: businessLoading } = useQuery(
+    trpc.business.getForUser.queryOptions(),
+  );
+
   const { data, isLoading } = useQuery(
-    trpc.menu.getAllForBusiness.queryOptions({
-      businessId: "some-business-id",
-    }),
+    trpc.menu.getAllForBusiness.queryOptions(
+      {
+        businessId: business?.id ?? "",
+      },
+      {
+        enabled: !businessLoading && !!business,
+      },
+    ),
   );
   const [activeMenu, setActiveMenuState] = useState<Menu | null>(null);
 
