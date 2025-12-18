@@ -111,9 +111,9 @@ const ShareQRButtonDialog = ({
         <div className="my-4 flex justify-center">
           {data?.public_url ? (
             isLoading ? (
-              <Skeleton className="h-48 w-48" />
+              <Skeleton className="h-52 w-52" />
             ) : (
-              <img src={data.public_url} alt="QR Code" className="scale-80" />
+              <img src={data.public_url} alt="QR Code" className="h-52 w-52" />
             )
           ) : (
             <p className="text-muted-foreground text-center text-sm">
@@ -122,7 +122,7 @@ const ShareQRButtonDialog = ({
           )}
         </div>
         <DialogFooter>
-          <div className="flex w-full gap-2 sm:flex-row sm:gap-4">
+          <div className="flex w-full flex-col gap-2">
             <Button
               variant={"outline"}
               className="flex-1"
