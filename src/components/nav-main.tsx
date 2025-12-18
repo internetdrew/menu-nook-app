@@ -7,7 +7,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
@@ -15,28 +15,20 @@ import { Link, NavLink } from "react-router";
 import { Skeleton } from "./ui/skeleton";
 
 export function NavMain() {
-  const { places } = usePlaceContext();
+  const { menus, activeMenu } = useMenuContext();
   const { setOpenMobile } = useSidebar();
-  const { activePlace } = usePlaceContext();
 
   const { data: subscription } = useQuery(
-    trpc.subscription.getForPlace.queryOptions(
-      {
-        placeId: activePlace?.id ?? "",
-      },
-      {
-        enabled: !!activePlace,
-      },
-    ),
+    trpc.subscription.getForUser.queryOptions(),
   );
 
   const { data: indexedCategories, isLoading: isLoadingCategories } = useQuery(
-    trpc.category.getAllSortedByIndex.queryOptions(
+    trpc.menuCategory.getAllSortedByIndex.queryOptions(
       {
-        placeId: activePlace?.id ?? "",
+        menuId: activeMenu?.id ?? "",
       },
       {
-        enabled: !!activePlace,
+        enabled: !!activeMenu,
       },
     ),
   );
@@ -45,13 +37,13 @@ export function NavMain() {
     {
       title: subscription ? "Live Menu" : "Menu Preview",
       url: subscription
-        ? `/menu/${activePlace?.id}`
-        : `/preview/menu/${activePlace?.id}`,
+        ? `/menu/${activeMenu?.id}`
+        : `/preview/menu/${activeMenu?.id}`,
       icon: Eye,
     },
   ];
 
-  if (!places.length) {
+  if (!menus.length) {
     return null;
   }
 
