@@ -1,19 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "../ui/skeleton";
 
-const ItemsCard = () => {
-  const { activePlace } = usePlaceContext();
-
+const ItemsCard = ({ activeMenuId }: { activeMenuId: string }) => {
   const { data: count, isLoading } = useQuery(
-    trpc.item.getCountByPlaceId.queryOptions(
+    trpc.menuCategoryItem.getCountByMenuId.queryOptions(
       {
-        placeId: activePlace?.id ?? "",
+        menuId: activeMenuId,
       },
       {
-        enabled: !!activePlace,
+        enabled: !!activeMenuId,
       },
     ),
   );
