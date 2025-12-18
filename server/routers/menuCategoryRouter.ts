@@ -80,7 +80,7 @@ export const menuCategoryRouter = router({
       const { data, error } = await supabaseAdminClient
         .from("menu_category_sort_indexes")
         .select(`*, category:menu_categories(*)`)
-        .eq("category.menu_id", menuId)
+        .eq("menu_id", menuId)
         .order("order_index", { ascending: true });
 
       if (error) {
