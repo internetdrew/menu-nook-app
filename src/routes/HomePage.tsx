@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import CategoriesCard from "@/components/home/CategoriesCard";
 import ItemsCard from "@/components/home/ItemsCard";
 import ShareQRButtonDialog from "@/components/home/ShareQRButtonDialog";
@@ -8,7 +9,6 @@ import {
 } from "@/components/ui/popover";
 import { Info } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
