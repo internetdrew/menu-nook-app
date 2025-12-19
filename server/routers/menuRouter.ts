@@ -125,4 +125,74 @@ export const menuRouter = router({
 
       return data;
     }),
+  getById: protectedProcedure
+    .input(
+      z.object({
+        menuId: z.uuid(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { menuId } = input;
+
+      const { data: menu, error: menuError } = await supabaseAdminClient
+        .from("menus")
+        .select(
+          `
+        *,
+        business:businesses(*)
+      `,
+        )
+        .eq("id", menuId)
+        .single();
+
+      if (menuError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch menu: ${menuError.message}`,
+        });
+      }
+
+      const { data: sortedCategories, error: catError } =
+        await supabaseAdminClient
+          .from("menu_category_sort_indexes")
+          .select(
+            `
+          *,
+          category:menu_categories(*, 
+            items:menu_category_items(
+              *,
+              sort_index:menu_category_item_sort_indexes(order_index)
+            )
+          )
+        `,
+          )
+          .eq("menu_id", menuId)
+          .order("order_index", { ascending: true });
+
+      if (catError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch category sort order: ${catError.message}`,
+        });
+      }
+
+      const categoriesWithSortedItems = sortedCategories.map((row) => {
+        const items =
+          row.category.items?.sort((a, b) => {
+            const ai = a.sort_index?.[0]?.order_index ?? 0;
+            const bi = b.sort_index?.[0]?.order_index ?? 0;
+            return ai - bi;
+          }) ?? [];
+
+        return {
+          ...row.category,
+          items,
+        };
+      });
+
+      return {
+        ...menu,
+        menu_categories: categoriesWithSortedItems,
+      };
+    }),
 });
