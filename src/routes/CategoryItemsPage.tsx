@@ -287,7 +287,10 @@ const SortableMenuItem = ({
             )}
           </span>
           <span className="text-muted-foreground mt-1">
-            ${itemIndex?.item?.price.toFixed(2)}
+            {new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+            }).format(itemIndex?.item?.price ?? 0)}
           </span>
         </ItemContent>
         <ItemActions>
