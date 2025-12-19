@@ -1,9 +1,9 @@
 import { Button } from "./ui/button";
 import FormDialog from "./dialogs/FormDialog";
 import { useState } from "react";
-import { FeedbackForm } from "./forms/FeedbackForm";
+import { UserFeedbackForm } from "./forms/UserFeedbackForm";
 
-const FeedbackTrigger = () => {
+export const UserFeedbackTrigger = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
@@ -21,11 +21,9 @@ const FeedbackTrigger = () => {
         isDialogOpen={isDialogOpen}
         setIsDialogOpen={setIsDialogOpen}
         formComponent={
-          <FeedbackForm onSuccess={() => setIsDialogOpen(false)} />
+          <UserFeedbackForm onSuccess={() => setIsDialogOpen(false)} />
         }
       />
     </>
   );
 };
-
-export default FeedbackTrigger;

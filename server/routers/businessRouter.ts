@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { supabaseAdminClient } from "../supabase";
 
-export const placeRouter = router({
+export const businessRouter = router({
   create: protectedProcedure
     .input(
       z.object({
@@ -12,7 +12,7 @@ export const placeRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { data: place, error } = await supabaseAdminClient
-        .from("places")
+        .from("businesses")
         .insert({
           name: input.name,
           user_id: ctx.user.id,
@@ -29,11 +29,12 @@ export const placeRouter = router({
 
       return place;
     }),
-  getAll: protectedProcedure.query(async ({ ctx }) => {
+  getForUser: protectedProcedure.query(async ({ ctx }) => {
     const { data, error } = await supabaseAdminClient
-      .from("places")
+      .from("businesses")
       .select()
-      .eq("user_id", ctx.user.id);
+      .eq("user_id", ctx.user.id)
+      .maybeSingle();
 
     if (error) {
       throw new TRPCError({
@@ -47,14 +48,14 @@ export const placeRouter = router({
   delete: protectedProcedure
     .input(
       z.object({
-        id: z.uuid(),
+        businessId: z.uuid(),
       }),
     )
     .mutation(async ({ input }) => {
       const { data, error } = await supabaseAdminClient
-        .from("places")
+        .from("businesses")
         .delete()
-        .eq("id", input.id)
+        .eq("id", input.businessId)
         .select()
         .single();
 

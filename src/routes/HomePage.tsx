@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import CategoriesCard from "@/components/home/CategoriesCard";
 import ItemsCard from "@/components/home/ItemsCard";
 import ShareQRButtonDialog from "@/components/home/ShareQRButtonDialog";
@@ -8,14 +9,13 @@ import {
 } from "@/components/ui/popover";
 import { Info } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
 export const HomePage = () => {
   const [params, setSearchParams] = useSearchParams();
   const [showToast, setShowToast] = useState(false);
-  const { activePlace } = usePlaceContext();
+  const { activeMenu } = useMenuContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,13 +39,13 @@ export const HomePage = () => {
       action: (
         <Link
           className="ml-auto text-pink-600 underline underline-offset-4"
-          to={`/menu/${activePlace?.id}`}
+          to={`/menu/${activeMenu?.id}`}
         >
           View Menu
         </Link>
       ),
     });
-  }, [showToast, navigate, activePlace?.id]);
+  }, [showToast, navigate, activeMenu?.id]);
 
   return (
     <div>
@@ -60,12 +60,21 @@ export const HomePage = () => {
               Everything you need to know about your menu, at a glance.
             </PopoverContent>
           </Popover>
-          <ShareQRButtonDialog />
+          {activeMenu && (
+            <ShareQRButtonDialog
+              activeMenuId={activeMenu.id}
+              activeMenuName={activeMenu.name}
+            />
+          )}
         </div>
 
         <div className="my-4 grid grid-cols-1 items-start gap-4 sm:grid-cols-2 md:grid-cols-3">
-          <CategoriesCard />
-          <ItemsCard />
+          {activeMenu && (
+            <>
+              <CategoriesCard activeMenuId={activeMenu.id} />
+              <ItemsCard activeMenuId={activeMenu.id} />
+            </>
+          )}
         </div>
       </main>
     </div>

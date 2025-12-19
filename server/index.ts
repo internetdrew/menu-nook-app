@@ -8,26 +8,26 @@ import compression from "compression";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { createServerSupabaseClient } from "./supabase";
-import { placeRouter } from "./routers/placeRouter";
-import { qrCodeRouter } from "./routers/qrRouter";
-import { categoryRouter } from "./routers/categoryRouter";
-import { itemRouter } from "./routers/itemRouter";
 import { menuRouter } from "./routers/menuRouter";
+import { menuQRCodeRouter } from "./routers/menuQRCodeRouter";
+import { menuCategoryRouter } from "./routers/menuCategoryRouter";
+import { menuCategoryItemRouter } from "./routers/menuCategoryItemRouter";
 import { stripeRouter } from "./routers/stripeRouter";
 import { subscriptionRouter } from "./routers/subscriptionRouter";
 import { stripeWebhookHandler } from "./utils/stripe";
-import { feedbackRouter } from "./routers/feedbackRouter";
+import { userFeedbackRouter } from "./routers/userFeedbackRouter";
+import { businessRouter } from "./routers/businessRouter";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 export const appRouter = router({
-  place: placeRouter,
-  qr: qrCodeRouter,
-  category: categoryRouter,
-  item: itemRouter,
+  business: businessRouter,
   menu: menuRouter,
+  menuQRCode: menuQRCodeRouter,
+  menuCategory: menuCategoryRouter,
+  menuCategoryItem: menuCategoryItemRouter,
   stripe: stripeRouter,
-  feedback: feedbackRouter,
+  userFeedback: userFeedbackRouter,
   subscription: subscriptionRouter,
 });
 

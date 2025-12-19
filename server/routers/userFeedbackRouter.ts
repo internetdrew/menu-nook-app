@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { supabaseAdminClient } from "../supabase";
 
-export const feedbackRouter = router({
+export const userFeedbackRouter = router({
   submit: protectedProcedure
     .input(
       z.object({
@@ -15,7 +15,7 @@ export const feedbackRouter = router({
 
       const { data: newFeedback, error: feedbackError } =
         await supabaseAdminClient
-          .from("feedback")
+          .from("user_feedback")
           .insert({
             user_id: ctx.user.id,
             feedback,

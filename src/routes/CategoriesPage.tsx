@@ -14,7 +14,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { queryClient, trpc } from "@/utils/trpc";
 import {
   closestCenter,
@@ -42,7 +42,7 @@ import { toast } from "sonner";
 import { Link } from "react-router";
 
 type CategoryIndex =
-  inferRouterOutputs<AppRouter>["category"]["getAllSortedByIndex"][number];
+  inferRouterOutputs<AppRouter>["menuCategory"]["getAllSortedByIndex"][number];
 
 export const CategoriesPage = () => {
   const [renderCategoryDialog, setRenderCategoryDialog] = useState(false);
@@ -56,17 +56,17 @@ export const CategoriesPage = () => {
     useState(false);
 
   const updateCategoryOrderMutation = useMutation(
-    trpc.category.updateOrder.mutationOptions(),
+    trpc.menuCategory.updateOrder.mutationOptions(),
   );
-  const { activePlace } = usePlaceContext();
+  const { activeMenu } = useMenuContext();
 
   const { data, isLoading: isLoadingCategories } = useQuery(
-    trpc.category.getAllSortedByIndex.queryOptions(
+    trpc.menuCategory.getAllSortedByIndex.queryOptions(
       {
-        placeId: activePlace?.id ?? "",
+        menuId: activeMenu?.id ?? "",
       },
       {
-        enabled: !!activePlace,
+        enabled: !!activeMenu,
       },
     ),
   );
@@ -81,7 +81,7 @@ export const CategoriesPage = () => {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (over && active.id !== over.id) {
+    if (over && active?.id !== over?.id) {
       setIndexedCategories((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
@@ -90,7 +90,7 @@ export const CategoriesPage = () => {
 
         updateCategoryOrderMutation.mutateAsync(
           {
-            placeId: activePlace!.id,
+            menuId: activeMenu?.id ?? null,
             newCategoryOrder: newOrder.map((catIndex) => ({
               indexId: catIndex.id,
               categoryId: catIndex.category.id,
@@ -99,7 +99,7 @@ export const CategoriesPage = () => {
           {
             onSuccess: () => {
               queryClient.invalidateQueries({
-                queryKey: trpc.category.getAllSortedByIndex.queryKey(),
+                queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
               });
               toast.success("Category order updated.");
             },
@@ -164,7 +164,7 @@ export const CategoriesPage = () => {
                 ))
               : indexedCategories.map((index) => (
                   <SortableCategoryItem
-                    key={index.id}
+                    key={index?.id}
                     categoryIndex={index}
                     onEditButtonClick={() => {
                       setSelectedCategory(index.category);
@@ -238,7 +238,7 @@ const SortableCategoryItem = ({
         </button>
         <ItemContent>
           <ItemTitle className="select-none">
-            <Link to={`/dashboard/categories/${categoryIndex.category.id}`}>
+            <Link to={`/dashboard/categories/${categoryIndex?.category?.id}`}>
               {categoryIndex?.category?.name}
             </Link>
           </ItemTitle>

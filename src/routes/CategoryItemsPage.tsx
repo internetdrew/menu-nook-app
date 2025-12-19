@@ -5,7 +5,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { queryClient, trpc } from "@/utils/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ClipboardPen, GripVertical, Info, Trash } from "lucide-react";
@@ -43,17 +43,17 @@ import {
 } from "@/components/ui/popover";
 
 type ItemIndex =
-  inferRouterOutputs<AppRouter>["item"]["getAllForCategorySortedByIndex"][number];
+  inferRouterOutputs<AppRouter>["menuCategoryItem"]["getSortedForCategory"][number];
 
 export const CategoryItemsPage = () => {
-  const { activePlace } = usePlaceContext();
+  const { activeMenu } = useMenuContext();
   const { categoryId } = useParams<{ categoryId: string }>();
   const parsedCategoryId = categoryId ? parseInt(categoryId, 10) : null;
 
   const { data: category, isLoading: isLoadingCategory } = useQuery(
-    trpc.category.getById.queryOptions(
+    trpc.menuCategory.getById.queryOptions(
       { categoryId: parsedCategoryId ?? 0 },
-      { enabled: parsedCategoryId != null && !!activePlace },
+      { enabled: parsedCategoryId != null && !!activeMenu },
     ),
   );
 
@@ -68,11 +68,11 @@ export const CategoryItemsPage = () => {
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
 
   const updateItemOrderMutation = useMutation(
-    trpc.item.updateOrder.mutationOptions(),
+    trpc.menuCategoryItem.updateSortOrder.mutationOptions(),
   );
 
   const { data: indexedItems, isLoading: isLoadingItems } = useQuery(
-    trpc.item.getAllForCategorySortedByIndex.queryOptions(
+    trpc.menuCategoryItem.getSortedForCategory.queryOptions(
       {
         categoryId: parsedCategoryId,
       },
@@ -114,7 +114,7 @@ export const CategoryItemsPage = () => {
           {
             onSuccess: () => {
               queryClient.invalidateQueries({
-                queryKey: trpc.item.getAllForCategorySortedByIndex.queryKey({
+                queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey({
                   categoryId: category.id,
                 }),
               });
@@ -287,7 +287,10 @@ const SortableMenuItem = ({
             )}
           </span>
           <span className="text-muted-foreground mt-1">
-            ${itemIndex?.item?.price.toFixed(2)}
+            {new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+            }).format(itemIndex?.item?.price ?? 0)}
           </span>
         </ItemContent>
         <ItemActions>

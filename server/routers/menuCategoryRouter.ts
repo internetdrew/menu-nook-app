@@ -3,22 +3,22 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { supabaseAdminClient } from "../supabase";
 
-export const categoryRouter = router({
+export const menuCategoryRouter = router({
   create: protectedProcedure
     .input(
       z.object({
-        placeId: z.uuid(),
+        menuId: z.uuid(),
         name: z.string().min(1).max(100),
         description: z.string().max(255).optional(),
       }),
     )
     .mutation(async ({ input }) => {
-      const { name, placeId, description } = input;
+      const { name, menuId, description } = input;
 
       const { data, error } = await supabaseAdminClient
-        .from("category_sort_indexes")
+        .from("menu_category_sort_indexes")
         .select("order_index")
-        .eq("place_id", placeId)
+        .eq("menu_id", menuId)
         .order("order_index", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -37,10 +37,10 @@ export const categoryRouter = router({
 
       const { data: newCategory, error: createCategoryError } =
         await supabaseAdminClient
-          .from("place_categories")
+          .from("menu_categories")
           .insert({
             name,
-            place_id: placeId,
+            menu_id: menuId,
             description,
           })
           .select()
@@ -54,10 +54,10 @@ export const categoryRouter = router({
       }
 
       const { error: sortIndexError } = await supabaseAdminClient
-        .from("category_sort_indexes")
+        .from("menu_category_sort_indexes")
         .insert({
           category_id: newCategory.id,
-          place_id: placeId,
+          menu_id: menuId,
           order_index: nextIndex,
         });
 
@@ -72,15 +72,15 @@ export const categoryRouter = router({
   getAllSortedByIndex: protectedProcedure
     .input(
       z.object({
-        placeId: z.uuid(),
+        menuId: z.uuid(),
       }),
     )
     .query(async ({ input }) => {
-      const { placeId } = input;
+      const { menuId } = input;
       const { data, error } = await supabaseAdminClient
-        .from("category_sort_indexes")
-        .select(`*, category:place_categories(*, place_items(*))`)
-        .eq("place_id", placeId)
+        .from("menu_category_sort_indexes")
+        .select(`*, category:menu_categories(*)`)
+        .eq("menu_id", menuId)
         .order("order_index", { ascending: true });
 
       if (error) {
@@ -103,7 +103,7 @@ export const categoryRouter = router({
       const { categoryId, name, description } = input;
 
       const { data, error: updateCategoryError } = await supabaseAdminClient
-        .from("place_categories")
+        .from("menu_categories")
         .update({
           name,
           description,
@@ -131,7 +131,7 @@ export const categoryRouter = router({
       const { categoryId } = input;
 
       const { data, error: deleteCategoryError } = await supabaseAdminClient
-        .from("place_categories")
+        .from("menu_categories")
         .delete()
         .eq("id", categoryId)
         .select()
@@ -149,7 +149,7 @@ export const categoryRouter = router({
   updateOrder: protectedProcedure
     .input(
       z.object({
-        placeId: z.string(),
+        menuId: z.uuid().nullable(),
         newCategoryOrder: z.array(
           z.object({
             indexId: z.number(),
@@ -159,14 +159,21 @@ export const categoryRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const { placeId, newCategoryOrder } = input;
+      const { menuId, newCategoryOrder } = input;
+
+      if (menuId === null) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Menu ID cannot be null when updating category order.",
+        });
+      }
 
       const offset = 10000;
       for (let index = 0; index < newCategoryOrder.length; index++) {
         const { indexId } = newCategoryOrder[index];
 
         const { error } = await supabaseAdminClient
-          .from("category_sort_indexes")
+          .from("menu_category_sort_indexes")
           .update({ order_index: offset + index })
           .eq("id", indexId)
           .select();
@@ -183,9 +190,9 @@ export const categoryRouter = router({
         const { categoryId } = newCategoryOrder[index];
 
         const { error } = await supabaseAdminClient
-          .from("category_sort_indexes")
+          .from("menu_category_sort_indexes")
           .update({ order_index: index })
-          .eq("place_id", placeId)
+          .eq("menu_id", menuId)
           .eq("category_id", categoryId)
           .select();
 
@@ -208,7 +215,7 @@ export const categoryRouter = router({
     .query(async ({ input }) => {
       const { categoryId } = input;
       const { data, error } = await supabaseAdminClient
-        .from("place_categories")
+        .from("menu_categories")
         .select("*")
         .eq("id", categoryId)
         .single();
@@ -221,18 +228,18 @@ export const categoryRouter = router({
       }
       return data;
     }),
-  getCountByPlaceId: protectedProcedure
+  getCountByMenuId: protectedProcedure
     .input(
       z.object({
-        placeId: z.string(),
+        menuId: z.uuid(),
       }),
     )
     .query(async ({ input }) => {
-      const { placeId } = input;
+      const { menuId } = input;
       const { count, error } = await supabaseAdminClient
-        .from("place_categories")
+        .from("menu_categories")
         .select("id", { count: "exact", head: true })
-        .eq("place_id", placeId);
+        .eq("menu_id", menuId);
 
       if (error) {
         throw new TRPCError({

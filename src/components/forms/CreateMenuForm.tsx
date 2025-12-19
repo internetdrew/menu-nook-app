@@ -13,8 +13,9 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { queryClient, trpc } from "@/utils/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Spinner } from "../ui/spinner";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -22,10 +23,9 @@ const formSchema = z.object({
   }),
 });
 
-const CreatePlaceForm = ({ onSuccess }: { onSuccess: () => void }) => {
-  const createPlace = useMutation(trpc.place.create.mutationOptions());
-  const deletePlace = useMutation(trpc.place.delete.mutationOptions());
-  const createQRCode = useMutation(trpc.qr.create.mutationOptions());
+export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
+  const createMenu = useMutation(trpc.menu.create.mutationOptions());
+  const { data: business } = useQuery(trpc.business.getForUser.queryOptions());
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -35,34 +35,27 @@ const CreatePlaceForm = ({ onSuccess }: { onSuccess: () => void }) => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const place = await createPlace.mutateAsync(
-      { ...values },
+    if (!business) {
+      toast.error("No business found. Please create a business first.");
+      return;
+    }
+
+    await createMenu.mutateAsync(
+      { ...values, businessId: business.id, baseUrl: window.location.origin },
       {
         onError: (error) => {
-          console.error("Failed to create place:", error);
-          toast.error("Failed to create place. Please try again.");
+          console.error("Failed to create menu:", error);
+          toast.error("Failed to create menu. Please try again.");
+        },
+        onSuccess: async (menu) => {
+          await queryClient.invalidateQueries({
+            queryKey: trpc.menu.getAllForBusiness.queryKey(),
+          });
+          toast.success(`${menu.name} created successfully!`);
+          onSuccess();
         },
       },
     );
-    await createQRCode.mutateAsync(
-      {
-        placeId: place.id,
-        baseUrl: window.location.origin,
-      },
-      {
-        onError: async (error) => {
-          console.error("Failed to create QR code:", error);
-          await deletePlace.mutateAsync({ id: place.id });
-          toast.error("Failed to create place. Please try again.");
-        },
-      },
-    );
-
-    await queryClient.invalidateQueries({
-      queryKey: trpc.place.getAll.queryKey(),
-    });
-    toast.success("Place created successfully!");
-    onSuccess();
   };
 
   return (
@@ -73,12 +66,12 @@ const CreatePlaceForm = ({ onSuccess }: { onSuccess: () => void }) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Menu Name</FormLabel>
               <FormControl>
-                <Input placeholder="The Blonde Wolf" {...field} />
+                <Input placeholder="E.g. Dinner Menu" {...field} />
               </FormControl>
               <FormDescription>
-                Make sure this is the name your customers will recognize.
+                This will allow you to discern between multiple menus.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -86,12 +79,10 @@ const CreatePlaceForm = ({ onSuccess }: { onSuccess: () => void }) => {
         />
         <div className="flex justify-end">
           <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Creating..." : "Create"}
+            {form.formState.isSubmitting && <Spinner />} Create
           </Button>
         </div>
       </form>
     </Form>
   );
 };
-
-export default CreatePlaceForm;

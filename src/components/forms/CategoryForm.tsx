@@ -16,7 +16,7 @@ import { queryClient, trpc } from "@/utils/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import type { CategoryIndex } from "../ManageCategoriesDropdown";
 
 interface CategoryFormProps {
@@ -42,9 +42,13 @@ const formSchema = z.object({
 });
 
 const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
-  const createCategory = useMutation(trpc.category.create.mutationOptions());
-  const updateCategory = useMutation(trpc.category.update.mutationOptions());
-  const { activePlace } = usePlaceContext();
+  const createCategory = useMutation(
+    trpc.menuCategory.create.mutationOptions(),
+  );
+  const updateCategory = useMutation(
+    trpc.menuCategory.update.mutationOptions(),
+  );
+  const { activeMenu } = useMenuContext();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,7 +65,7 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
         {
           onSuccess: () => {
             queryClient.invalidateQueries({
-              queryKey: trpc.category.getAllSortedByIndex.queryKey(),
+              queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
             });
             toast.success("Category updated successfully!");
             onSuccess();
@@ -74,11 +78,11 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
       );
     } else {
       await createCategory.mutateAsync(
-        { placeId: activePlace?.id ?? "", ...values },
+        { menuId: activeMenu?.id ?? "", ...values },
         {
           onSuccess: () => {
             queryClient.invalidateQueries({
-              queryKey: trpc.category.getAllSortedByIndex.queryKey(),
+              queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
             });
             toast.success("Category created successfully!");
             onSuccess();

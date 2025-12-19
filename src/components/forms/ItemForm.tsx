@@ -18,16 +18,16 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "server";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
-type Category = inferRouterOutputs<AppRouter>["category"]["getById"];
+type MenuCategory = inferRouterOutputs<AppRouter>["menuCategory"]["getById"];
 type Item =
-  inferRouterOutputs<AppRouter>["item"]["getAllForCategorySortedByIndex"][number]["item"];
+  inferRouterOutputs<AppRouter>["menuCategoryItem"]["getSortedForCategory"][number]["item"];
 
 interface ItemFormProps {
   onSuccess: () => void;
   item?: Item | null;
-  chosenCategory: Category;
+  chosenCategory: MenuCategory;
 }
 
 const formSchema = z.object({
@@ -56,8 +56,10 @@ const formSchema = z.object({
 
 const ItemForm = (props: ItemFormProps) => {
   const { onSuccess, item, chosenCategory } = props;
-  const createItem = useMutation(trpc.item.create.mutationOptions());
-  const { activePlace } = usePlaceContext();
+  const createItem = useMutation(
+    trpc.menuCategoryItem.create.mutationOptions(),
+  );
+  const { activeMenu } = useMenuContext();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,7 +71,9 @@ const ItemForm = (props: ItemFormProps) => {
     },
   });
 
-  const updateItem = useMutation(trpc.item.update.mutationOptions());
+  const updateItem = useMutation(
+    trpc.menuCategoryItem.update.mutationOptions(),
+  );
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (item) {
@@ -79,13 +83,12 @@ const ItemForm = (props: ItemFormProps) => {
           name: values.name,
           description: values.description,
           price: values.price,
-          categoryId: chosenCategory?.id,
-          placeId: activePlace?.id || "",
+          menuCategoryId: chosenCategory?.id,
         },
         {
           onSuccess: () => {
             queryClient.invalidateQueries({
-              queryKey: trpc.item.getAllForCategorySortedByIndex.queryKey(),
+              queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
             });
             toast.success("Item updated successfully!");
             onSuccess();
@@ -105,13 +108,13 @@ const ItemForm = (props: ItemFormProps) => {
         name: values.name,
         description: values.description,
         price: values.price,
-        categoryId: chosenCategory.id,
-        placeId: activePlace?.id || "",
+        menuCategoryId: chosenCategory.id,
+        menuId: activeMenu?.id || "",
       },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({
-            queryKey: trpc.item.getAllForCategorySortedByIndex.queryKey(),
+            queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
           });
           toast.success("Item created successfully!");
           onSuccess();

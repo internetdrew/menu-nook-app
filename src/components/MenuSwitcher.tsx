@@ -1,4 +1,5 @@
-import { ChevronsUpDown, MapPin, Plus } from "lucide-react";
+import { useState } from "react";
+import { ChevronsUpDown, FolderTree, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,30 +14,39 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
+import FormDialog from "./dialogs/FormDialog";
+import { CreateMenuForm } from "./forms/CreateMenuForm";
+import { useNavigate } from "react-router";
 
-export function PlaceSwitcher() {
+export function MenuSwitcher() {
   const { isMobile } = useSidebar();
-  const { places, activePlace, setActivePlace } = usePlaceContext();
+  const navigate = useNavigate();
+  const [renderDropdown, setRenderDropdown] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const { menus, activeMenu, setActiveMenu } = useMenuContext();
+
+  const triggerDialog = () => {
+    setRenderDropdown(false);
+    setIsDialogOpen(true);
+  };
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={renderDropdown} onOpenChange={setRenderDropdown}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <MapPin className="size-4" />
+                <FolderTree className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
-                  {activePlace?.name ?? "No place selected"}
-                </span>
-                <span className="truncate text-xs">
-                  {/* {activePlace?.street_address} */}
+                  {activeMenu?.name ?? "No menu selected"}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
@@ -49,27 +59,41 @@ export function PlaceSwitcher() {
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Places
+              Menus
             </DropdownMenuLabel>
-            {places.map((place) => (
+            {menus.map((menu) => (
               <DropdownMenuItem
-                key={place.id}
-                onClick={() => setActivePlace(place)}
+                key={menu.id}
+                onClick={() => {
+                  setActiveMenu(menu);
+                  navigate("/");
+                }}
                 className="gap-2 p-2"
               >
-                {place.name}
+                {menu.name}
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
+            <DropdownMenuItem className="gap-2 p-2" onClick={triggerDialog}>
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
               </div>
-              <div className="text-muted-foreground font-medium">Add Place</div>
+              <div className="text-muted-foreground font-medium">
+                Create Menu
+              </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+      <FormDialog
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+        title="Create Menu"
+        description="Add a new menu to your business."
+        formComponent={
+          <CreateMenuForm onSuccess={() => setIsDialogOpen(false)} />
+        }
+      />
     </SidebarMenu>
   );
 }

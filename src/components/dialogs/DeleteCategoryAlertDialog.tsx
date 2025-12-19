@@ -23,7 +23,7 @@ const DeleteCategoryAlertDialog = ({
   onOpenChange: (open: boolean) => void;
 }) => {
   const deleteCategoryMutation = useMutation(
-    trpc.category.delete.mutationOptions(),
+    trpc.menuCategory.delete.mutationOptions(),
   );
 
   const deleteCategory = async () => {
@@ -34,7 +34,7 @@ const DeleteCategoryAlertDialog = ({
           onSuccess: () => {
             toast.success(`${category.name} has been deleted.`);
             queryClient.invalidateQueries({
-              queryKey: trpc.category.getAllSortedByIndex.queryKey(),
+              queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
             });
             onOpenChange(false);
           },

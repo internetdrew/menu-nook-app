@@ -1,10 +1,8 @@
-"use client";
-
 import * as React from "react";
 import { ScrollText } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import { PlaceSwitcher } from "@/components/PlaceSwitcher";
+import { MenuSwitcher } from "@/components/MenuSwitcher";
 import {
   Sidebar,
   SidebarContent,
@@ -16,11 +14,12 @@ import {
 } from "@/components/ui/sidebar";
 import { Link } from "react-router";
 import { title } from "@/constants";
-import { usePlaceContext } from "@/contexts/ActivePlaceContext";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { places } = usePlaceContext();
   const { setOpenMobile } = useSidebar();
+  const { data: business } = useQuery(trpc.business.getForUser.queryOptions());
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -35,7 +34,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <span className="font-semibold">{title}</span>
           </Link>
         </SidebarMenuButton>
-        {places.length > 0 && <PlaceSwitcher />}
+        {business && <MenuSwitcher />}
       </SidebarHeader>
       <SidebarContent>
         <NavMain />

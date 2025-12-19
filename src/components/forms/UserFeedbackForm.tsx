@@ -31,9 +31,9 @@ const formSchema = z.object({
     }),
 });
 
-export const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
+export const UserFeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
   const submitFeedbackMutation = useMutation(
-    trpc.feedback.submit.mutationOptions(),
+    trpc.userFeedback.submit.mutationOptions(),
   );
 
   const form = useForm<z.infer<typeof formSchema>>({

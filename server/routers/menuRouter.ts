@@ -1,81 +1,198 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { publicProcedure, router } from "../trpc";
+import { protectedProcedure, router } from "../trpc";
 import { supabaseAdminClient } from "../supabase";
+import QRCode from "qrcode";
+import { generateQRFilePath } from "../utils/qrCode";
 
 export const menuRouter = router({
-  getForPlace: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
-        placeId: z.string(),
+        name: z.string().min(1),
+        businessId: z.uuid(),
+        baseUrl: z.url(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { name, businessId, baseUrl } = input;
+
+      const { data: menu, error: menuCreationError } = await supabaseAdminClient
+        .from("menus")
+        .insert({
+          name,
+          business_id: businessId,
+        })
+        .select()
+        .single();
+
+      if (menuCreationError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: menuCreationError.message,
+        });
+      }
+
+      const qrCodeDataUrl = await QRCode.toDataURL(
+        `${baseUrl}/menu/${menu.id}`,
+        {
+          width: 400,
+          margin: 2,
+          color: { dark: "#000000", light: "#FFFFFF" },
+        },
+      );
+
+      const base64Data = qrCodeDataUrl.split(",")[1];
+      const buffer = Buffer.from(base64Data, "base64");
+
+      const filePath = generateQRFilePath(menu.id);
+
+      const { error: qrUploadError } = await supabaseAdminClient.storage
+        .from("qr_codes")
+        .upload(filePath, buffer, {
+          contentType: "image/png",
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (qrUploadError) {
+        await supabaseAdminClient.from("menus").delete().eq("id", menu.id);
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to upload QR code to storage: ${qrUploadError.message}`,
+        });
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabaseAdminClient.storage.from("qr_codes").getPublicUrl(filePath);
+
+      const { error: insertError } = await supabaseAdminClient
+        .from("menu_qr_codes")
+        .insert({ menu_id: menu.id, public_url: publicUrl });
+
+      if (insertError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to insert QR code record: ${insertError.message}`,
+        });
+      }
+
+      return menu;
+    }),
+  getAllForBusiness: protectedProcedure
+    .input(
+      z.object({
+        businessId: z.uuid(),
       }),
     )
     .query(async ({ input }) => {
-      const { data: place, error: placeError } = await supabaseAdminClient
-        .from("places")
-        .select("*")
-        .eq("id", input.placeId)
-        .single();
+      const { data, error } = await supabaseAdminClient
+        .from("menus")
+        .select()
+        .eq("business_id", input.businessId);
 
-      if (placeError || !place) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Place not found",
-        });
-      }
-
-      const { data: categoryIndexes, error: categoryError } =
-        await supabaseAdminClient
-          .from("category_sort_indexes")
-          .select(
-            `
-            id,
-            order_index,
-            category:place_categories(*)
-          `,
-          )
-          .eq("place_id", input.placeId)
-          .order("order_index", { ascending: true });
-
-      if (categoryError) {
+      if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: categoryError.message,
+          message: error.message,
         });
       }
 
-      const categoriesWithItems = await Promise.all(
-        (categoryIndexes ?? []).map(async (catIndex) => {
-          const { data: itemIndexes, error: itemError } =
-            await supabaseAdminClient
-              .from("item_sort_indexes")
-              .select(
-                `
-                id,
-                order_index,
-                item:place_items(*)
-              `,
-              )
-              .eq("category_id", catIndex.category.id)
-              .order("order_index", { ascending: true });
+      return data;
+    }),
+  delete: protectedProcedure
+    .input(
+      z.object({
+        menuId: z.uuid(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { data, error } = await supabaseAdminClient
+        .from("menus")
+        .delete()
+        .eq("id", input.menuId)
+        .select()
+        .single();
 
-          if (itemError) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: itemError.message,
-            });
-          }
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
 
-          return {
-            ...catIndex.category,
-            items: (itemIndexes ?? []).map((idx) => idx.item),
-          };
-        }),
-      );
+      return data;
+    }),
+  getById: protectedProcedure
+    .input(
+      z.object({
+        menuId: z.uuid(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { menuId } = input;
+
+      const { data: menu, error: menuError } = await supabaseAdminClient
+        .from("menus")
+        .select(
+          `
+        *,
+        business:businesses(*)
+      `,
+        )
+        .eq("id", menuId)
+        .single();
+
+      if (menuError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch menu: ${menuError.message}`,
+        });
+      }
+
+      const { data: sortedCategories, error: catError } =
+        await supabaseAdminClient
+          .from("menu_category_sort_indexes")
+          .select(
+            `
+          *,
+          category:menu_categories(*, 
+            items:menu_category_items(
+              *,
+              sort_index:menu_category_item_sort_indexes(order_index)
+            )
+          )
+        `,
+          )
+          .eq("menu_id", menuId)
+          .order("order_index", { ascending: true });
+
+      if (catError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch category sort order: ${catError.message}`,
+        });
+      }
+
+      const categoriesWithSortedItems = sortedCategories.map((row) => {
+        const items =
+          row.category.items?.sort((a, b) => {
+            const ai = a.sort_index?.[0]?.order_index ?? 0;
+            const bi = b.sort_index?.[0]?.order_index ?? 0;
+            return ai - bi;
+          }) ?? [];
+
+        return {
+          ...row.category,
+          items,
+        };
+      });
 
       return {
-        place: place,
-        categories: categoriesWithItems,
+        ...menu,
+        menu_categories: categoriesWithSortedItems,
       };
     }),
 });

@@ -3,28 +3,29 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { supabaseAdminClient } from "../supabase";
 
-export const itemRouter = router({
+export const menuCategoryItemRouter = router({
   create: protectedProcedure
     .input(
       z.object({
+        menuId: z.uuid(),
+        menuCategoryId: z.number(),
         name: z.string().min(1).max(100),
         description: z.string().max(255).optional(),
-        placeId: z.uuid(),
         price: z.number().min(0),
         imageUrl: z.url().optional(),
-        categoryId: z.number(),
       }),
     )
     .mutation(async ({ input }) => {
-      const { name, placeId, description, price, imageUrl, categoryId } = input;
+      const { name, description, price, imageUrl, menuCategoryId, menuId } =
+        input;
 
       const { data: newItem, error: newItemError } = await supabaseAdminClient
-        .from("place_items")
+        .from("menu_category_items")
         .insert({
-          place_id: placeId,
+          menu_id: menuId,
+          menu_category_id: menuCategoryId,
           name,
           description,
-          category_id: categoryId,
           price,
           image_url: imageUrl,
         })
@@ -40,9 +41,9 @@ export const itemRouter = router({
 
       const { data: lastIndexRow, error: lastIndexError } =
         await supabaseAdminClient
-          .from("item_sort_indexes")
+          .from("menu_category_item_sort_indexes")
           .select("order_index")
-          .eq("category_id", categoryId)
+          .eq("menu_category_id", menuCategoryId)
           .order("order_index", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -61,10 +62,10 @@ export const itemRouter = router({
           : lastIndexRow.order_index + 1;
 
       const { error: sortInsertError } = await supabaseAdminClient
-        .from("item_sort_indexes")
+        .from("menu_category_item_sort_indexes")
         .insert({
-          category_id: categoryId,
-          item_id: newItem.id,
+          menu_category_id: menuCategoryId,
+          menu_category_item_id: newItem.id,
           order_index: nextIndex,
         });
 
@@ -77,58 +78,31 @@ export const itemRouter = router({
 
       return newItem;
     }),
-  getAllByPlace: protectedProcedure
-    .input(
-      z.object({
-        placeId: z.uuid(),
-      }),
-    )
-    .query(async ({ input }) => {
-      const { placeId } = input;
-
-      const { data, error } = await supabaseAdminClient
-        .from("place_items")
-        .select("*, category:place_categories(id,name)")
-        .eq("place_id", placeId)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to fetch categories: ${error.message}`,
-        });
-      }
-
-      return data;
-    }),
   update: protectedProcedure
     .input(
       z.object({
         id: z.number(),
         name: z.string().min(1).max(100),
         description: z.string().max(255).optional(),
-        placeId: z.uuid(),
         price: z.number().min(0),
         imageUrl: z.url().optional(),
-        categoryId: z.number(),
+        menuCategoryId: z.number(),
       }),
     )
     .mutation(async ({ input }) => {
-      const { id, name, placeId, description, price, imageUrl, categoryId } =
-        input;
+      const { id, name, menuCategoryId, description, price, imageUrl } = input;
 
       const { data, error } = await supabaseAdminClient
-        .from("place_items")
+        .from("menu_category_items")
         .update({
           name,
           description,
-          category_id: categoryId,
+          menu_category_id: menuCategoryId,
           price,
           image_url: imageUrl,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)
-        .eq("place_id", placeId)
         .select()
         .single();
 
@@ -150,7 +124,7 @@ export const itemRouter = router({
     .mutation(async ({ input }) => {
       const { id } = input;
       const { data, error } = await supabaseAdminClient
-        .from("place_items")
+        .from("menu_category_items")
         .delete()
         .eq("id", id)
         .select()
@@ -165,7 +139,7 @@ export const itemRouter = router({
 
       return data;
     }),
-  getAllForCategorySortedByIndex: protectedProcedure
+  getSortedForCategory: protectedProcedure
     .input(
       z.object({
         categoryId: z.number().nullable(),
@@ -179,9 +153,11 @@ export const itemRouter = router({
       }
 
       const { data, error } = await supabaseAdminClient
-        .from("item_sort_indexes")
-        .select("*, item:place_items(*, category:place_categories(id,name))")
-        .eq("category_id", categoryId)
+        .from("menu_category_item_sort_indexes")
+        .select(
+          "*, item:menu_category_items(*, category:menu_categories(id,name))",
+        )
+        .eq("menu_category_id", categoryId)
         .order("order_index", { ascending: true });
 
       if (error) {
@@ -193,7 +169,7 @@ export const itemRouter = router({
 
       return data;
     }),
-  updateOrder: protectedProcedure
+  updateSortOrder: protectedProcedure
     .input(
       z.object({
         categoryId: z.number(),
@@ -213,7 +189,7 @@ export const itemRouter = router({
       for (let index = 0; index < newItemOrder.length; index++) {
         const { indexId } = newItemOrder[index];
         const { error } = await supabaseAdminClient
-          .from("item_sort_indexes")
+          .from("menu_category_item_sort_indexes")
           .update({ order_index: offset + index })
           .eq("id", indexId)
           .select();
@@ -229,10 +205,10 @@ export const itemRouter = router({
       for (let index = 0; index < newItemOrder.length; index++) {
         const { itemId } = newItemOrder[index];
         const { error } = await supabaseAdminClient
-          .from("item_sort_indexes")
+          .from("menu_category_item_sort_indexes")
           .update({ order_index: index })
-          .eq("category_id", categoryId)
-          .eq("item_id", itemId)
+          .eq("menu_category_id", categoryId)
+          .eq("menu_category_item_id", itemId)
           .select();
 
         if (error) {
@@ -245,24 +221,47 @@ export const itemRouter = router({
 
       return { success: true };
     }),
-  getCountByPlaceId: protectedProcedure
+  getCountByMenuCategoryId: protectedProcedure
     .input(
       z.object({
-        placeId: z.string(),
+        menuCategoryId: z.number(),
       }),
     )
     .query(async ({ input }) => {
-      const { placeId } = input;
+      const { menuCategoryId } = input;
 
       const { count, error } = await supabaseAdminClient
-        .from("place_items")
+        .from("menu_category_items")
         .select("id", { count: "exact", head: true })
-        .eq("place_id", placeId);
+        .eq("menu_category_id", menuCategoryId);
 
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to fetch item count: ${error.message}`,
+        });
+      }
+
+      return count ?? 0;
+    }),
+  getCountByMenuId: protectedProcedure
+    .input(
+      z.object({
+        menuId: z.uuid(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { menuId } = input;
+
+      const { count, error } = await supabaseAdminClient
+        .from("menu_category_items")
+        .select("*", { count: "exact", head: true })
+        .eq("menu_id", menuId);
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch item count by menu id: ${error.message}`,
         });
       }
 

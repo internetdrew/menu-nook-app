@@ -15,7 +15,7 @@ import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "server";
 
 type ItemIndex =
-  inferRouterOutputs<AppRouter>["item"]["getAllForCategorySortedByIndex"][number];
+  inferRouterOutputs<AppRouter>["menuCategoryItem"]["getSortedForCategory"][number];
 
 interface DeleteItemAlertDialogProps {
   item: ItemIndex["item"];
@@ -28,7 +28,9 @@ const DeleteItemAlertDialog = ({
   open,
   onOpenChange,
 }: DeleteItemAlertDialogProps) => {
-  const deleteItem = useMutation(trpc.item.delete.mutationOptions());
+  const deleteItem = useMutation(
+    trpc.menuCategoryItem.delete.mutationOptions(),
+  );
 
   const onDelete = async () => {
     await deleteItem.mutateAsync(
@@ -40,7 +42,7 @@ const DeleteItemAlertDialog = ({
           onOpenChange(false);
           toast.success(`${item.name} has been deleted.`);
           queryClient.invalidateQueries({
-            queryKey: trpc.item.getAllForCategorySortedByIndex.queryKey(),
+            queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
           });
         },
         onError: () => {
