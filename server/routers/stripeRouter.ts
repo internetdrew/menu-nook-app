@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { Request, Response } from "express";
-import { createServerSupabaseClient } from "../supabase";
 import { stripe } from "../utils/stripe";
 import { protectedProcedure, router } from "../trpc";
 import { TRPCError } from "@trpc/server";
@@ -21,24 +19,13 @@ export const stripeRouter = router({
   createCheckoutSession: protectedProcedure
     .input(
       z.object({
-        placeId: z.uuid(),
         baseUrl: z.url(),
       }),
     )
-    .mutation(async ({ input, ctx }) => {
-      const { placeId } = input;
-      const supabase = createServerSupabaseClient(
-        ctx.req as Request,
-        ctx.res as Response,
-      );
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+    .mutation(async ({ ctx }) => {
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
-        customer_email: user?.email,
+        customer_email: ctx.user.email,
         payment_method_types: ["card"],
         line_items: [
           {
@@ -49,11 +36,11 @@ export const stripeRouter = router({
         success_url: `${APP_DOMAIN}/dashboard?success=true`,
         cancel_url: `${APP_DOMAIN}/dashboard?canceled=true`,
         metadata: {
-          placeId: placeId,
+          userId: ctx.user.id,
         },
         subscription_data: {
           metadata: {
-            placeId: placeId,
+            userId: ctx.user.id,
           },
         },
       });
