@@ -49,13 +49,13 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
       event.type === "customer.subscription.deleted"
     ) {
       const subscription = event.data.object as Stripe.Subscription;
-      const placeId = subscription.metadata.placeId;
+      const userId = subscription.metadata.userId;
 
-      if (!subscription.id || !subscription.customer || !placeId) {
+      if (!subscription.id || !subscription.customer || !userId) {
         console.error("Invalid subscription event", {
           subscriptionId: subscription.id,
           customer: subscription.customer,
-          placeId,
+          userId,
         });
         return;
       }
@@ -95,7 +95,7 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
           .insert({
             current_period_start: periodStart,
             current_period_end: periodEnd,
-            place_id: placeId,
+            user_id: userId,
             stripe_customer_id: customerId as string,
             stripe_price_id: priceItem.price.id,
             stripe_subscription_id: subscription.id,
