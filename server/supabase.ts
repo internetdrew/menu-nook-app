@@ -30,14 +30,7 @@ export const createServerSupabaseClient = (req: Request, res: Response) => {
         cookiesToSet.forEach(({ name, value, options }) =>
           res.appendHeader(
             "Set-Cookie",
-            serializeCookieHeader(name, value, {
-              ...options,
-              domain: ".menunook.com",
-              path: "/",
-              secure: true,
-              httpOnly: options?.httpOnly ?? true,
-              sameSite: "lax",
-            }),
+            serializeCookieHeader(name, value, options),
           ),
         );
       },
