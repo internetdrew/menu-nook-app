@@ -11,7 +11,7 @@ export const UserFeedbackTrigger = () => {
       <Button
         variant={"outline"}
         onClick={() => setIsDialogOpen(true)}
-        className="ml-auto text-xs"
+        className="ml-auto text-sm"
       >
         Feedback
       </Button>
