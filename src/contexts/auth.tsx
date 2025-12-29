@@ -23,24 +23,22 @@ export function AuthProvider({
   children: ReactNode;
   initialMock?: AuthContextType;
 }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [user, setUser] = useState<User | null>(initialMock?.user ?? null);
+  const [isLoading, setIsLoading] = useState(initialMock?.isLoading ?? true);
+  const [error, setError] = useState<Error | null>(initialMock?.error ?? null);
 
   useEffect(() => {
-    if (initialMock) {
-      setUser(initialMock.user ? initialMock.user : null);
-      setIsLoading(initialMock.isLoading);
-      setError(initialMock.error);
-      return;
-    }
+    if (initialMock) return;
 
     supabaseBrowserClient.auth
       .getSession()
       .then(({ data: { session }, error }) => {
         setUser(session?.user ?? null);
         setIsLoading(false);
-        if (error) setError(error);
+
+        if (error) {
+          setError(error);
+        }
       });
 
     const {
