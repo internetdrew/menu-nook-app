@@ -7,8 +7,9 @@ import { HomePage } from "./routes/HomePage.tsx";
 import { CategoriesPage } from "./routes/CategoriesPage.tsx";
 import { CategoryItemsPage } from "./routes/CategoryItemsPage.tsx";
 import { SettingsPage } from "./routes/SettingsPage.tsx";
+import { DashboardPage } from "./routes/DashboardPage.tsx";
 import { NotFound } from "./routes/NotFound.tsx";
-import { Navigate, Outlet } from "react-router";
+import { Navigate } from "react-router";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated.tsx";
 
 export const routes = [
@@ -49,6 +50,7 @@ export const routes = [
       },
       {
         path: "dashboard",
+        element: <DashboardPage />,
         children: [
           {
             index: true,
@@ -56,7 +58,6 @@ export const routes = [
           },
           {
             path: "categories",
-            element: <Outlet />,
             children: [
               {
                 index: true,
@@ -70,7 +71,6 @@ export const routes = [
           },
           {
             path: "settings",
-            element: <Outlet />,
             children: [
               {
                 index: true,
