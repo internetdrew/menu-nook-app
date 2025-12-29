@@ -22,20 +22,23 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "./utils/trpc";
 import { CreateMenuForm } from "./components/forms/CreateMenuForm";
 import EmptyStatePrompt from "./components/EmptyStatePrompt";
+import { useAuth } from "./contexts/auth";
 
 function App() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: business, isLoading } = useQuery(
-    trpc.business.getForUser.queryOptions(),
+  const { user, isLoading: authLoading } = useAuth();
+
+  const { data: business, isLoading: businessLoading } = useQuery(
+    trpc.business.getForUser.queryOptions(undefined, {
+      enabled: !!user && !authLoading,
+    }),
   );
   const { data: menus, isLoading: menusLoading } = useQuery(
     trpc.menu.getAllForBusiness.queryOptions(
       {
         businessId: business?.id || "",
       },
-      {
-        enabled: !!business,
-      },
+      { enabled: !!business && !!user && !authLoading },
     ),
   );
   return (
@@ -66,7 +69,7 @@ function App() {
           </div>
         </header>
         <div className="p-4 pt-0">
-          {isLoading || menusLoading ? (
+          {authLoading || businessLoading || menusLoading ? (
             <Spinner className="mx-auto mt-36 size-6 text-pink-600" />
           ) : !business ? (
             <EmptyStatePrompt
