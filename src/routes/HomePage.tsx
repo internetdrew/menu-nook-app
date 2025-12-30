@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Info } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
@@ -16,7 +16,6 @@ export const HomePage = () => {
   const [params, setSearchParams] = useSearchParams();
   const [showToast, setShowToast] = useState(false);
   const { activeMenu } = useMenuContext();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const successfulSubscription = params.get("success") === "true";
@@ -45,7 +44,7 @@ export const HomePage = () => {
         </Link>
       ),
     });
-  }, [showToast, navigate, activeMenu?.id]);
+  }, [showToast, activeMenu?.id]);
 
   return (
     <div>
