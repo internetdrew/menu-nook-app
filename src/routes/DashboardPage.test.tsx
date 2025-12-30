@@ -167,6 +167,68 @@ describe("Dashboard Page", () => {
     expect(dialog).not.toBeInTheDocument();
   });
 
+  it("renders an error message when user tries to create a business without text entry when user has no business", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForUser": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({ result: { data: null } }),
+      }),
+
+      http.post("/trpc/business.create", async ({ request }) => {
+        const body = (await request.json()) as { name: string };
+        return HttpResponse.json([
+          {
+            result: {
+              data: {
+                id: "business-123",
+                name: body.name,
+                user_id: "user-123",
+              },
+            },
+          },
+        ]);
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await waitFor(() => {
+      expect(screen.getByText(/No business found/i)).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/Add your business to start managing your menus./i),
+    ).toBeInTheDocument();
+    const button = screen.getByRole("button", {
+      name: /create business/i,
+    });
+    expect(button).toBeInTheDocument();
+    await user.click(button);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+
+    expect(
+      within(dialog).getByText(/Create Your Business/i),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        /Add your business to start managing your menus./i,
+      ),
+    ).toBeInTheDocument();
+
+    const submitButton = within(dialog).getByRole("button", {
+      name: /create/i,
+    });
+    await user.click(submitButton);
+
+    expect(
+      screen.getByText(/Name must be at least 2 characters./i),
+    ).toBeInTheDocument();
+  });
+
   it("renders the menu creation card when the user has a business", async () => {
     server.use(
       createTrpcQueryHandler({
@@ -281,5 +343,76 @@ describe("Dashboard Page", () => {
     await user.click(submitButton);
 
     expect(dialog).not.toBeInTheDocument();
+  });
+
+  it("renders an error message when user tries to create a menu without text entry", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForUser": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({ result: { data: [] } }),
+      }),
+
+      http.post("/trpc/business.create", async ({ request }) => {
+        const body = (await request.json()) as { name: string };
+        return HttpResponse.json([
+          {
+            result: {
+              data: {
+                id: "business-123",
+                name: body.name,
+                user_id: "user-123",
+              },
+            },
+          },
+        ]);
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await waitFor(() => {
+      expect(screen.getByText(/no menus found/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Test Business/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/add your first menu to get started./i),
+    ).toBeInTheDocument();
+    const button = screen.getByRole("button", {
+      name: /create menu/i,
+    });
+    expect(button).toBeInTheDocument();
+    await user.click(button);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+
+    expect(within(dialog).getByText(/Create New Menu/i)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        /Fill in the details below to create a new menu./i,
+      ),
+    ).toBeInTheDocument();
+
+    const submitButton = within(dialog).getByRole("button", {
+      name: /create/i,
+    });
+    await user.click(submitButton);
+
+    expect(dialog).toBeInTheDocument();
+
+    expect(
+      screen.getByText(/Menu name must have at least 2 characters./i),
+    ).toBeInTheDocument();
   });
 });
