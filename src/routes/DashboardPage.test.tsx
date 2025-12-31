@@ -19,6 +19,14 @@ vi.mock("@/lib/supabase", () => {
   };
 });
 
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+  Toaster: vi.fn(() => null),
+}));
+
 describe("Dashboard Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -167,7 +175,7 @@ describe("Dashboard Page", () => {
     expect(dialog).not.toBeInTheDocument();
   });
 
-  it("renders an error message when user tries to create a business without text entry when user has no business", async () => {
+  it("renders an error message when user tries to create a business without text entry", async () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({ result: { data: null } }),
@@ -414,5 +422,294 @@ describe("Dashboard Page", () => {
     expect(
       screen.getByText(/Menu name must have at least 2 characters./i),
     ).toBeInTheDocument();
+  });
+
+  it("renders full sidebar items when a business and menu are created", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForUser": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                name: "Test Menu",
+                business_id: "business-123",
+              },
+            ],
+          },
+        }),
+      }),
+    );
+
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    expect(await screen.findByText(/Test Business/i)).toBeInTheDocument();
+
+    const sidebar = screen.getByRole("navigation", { name: /app sidebar/i });
+    expect(sidebar).toBeInTheDocument();
+
+    expect(await within(sidebar).findByText(/Test Menu/i)).toBeInTheDocument();
+
+    expect(within(sidebar).getByText(/Manage/i)).toBeInTheDocument();
+    expect(
+      within(sidebar).getByRole("link", { name: /categories/i }),
+    ).toBeInTheDocument();
+
+    expect(within(sidebar).getByText(/Menu Preview/i)).toBeInTheDocument();
+
+    expect(within(sidebar).getByText(/Mock User/i)).toBeInTheDocument();
+    expect(within(sidebar).getByText(/test@example.com/i)).toBeInTheDocument();
+  });
+  it("renders link to live menu when user has a valid subscription", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForUser": () => ({
+          result: {
+            data: {
+              id: "sub-123",
+              status: "active",
+            },
+          },
+        }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                name: "Test Menu",
+                business_id: "business-123",
+              },
+            ],
+          },
+        }),
+      }),
+    );
+
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    expect(await screen.findByText(/Test Business/i)).toBeInTheDocument();
+
+    const sidebar = screen.getByRole("navigation", { name: /app sidebar/i });
+    expect(sidebar).toBeInTheDocument();
+
+    expect(
+      within(sidebar).queryByText(/Menu Preview/i),
+    ).not.toBeInTheDocument();
+
+    expect(
+      await within(sidebar).findByRole("link", { name: /live menu/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders home page overview when user has business and menus", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForUser": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                name: "Test Menu",
+                business_id: "business-123",
+              },
+            ],
+          },
+        }),
+        "menuCategory.getAllSortedByIndex": () => ({
+          result: { data: [] },
+        }),
+        "menuCategory.getCountByMenuId": () => ({
+          result: { data: 9 },
+        }),
+        "menuCategoryItem.getCountByMenuId": () => ({
+          result: { data: 0 },
+        }),
+        "menuQRCode.getPublicUrlForMenu": () => ({
+          result: { data: { public_url: "https://example.com/qr-code.png" } },
+        }),
+      }),
+    );
+
+    renderApp({ initialEntries: ["/dashboard"], authMock: authedUserState });
+
+    expect(await screen.findByText(/Test Menu Overview/i)).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: /share menu/i }),
+    ).toBeInTheDocument();
+
+    const categoriesManagedTitle = screen.getByText(/categories managed/i);
+    const categoriesCard = categoriesManagedTitle?.closest(
+      '[data-slot="card"]',
+    ) as HTMLElement;
+    expect(screen.getByText(/categories managed/i)).toBeInTheDocument();
+    expect(await within(categoriesCard).findByText("9")).toBeInTheDocument();
+
+    const itemsManagedTitle = screen.getByText(/items managed/i);
+    const itemsCard = itemsManagedTitle?.closest(
+      '[data-slot="card"]',
+    ) as HTMLElement;
+    expect(screen.getByText(/items managed/i)).toBeInTheDocument();
+    expect(await within(itemsCard).findByText("0")).toBeInTheDocument();
+  });
+
+  it("renders qr code share dialog when share menu button is clicked", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForUser": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                name: "Test Menu",
+                business_id: "business-123",
+              },
+            ],
+          },
+        }),
+        "menuCategory.getAllSortedByIndex": () => ({
+          result: { data: [] },
+        }),
+        "menuCategory.getCountByMenuId": () => ({
+          result: { data: 0 },
+        }),
+        "menuCategoryItem.getCountByMenuId": () => ({
+          result: { data: 0 },
+        }),
+        "menuQRCode.getPublicUrlForMenu": () => ({
+          result: { data: { public_url: "https://example.com/qr-code.png" } },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ["/dashboard"], authMock: authedUserState });
+
+    const shareMenuButton = await screen.findByRole("button", {
+      name: /share menu/i,
+    });
+    expect(shareMenuButton).toBeInTheDocument();
+    await user.click(shareMenuButton);
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+
+    expect(within(dialog).getByText(/Share Your Menu/i)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        /Put your camera over the QR code to open your menu or copy the link and paste into your browser./i,
+      ),
+    ).toBeInTheDocument();
+
+    const qrCodeImage = within(dialog).getByAltText(/Menu QR Code/i);
+    expect(qrCodeImage).toBeInTheDocument();
+    expect(qrCodeImage).toHaveAttribute(
+      "src",
+      "https://example.com/qr-code.png",
+    );
+  });
+
+  it("copies qr code link to clipboard when user clicks button", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForUser": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                name: "Test Menu",
+                business_id: "business-123",
+              },
+            ],
+          },
+        }),
+        "menuCategory.getAllSortedByIndex": () => ({
+          result: { data: [] },
+        }),
+        "menuCategory.getCountByMenuId": () => ({
+          result: { data: 0 },
+        }),
+        "menuCategoryItem.getCountByMenuId": () => ({
+          result: { data: 0 },
+        }),
+        "menuQRCode.getPublicUrlForMenu": () => ({
+          result: { data: { public_url: "https://example.com/qr-code.png" } },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+
+    const writeTextSpy = vi
+      .spyOn(navigator.clipboard, "writeText")
+      .mockResolvedValue();
+
+    renderApp({ initialEntries: ["/dashboard"], authMock: authedUserState });
+
+    const shareMenuButton = await screen.findByRole("button", {
+      name: /share menu/i,
+    });
+    expect(shareMenuButton).toBeInTheDocument();
+    await user.click(shareMenuButton);
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+
+    expect(
+      within(dialog).getByRole("button", { name: /copy link/i }),
+    ).toBeInTheDocument();
+    await user.click(
+      within(dialog).getByRole("button", { name: /copy link/i }),
+    );
+
+    expect(writeTextSpy).toHaveBeenCalledWith(
+      `${window.location.origin}/menu/menu-123`,
+    );
   });
 });
