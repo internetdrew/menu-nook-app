@@ -41,7 +41,7 @@ import type { AppRouter } from "server";
 import { toast } from "sonner";
 import { Link } from "react-router";
 
-type CategoryIndex =
+export type CategoryIndex =
   inferRouterOutputs<AppRouter>["menuCategory"]["getAllSortedByIndex"][number];
 
 export const CategoriesPage = () => {
