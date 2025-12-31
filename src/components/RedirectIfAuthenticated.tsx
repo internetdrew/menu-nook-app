@@ -1,4 +1,3 @@
-// components/RedirectIfAuthenticated.tsx
 import { Navigate, Outlet } from "react-router";
 import { useAuth } from "@/contexts/auth";
 import { Spinner } from "./ui/spinner";
