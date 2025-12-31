@@ -18,7 +18,7 @@ const CategoriesCard = ({ activeMenuId }: { activeMenuId: string }) => {
   return (
     <Card>
       <CardHeader className="flex items-center justify-between">
-        <CardTitle className="text-sm">Categories</CardTitle>
+        <CardTitle className="text-sm">Categories Managed</CardTitle>
         {/* <Icon className="text-muted-foreground size-3" /> */}
       </CardHeader>
       <CardContent className="mt-auto">

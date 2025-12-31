@@ -18,7 +18,7 @@ const ItemsCard = ({ activeMenuId }: { activeMenuId: string }) => {
   return (
     <Card>
       <CardHeader className="flex items-center justify-between">
-        <CardTitle className="text-sm">Items</CardTitle>
+        <CardTitle className="text-sm">Items Managed</CardTitle>
         {/* <Icon className="text-muted-foreground size-3" /> */}
       </CardHeader>
       <CardContent className="mt-auto">
