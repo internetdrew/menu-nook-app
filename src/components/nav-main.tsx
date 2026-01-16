@@ -62,7 +62,7 @@ export function NavMain() {
                 asChild
               >
                 <NavLink
-                  to={`/dashboard/categories`}
+                  to={`/categories`}
                   end
                   onClick={() => setOpenMobile(false)}
                 >
@@ -86,7 +86,7 @@ export function NavMain() {
                           asChild
                         >
                           <NavLink
-                            to={`/dashboard/categories/${index.category.id}`}
+                            to={`/categories/${index.category.id}`}
                             onClick={() => setOpenMobile(false)}
                           >
                             {({ isActive }) => (
