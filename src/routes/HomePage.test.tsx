@@ -764,4 +764,39 @@ describe("Dashboard Home Page", () => {
 
     expect(feedbackForm).not.toBeInTheDocument();
   });
+
+  it("blocks user from submitting feedback when none is provided", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForUser": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({ result: { data: null } }),
+      }),
+    );
+
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    const feedbackButton = screen.getByRole("button", {
+      name: /feedback/i,
+    });
+    expect(feedbackButton).toBeInTheDocument();
+    await userEvent.click(feedbackButton);
+
+    const feedbackForm = screen.getByRole("dialog", { name: /feedback/i });
+    expect(feedbackForm).toBeInTheDocument();
+
+    expect(
+      within(feedbackForm).queryByText(/Please add feedback to submit./i),
+    ).not.toBeInTheDocument();
+
+    const submitButton = within(feedbackForm).getByRole("button", {
+      name: /submit/i,
+    });
+    expect(submitButton).toBeInTheDocument();
+    await userEvent.click(submitButton);
+
+    expect(
+      within(feedbackForm).getByText(/Please add feedback to submit./i),
+    ).toBeInTheDocument();
+  });
 });
