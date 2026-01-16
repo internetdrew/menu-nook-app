@@ -7,7 +7,7 @@ import { HomePage } from "./routes/HomePage.tsx";
 import { CategoriesPage } from "./routes/CategoriesPage.tsx";
 import { CategoryItemsPage } from "./routes/CategoryItemsPage.tsx";
 import { SettingsPage } from "./routes/SettingsPage.tsx";
-import { DashboardPage } from "./routes/DashboardPage.tsx";
+import { DashboardPage } from "./components/Dashboard.tsx";
 import { NotFound } from "./routes/NotFound.tsx";
 import { Navigate } from "react-router";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated.tsx";
@@ -24,7 +24,7 @@ export const routes = [
   },
   {
     path: "/preview/menu",
-    element: <Navigate to="/dashboard" replace />,
+    element: <Navigate to="/" replace />,
   },
   {
     path: "/preview/menu/:menuId",
@@ -45,11 +45,6 @@ export const routes = [
     ),
     children: [
       {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
-      },
-      {
-        path: "dashboard",
         element: <DashboardPage />,
         children: [
           {
