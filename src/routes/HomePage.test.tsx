@@ -172,7 +172,9 @@ describe("Dashboard Home Page", () => {
     });
     await user.click(submitButton);
 
-    expect(dialog).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(dialog).not.toBeInTheDocument();
+    });
   });
 
   it("renders an error message when user tries to create a business without text entry", async () => {
@@ -350,7 +352,9 @@ describe("Dashboard Home Page", () => {
     });
     await user.click(submitButton);
 
-    expect(dialog).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(dialog).not.toBeInTheDocument();
+    });
   });
 
   it("renders an error message when user tries to create a menu without text entry", async () => {
