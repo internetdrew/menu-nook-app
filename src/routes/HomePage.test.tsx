@@ -724,16 +724,11 @@ describe("Dashboard Home Page", () => {
         "menu.getAllForBusiness": () => ({ result: { data: null } }),
       }),
 
-      http.post("/trpc/userFeedback.submit", async ({ request }) => {
-        const body = (await request.json()) as { name: string };
+      http.post("/trpc/userFeedback.submit", async () => {
         return HttpResponse.json([
           {
             result: {
-              data: {
-                id: "business-123",
-                name: body.name,
-                user_id: "user-123",
-              },
+              data: {},
             },
           },
         ]);
