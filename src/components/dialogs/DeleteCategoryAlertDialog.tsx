@@ -32,7 +32,9 @@ const DeleteCategoryAlertDialog = ({
         { categoryId: category.id },
         {
           onSuccess: () => {
-            toast.success(`${category.name} has been deleted.`);
+            toast.success(
+              `The ${category.name} category has been deleted from your menu.`,
+            );
             queryClient.invalidateQueries({
               queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
             });
@@ -40,7 +42,9 @@ const DeleteCategoryAlertDialog = ({
           },
           onError: (error) => {
             console.error("Failed to delete category:", error);
-            toast.error(`Failed to delete ${category.name}. Please try again.`);
+            toast.error(
+              `Failed to delete the ${category.name} category. Please try again.`,
+            );
           },
         },
       );
@@ -58,15 +62,14 @@ const DeleteCategoryAlertDialog = ({
           <AlertDialogDescription>
             This will permanently delete{" "}
             <span className="font-semibold">{category?.name}</span> and all of
-            its associated items. If you just want to change the name, please
-            use the <span className="font-semibold">Edit</span> option instead.
+            its associated items from your menu. If you just want to change the
+            name, cancel this operation use the{" "}
+            <span className="font-semibold">Edit</span> option instead.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={deleteCategory}>
-            Continue
-          </AlertDialogAction>
+          <AlertDialogAction onClick={deleteCategory}>Delete</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
