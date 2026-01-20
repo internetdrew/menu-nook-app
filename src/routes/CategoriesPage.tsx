@@ -40,6 +40,7 @@ import { useEffect, useState } from "react";
 import type { AppRouter } from "server";
 import { toast } from "sonner";
 import { Link } from "react-router";
+import EmptyStatePrompt from "@/components/EmptyStatePrompt";
 
 export type CategoryIndex =
   inferRouterOutputs<AppRouter>["menuCategory"]["getAllSortedByIndex"][number];
@@ -120,6 +121,21 @@ export const CategoriesPage = () => {
       setIndexedCategories(data);
     }
   }, [data]);
+
+  if (data?.length === 0 && !isLoadingCategories) {
+    return (
+      <EmptyStatePrompt
+        cardTitle="No Categories Found"
+        cardDescription={`Add your first category to your ${activeMenu?.name}.`}
+        buttonText="Add Category"
+        isDialogOpen={renderCategoryDialog}
+        setIsDialogOpen={setRenderCategoryDialog}
+        formComponent={CategoryForm}
+        formDialogTitle="Create New Category"
+        formDialogDescription="Fill in the details below to create a new category."
+      />
+    );
+  }
 
   return (
     <>
