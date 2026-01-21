@@ -157,7 +157,7 @@ export const CategoryItemsPage = () => {
   }
 
   return (
-    <div className="pb-10">
+    <div data-testid="category-item-list" className="pb-10">
       <main>
         <div className="my-4 flex items-center">
           {isLoadingCategory ? (
@@ -193,7 +193,7 @@ export const CategoryItemsPage = () => {
         </div>
         {indexedItems?.length === 0 && !isLoadingItems && (
           <div className="mt-12 flex flex-col items-center justify-center p-10">
-            <p className="text-muted-foreground text-center text-lg">
+            <p className="text-muted-foreground text-center">
               Start adding items to {category?.name} to populate your menu.
             </p>
           </div>
