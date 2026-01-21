@@ -202,7 +202,10 @@ const ItemForm = (props: ItemFormProps) => {
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting || !form.formState.isDirty}
+          >
             {item
               ? form.formState.isSubmitting
                 ? "Updating..."
