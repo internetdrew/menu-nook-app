@@ -133,7 +133,6 @@ export const menuRouter = router({
     )
     .query(async ({ input }) => {
       const { menuId } = input;
-      console.log("Fetching menu with ID:", menuId);
 
       const { data: menu, error: menuError } = await supabaseAdminClient
         .from("menus")
