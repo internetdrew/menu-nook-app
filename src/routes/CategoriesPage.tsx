@@ -258,7 +258,7 @@ const SortableCategory = ({
         </button>
         <ItemContent>
           <ItemTitle className="select-none">
-            <Link to={`/dashboard/categories/${categoryIndex?.category?.id}`}>
+            <Link to={`/categories/${categoryIndex?.category?.id}`}>
               {categoryIndex?.category?.name}
             </Link>
           </ItemTitle>
