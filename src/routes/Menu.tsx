@@ -8,7 +8,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { NotFound } from "./NotFound";
-import MenuUnavailable from "./MenuUnavailable";
+import MenuUnavailable from "../components/MenuUnavailable";
 import { toast } from "sonner";
 
 interface MenuProps {
@@ -68,7 +68,7 @@ export const Menu = ({ isPreview = false }: MenuProps) => {
     );
   }
 
-  if (error || !menu) {
+  if (!menu || error) {
     return (
       <NotFound
         title="Menu Not Found"
