@@ -181,6 +181,13 @@ export const CategoryItemsPage = () => {
             </Button>
           )}
         </div>
+        {indexedItems?.length === 0 && !isLoadingItems && (
+          <div className="mt-12 flex flex-col items-center justify-center p-10">
+            <p className="text-muted-foreground text-center text-lg">
+              Start adding items to this category to populate your menu.
+            </p>
+          </div>
+        )}
         <div>
           <DndContext
             sensors={sensors}
