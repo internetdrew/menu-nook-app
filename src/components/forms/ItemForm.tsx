@@ -20,7 +20,9 @@ import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "server";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
-type MenuCategory = inferRouterOutputs<AppRouter>["menuCategory"]["getById"];
+type MenuCategory = NonNullable<
+  inferRouterOutputs<AppRouter>["menuCategory"]["getById"]
+>;
 type Item =
   inferRouterOutputs<AppRouter>["menuCategoryItem"]["getSortedForCategory"][number]["item"];
 
@@ -200,7 +202,10 @@ const ItemForm = (props: ItemFormProps) => {
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting || !form.formState.isDirty}
+          >
             {item
               ? form.formState.isSubmitting
                 ? "Updating..."

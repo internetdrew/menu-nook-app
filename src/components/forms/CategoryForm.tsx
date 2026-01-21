@@ -142,7 +142,10 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting || !form.formState.isDirty}
+          >
             {form.formState.isSubmitting
               ? category
                 ? "Updating..."

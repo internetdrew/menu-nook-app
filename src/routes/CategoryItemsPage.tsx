@@ -35,7 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import FormDialog from "@/components/dialogs/FormDialog";
 import ItemForm from "@/components/forms/ItemForm";
 import DeleteItemAlertDialog from "@/components/dialogs/DeleteItemAlertDialog";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import {
   Popover,
   PopoverContent,
@@ -143,11 +143,21 @@ export const CategoryItemsPage = () => {
   };
 
   if (!category && !isLoadingCategory) {
-    return <div className="p-10">Category not found.</div>;
+    return (
+      <div className="mt-24 space-y-4 text-center">
+        <p className="text-muted-foreground text-lg">Category not found.</p>
+        <Link
+          to="/categories"
+          className="text-pink-600 underline-offset-4 transition duration-300 hover:underline"
+        >
+          View available categories
+        </Link>
+      </div>
+    );
   }
 
   return (
-    <div className="pb-10">
+    <div data-testid="category-item-list" className="pb-10">
       <main>
         <div className="my-4 flex items-center">
           {isLoadingCategory ? (
@@ -181,6 +191,13 @@ export const CategoryItemsPage = () => {
             </Button>
           )}
         </div>
+        {indexedItems?.length === 0 && !isLoadingItems && (
+          <div className="mt-12 flex flex-col items-center justify-center p-10">
+            <p className="text-muted-foreground text-center">
+              Start adding items to {category?.name} to populate your menu.
+            </p>
+          </div>
+        )}
         <div>
           <DndContext
             sensors={sensors}

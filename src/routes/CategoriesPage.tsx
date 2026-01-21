@@ -40,6 +40,7 @@ import { useEffect, useState } from "react";
 import type { AppRouter } from "server";
 import { toast } from "sonner";
 import { Link } from "react-router";
+import EmptyStatePrompt from "@/components/EmptyStatePrompt";
 
 export type CategoryIndex =
   inferRouterOutputs<AppRouter>["menuCategory"]["getAllSortedByIndex"][number];
@@ -121,6 +122,21 @@ export const CategoriesPage = () => {
     }
   }, [data]);
 
+  if (data?.length === 0 && !isLoadingCategories) {
+    return (
+      <EmptyStatePrompt
+        cardTitle="No Categories Found"
+        cardDescription={`Add your first category to your ${activeMenu?.name}.`}
+        buttonText="Add Category"
+        isDialogOpen={renderCategoryDialog}
+        setIsDialogOpen={setRenderCategoryDialog}
+        formComponent={CategoryForm}
+        formDialogTitle="Create New Category"
+        formDialogDescription="Fill in the details below to create a new category."
+      />
+    );
+  }
+
   return (
     <>
       <div className="my-4 flex items-center">
@@ -154,7 +170,7 @@ export const CategoriesPage = () => {
           items={indexedCategories.map((c) => c.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-2">
+          <ul data-testid="category-list" className="space-y-2">
             {isLoadingCategories
               ? Array.from({ length: 3 }).map((_, index) => (
                   <Skeleton
@@ -163,7 +179,7 @@ export const CategoriesPage = () => {
                   />
                 ))
               : indexedCategories.map((index) => (
-                  <SortableCategoryItem
+                  <SortableCategory
                     key={index?.id}
                     categoryIndex={index}
                     onEditButtonClick={() => {
@@ -176,12 +192,16 @@ export const CategoriesPage = () => {
                     }}
                   />
                 ))}
-          </div>
+          </ul>
         </SortableContext>
       </DndContext>
       <FormDialog
-        title="Add Category"
-        description="Add a new category to your to list items under."
+        title={selectedCategory ? "Edit Category" : "Create New Category"}
+        description={
+          selectedCategory
+            ? "Edit the details of your category."
+            : "Add a new category to your to list items under."
+        }
         isDialogOpen={renderCategoryDialog}
         setIsDialogOpen={setRenderCategoryDialog}
         formComponent={
@@ -202,7 +222,7 @@ export const CategoriesPage = () => {
   );
 };
 
-const SortableCategoryItem = ({
+const SortableCategory = ({
   categoryIndex,
   onEditButtonClick,
   onDeleteButtonClick,
@@ -227,7 +247,7 @@ const SortableCategoryItem = ({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <li key={categoryIndex.id} ref={setNodeRef} style={style}>
       <Item variant="outline" size="sm" className="max-w-full lg:max-w-1/2">
         <button
           className="cursor-grab px-2 active:cursor-grabbing"
@@ -238,14 +258,14 @@ const SortableCategoryItem = ({
         </button>
         <ItemContent>
           <ItemTitle className="select-none">
-            <Link to={`/dashboard/categories/${categoryIndex?.category?.id}`}>
+            <Link to={`/categories/${categoryIndex?.category?.id}`}>
               {categoryIndex?.category?.name}
             </Link>
           </ItemTitle>
         </ItemContent>
         <ItemActions>
           <Button
-            aria-label="Edit item"
+            aria-label="Edit category"
             size={"icon-sm"}
             variant={"ghost"}
             onClick={onEditButtonClick}
@@ -253,7 +273,7 @@ const SortableCategoryItem = ({
             <ClipboardPen />
           </Button>
           <Button
-            aria-label="Delete item"
+            aria-label="Delete category"
             size={"icon-sm"}
             variant={"ghost"}
             className="text-red-600 hover:text-red-600"
@@ -263,6 +283,6 @@ const SortableCategoryItem = ({
           </Button>
         </ItemActions>
       </Item>
-    </div>
+    </li>
   );
 };
