@@ -218,7 +218,7 @@ export const menuCategoryRouter = router({
         .from("menu_categories")
         .select("*")
         .eq("id", categoryId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         throw new TRPCError({
