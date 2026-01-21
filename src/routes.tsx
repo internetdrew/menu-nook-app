@@ -9,7 +9,7 @@ import { CategoryItemsPage } from "./routes/CategoryItemsPage.tsx";
 import { SettingsPage } from "./routes/SettingsPage.tsx";
 import { DashboardPage } from "./components/Dashboard.tsx";
 import { NotFound } from "./routes/NotFound.tsx";
-import { Navigate } from "react-router";
+import { Navigate, Outlet } from "react-router";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated.tsx";
 
 export const routes = [
@@ -23,12 +23,22 @@ export const routes = [
     ],
   },
   {
-    path: "/preview/menu",
-    element: <Navigate to="/" replace />,
-  },
-  {
-    path: "/preview/menu/:menuId",
-    element: <Menu isPreview={true} />,
+    path: "/preview",
+    element: (
+      <ProtectedRoute>
+        <Outlet />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "menu",
+        element: <Navigate to="/" replace />,
+      },
+      {
+        path: "menu/:menuId",
+        element: <Menu isPreview={true} />,
+      },
+    ],
   },
   {
     path: "/menu/:menuId",
