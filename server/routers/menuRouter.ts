@@ -133,6 +133,7 @@ export const menuRouter = router({
     )
     .query(async ({ input }) => {
       const { menuId } = input;
+      console.log("Fetching menu with ID:", menuId);
 
       const { data: menu, error: menuError } = await supabaseAdminClient
         .from("menus")
@@ -143,13 +144,19 @@ export const menuRouter = router({
       `,
         )
         .eq("id", menuId)
-        .single();
+        .maybeSingle();
 
       if (menuError) {
+        console.error("Error fetching menu:", menuError);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to fetch menu: ${menuError.message}`,
         });
+      }
+
+      if (!menu) {
+        console.warn("Menu not found for ID:", menuId);
+        return null;
       }
 
       const { data: sortedCategories, error: catError } =
