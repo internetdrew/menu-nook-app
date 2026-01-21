@@ -184,11 +184,16 @@ export const menuRouter = router({
 
       const categoriesWithSortedItems = sortedCategories.map((row) => {
         const items =
-          row.category.items?.sort((a, b) => {
-            const ai = a.sort_index?.[0]?.order_index ?? 0;
-            const bi = b.sort_index?.[0]?.order_index ?? 0;
-            return ai - bi;
-          }) ?? [];
+          row.category.items
+            ?.map((item) => {
+              const { sort_index, ...rest } = item;
+
+              return {
+                ...rest,
+                order_index: sort_index?.[0]?.order_index ?? 0,
+              };
+            })
+            .sort((a, b) => a.order_index - b.order_index) ?? [];
 
         return {
           ...row.category,
