@@ -35,7 +35,7 @@ export function Header() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/dashboard">{business?.name}</Link>
+                    <Link to="/">{business?.name}</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </BreadcrumbList>

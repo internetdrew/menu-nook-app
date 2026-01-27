@@ -4,3 +4,5 @@ export const description =
 
 export const linkClasses =
   "text-pink-600 underline-offset-4 hover:text-pink-800 underline";
+
+export const MAX_MENUS_PER_BUSINESS = 10;

@@ -19,6 +19,7 @@ import FormDialog from "./dialogs/FormDialog";
 import { CreateMenuForm } from "./forms/CreateMenuForm";
 import { useNavigate } from "react-router";
 import { Skeleton } from "./ui/skeleton";
+import { MAX_MENUS_PER_BUSINESS } from "@/constants";
 
 export function MenuSwitcher() {
   const { isMobile, setOpenMobile } = useSidebar();
@@ -38,7 +39,7 @@ export function MenuSwitcher() {
   }
 
   return (
-    <SidebarMenu>
+    <SidebarMenu data-testid="menu-switcher">
       <SidebarMenuItem>
         <DropdownMenu open={renderDropdown} onOpenChange={setRenderDropdown}>
           <DropdownMenuTrigger asChild>
@@ -80,7 +81,11 @@ export function MenuSwitcher() {
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2" onClick={triggerDialog}>
+            <DropdownMenuItem
+              disabled={menus.length >= MAX_MENUS_PER_BUSINESS}
+              className="gap-2 p-2"
+              onClick={triggerDialog}
+            >
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
               </div>

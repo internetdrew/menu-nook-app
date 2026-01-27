@@ -192,9 +192,12 @@ export const CategoryItemsPage = () => {
           )}
         </div>
         {indexedItems?.length === 0 && !isLoadingItems && (
-          <div className="mt-12 flex flex-col items-center justify-center p-10">
+          <div className="mx-auto mt-12 flex max-w-md flex-col items-center justify-center p-10">
             <p className="text-muted-foreground text-center">
-              Start adding items to {category?.name} to populate your menu.
+              Start adding items to{" "}
+              <span className="font-semibold">{category?.name}</span> to
+              populate your menu. This category will not show up on your public
+              menu until it has at least one item.
             </p>
           </div>
         )}

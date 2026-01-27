@@ -57,6 +57,22 @@ export const Menu = ({ isPreview = false }: MenuProps) => {
     ),
   );
 
+  const categoriesWithItems = menu?.menu_categories.filter(
+    (category) => category.items && category.items.length > 0,
+  );
+
+  const handleSubscribe = async () => {
+    await stripeCheckoutMutation.mutateAsync(undefined, {
+      onSuccess: (data) => {
+        window.location.assign(data.url);
+      },
+      onError: (error) => {
+        console.error("Error creating checkout session:", error);
+        toast.error("Error creating checkout session: ");
+      },
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-screen-sm px-4 py-8">
@@ -83,26 +99,13 @@ export const Menu = ({ isPreview = false }: MenuProps) => {
     return <MenuUnavailable placeName={menu.name} />;
   }
 
-  const handleSubscribe = async () => {
-    await stripeCheckoutMutation.mutateAsync(undefined, {
-      onSuccess: (data) => {
-        window.location.assign(data.url);
-      },
-      onError: (error) => {
-        console.error("Error creating checkout session:", error);
-        toast.error("Error creating checkout session: ");
-      },
-    });
-  };
-
   return (
     <div className="flex min-h-screen flex-col">
       {isPreview && (
         <div className="sticky top-0 z-10 border-b border-yellow-300 bg-yellow-100 py-2 text-center text-sm text-yellow-800">
           <div className="mx-auto flex max-w-screen-sm flex-col items-center justify-center gap-2">
             <span>
-              This is a preview. To enable the live menu, please subscribe
-              below.
+              This is a preview. To enable the live menu, please subscribe.
             </span>
             {subscriptionIsActive ? (
               <a href={`${liveSiteUrl}/${menu.id}`} className={linkClasses}>
@@ -133,7 +136,7 @@ export const Menu = ({ isPreview = false }: MenuProps) => {
         <h2 className="text-muted-foreground mt-2 text-center">{menu.name}</h2>
         <nav className="my-8 flex flex-wrap items-center justify-center gap-4">
           <ul className="flex flex-wrap items-center justify-center gap-4">
-            {menu.menu_categories.map((category) => {
+            {categoriesWithItems?.map((category) => {
               return (
                 <li key={category.id}>
                   <Link
@@ -148,10 +151,10 @@ export const Menu = ({ isPreview = false }: MenuProps) => {
             })}
           </ul>
         </nav>
-        {menu.menu_categories.length === 0 ? (
+        {categoriesWithItems?.length === 0 ? (
           <p className="mt-16 text-center">No categories available.</p>
         ) : (
-          menu.menu_categories.map((category) => (
+          categoriesWithItems?.map((category) => (
             <section key={category.id} className="mt-16">
               <h2
                 id={createSlug(category.name)}
