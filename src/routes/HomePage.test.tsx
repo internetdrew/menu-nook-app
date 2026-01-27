@@ -8,6 +8,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { http, HttpResponse } from "msw";
+import { MAX_MENUS_PER_BUSINESS } from "@/constants";
 
 vi.mock("@/lib/supabase", () => {
   return {
@@ -797,5 +798,97 @@ describe("Dashboard Home Page", () => {
     expect(
       within(feedbackForm).getByText(/Please add feedback to submit./i),
     ).toBeInTheDocument();
+  });
+  it(`disables the create menu button when user has ${MAX_MENUS_PER_BUSINESS} menus`, async () => {
+    const maxMenus = Array.from({ length: MAX_MENUS_PER_BUSINESS }, (_, i) => ({
+      id: `${i + 1}`,
+      name: `Menu ${i + 1}`,
+      business_id: "123",
+    }));
+
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "123",
+              name: "The Test Place",
+              user_id: "test_user_123",
+            },
+          },
+        }),
+        "subscription.getForUser": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: maxMenus,
+          },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await waitFor(async () => {
+      const menuSwitcher = await screen.findByTestId("menu-switcher");
+      expect(menuSwitcher).toBeInTheDocument();
+    });
+    await user.click(screen.getByText("Menu 1"));
+
+    expect(screen.getByText("Menu 2")).toBeInTheDocument();
+    expect(screen.getByText("Menu 3")).toBeInTheDocument();
+    expect(
+      screen.getByText(`Menu ${MAX_MENUS_PER_BUSINESS}`),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("menuitem", { name: /create menu/i }),
+    ).toHaveAttribute("aria-disabled", "true");
+  });
+  it(`enables the create menu button when user has less than ${MAX_MENUS_PER_BUSINESS} menus`, async () => {
+    const belowMaxMenus = Array.from(
+      { length: MAX_MENUS_PER_BUSINESS - 1 },
+      (_, i) => ({
+        id: `${i + 1}`,
+        name: `Menu ${i + 1}`,
+        business_id: "123",
+      }),
+    );
+
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "123",
+              name: "The Test Place",
+              user_id: "test_user_123",
+            },
+          },
+        }),
+        "subscription.getForUser": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: belowMaxMenus,
+          },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await waitFor(async () => {
+      const menuSwitcher = await screen.findByTestId("menu-switcher");
+      expect(menuSwitcher).toBeInTheDocument();
+    });
+    await user.click(screen.getByText("Menu 1"));
+
+    expect(screen.getByText("Menu 2")).toBeInTheDocument();
+    expect(screen.getByText("Menu 3")).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("menuitem", { name: /create menu/i }),
+    ).not.toHaveAttribute("aria-disabled", "true");
   });
 });
