@@ -39,7 +39,7 @@ export function MenuSwitcher() {
   }
 
   return (
-    <SidebarMenu>
+    <SidebarMenu data-testid="menu-switcher">
       <SidebarMenuItem>
         <DropdownMenu open={renderDropdown} onOpenChange={setRenderDropdown}>
           <DropdownMenuTrigger asChild>
