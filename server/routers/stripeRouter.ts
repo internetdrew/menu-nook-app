@@ -26,8 +26,8 @@ export const stripeRouter = router({
           quantity: 1,
         },
       ],
-      success_url: `${APP_DOMAIN}/success=true`,
-      cancel_url: `${APP_DOMAIN}/canceled=true`,
+      success_url: `${APP_DOMAIN}/?success=true`,
+      cancel_url: `${APP_DOMAIN}/?canceled=true`,
       metadata: {
         userId: ctx.user.id,
       },
