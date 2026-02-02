@@ -248,7 +248,7 @@ describe("Category Items Page", () => {
                   item: {
                     id: 44,
                     name: "Existing Item",
-                    description: "An existing item description",
+                    description: "An existing description",
                     price: 12.5,
                   },
                 },
