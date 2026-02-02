@@ -54,7 +54,7 @@ export function NavUser() {
                   src={user?.user_metadata?.avatar_url}
                   alt={user?.user_metadata?.name}
                 />
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback className="rounded-full">
                   {user?.user_metadata?.name.charAt(0)}
                 </AvatarFallback>
               </Avatar>
@@ -80,7 +80,9 @@ export function NavUser() {
                     src={user?.user_metadata?.avatar_url}
                     alt={user?.user_metadata?.name}
                   />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-full">
+                    {user?.user_metadata?.name.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
