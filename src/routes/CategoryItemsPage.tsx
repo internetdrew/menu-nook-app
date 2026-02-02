@@ -295,25 +295,18 @@ const SortableMenuItem = ({
         <ItemContent className="select-none">
           <span className="flex items-center">
             <ItemTitle>{itemIndex?.item?.name}</ItemTitle>
-            {itemIndex?.item?.description && (
-              <Popover>
-                <PopoverTrigger>
-                  <Info className="ml-1 size-3" />
-                </PopoverTrigger>
-                <PopoverContent className="text-sm">
-                  {itemIndex?.item?.description}
-                </PopoverContent>
-              </Popover>
-            )}
           </span>
-          <span className="text-muted-foreground mt-1">
+          <span className="text-muted-foreground">
+            {itemIndex?.item?.description}
+          </span>
+          <span className="mt-1">
             {new Intl.NumberFormat("en-US", {
               style: "currency",
               currency: "USD",
             }).format(itemIndex?.item?.price ?? 0)}
           </span>
         </ItemContent>
-        <ItemActions>
+        <ItemActions className="ml-6">
           <Button
             aria-label="Edit item"
             size={"icon-sm"}

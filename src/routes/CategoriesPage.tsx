@@ -262,8 +262,11 @@ const SortableCategory = ({
               {categoryIndex?.category?.name}
             </Link>
           </ItemTitle>
+          <span className="text-muted-foreground">
+            {categoryIndex?.category?.description}
+          </span>
         </ItemContent>
-        <ItemActions>
+        <ItemActions className="ml-6">
           <Button
             aria-label="Edit category"
             size={"icon-sm"}
