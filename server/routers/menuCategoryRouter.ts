@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
-import { supabaseAdminClient } from "../supabase";
 
 export const menuCategoryRouter = router({
   create: protectedProcedure
@@ -12,10 +11,10 @@ export const menuCategoryRouter = router({
         description: z.string().max(255).optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { name, menuId, description } = input;
 
-      const { data, error } = await supabaseAdminClient
+      const { data, error } = await ctx.supabase
         .from("menu_category_sort_indexes")
         .select("order_index")
         .eq("menu_id", menuId)
@@ -36,7 +35,7 @@ export const menuCategoryRouter = router({
           : data.order_index + 1;
 
       const { data: newCategory, error: createCategoryError } =
-        await supabaseAdminClient
+        await ctx.supabase
           .from("menu_categories")
           .insert({
             name,
@@ -53,7 +52,7 @@ export const menuCategoryRouter = router({
         });
       }
 
-      const { error: sortIndexError } = await supabaseAdminClient
+      const { error: sortIndexError } = await ctx.supabase
         .from("menu_category_sort_indexes")
         .insert({
           category_id: newCategory.id,
@@ -75,9 +74,9 @@ export const menuCategoryRouter = router({
         menuId: z.uuid(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { menuId } = input;
-      const { data, error } = await supabaseAdminClient
+      const { data, error } = await ctx.supabase
         .from("menu_category_sort_indexes")
         .select(`*, category:menu_categories(*)`)
         .eq("menu_id", menuId)
@@ -99,10 +98,10 @@ export const menuCategoryRouter = router({
         description: z.string().max(255).optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { categoryId, name, description } = input;
 
-      const { data, error: updateCategoryError } = await supabaseAdminClient
+      const { data, error: updateCategoryError } = await ctx.supabase
         .from("menu_categories")
         .update({
           name,
@@ -127,10 +126,10 @@ export const menuCategoryRouter = router({
         categoryId: z.number(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { categoryId } = input;
 
-      const { data, error: deleteCategoryError } = await supabaseAdminClient
+      const { data, error: deleteCategoryError } = await ctx.supabase
         .from("menu_categories")
         .delete()
         .eq("id", categoryId)
@@ -158,7 +157,7 @@ export const menuCategoryRouter = router({
         ),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { menuId, newCategoryOrder } = input;
 
       if (menuId === null) {
@@ -172,7 +171,7 @@ export const menuCategoryRouter = router({
       for (let index = 0; index < newCategoryOrder.length; index++) {
         const { indexId } = newCategoryOrder[index];
 
-        const { error } = await supabaseAdminClient
+        const { error } = await ctx.supabase
           .from("menu_category_sort_indexes")
           .update({ order_index: offset + index })
           .eq("id", indexId)
@@ -189,7 +188,7 @@ export const menuCategoryRouter = router({
       for (let index = 0; index < newCategoryOrder.length; index++) {
         const { categoryId } = newCategoryOrder[index];
 
-        const { error } = await supabaseAdminClient
+        const { error } = await ctx.supabase
           .from("menu_category_sort_indexes")
           .update({ order_index: index })
           .eq("menu_id", menuId)
@@ -212,9 +211,9 @@ export const menuCategoryRouter = router({
         categoryId: z.number(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { categoryId } = input;
-      const { data, error } = await supabaseAdminClient
+      const { data, error } = await ctx.supabase
         .from("menu_categories")
         .select("*")
         .eq("id", categoryId)
@@ -234,9 +233,9 @@ export const menuCategoryRouter = router({
         menuId: z.uuid(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { menuId } = input;
-      const { count, error } = await supabaseAdminClient
+      const { count, error } = await ctx.supabase
         .from("menu_categories")
         .select("id", { count: "exact", head: true })
         .eq("menu_id", menuId);
