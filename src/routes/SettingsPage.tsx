@@ -1,10 +1,20 @@
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
+
 export const SettingsPage = () => {
+  const { activeMenu, loading } = useMenuContext();
+
+  if (loading) {
+    return <Skeleton />;
+  }
+
+  if (!activeMenu) {
+    return <div>No menu selected.</div>;
+  }
+
   return (
-    <div>
-      <h1 className="mt-4 font-medium">Settings</h1>
-      <p className="text-muted-foreground">
-        Let me know what you'd like to have here.
-      </p>
+    <div className="my-4">
+      <h1 className="font-medium">{activeMenu?.name} Settings</h1>
     </div>
   );
 };
