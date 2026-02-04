@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
-import { supabaseAdminClient } from "../supabase";
 
 export const businessRouter = router({
   create: protectedProcedure
@@ -11,7 +10,7 @@ export const businessRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { data: place, error } = await supabaseAdminClient
+      const { data: place, error } = await ctx.supabase
         .from("businesses")
         .insert({
           name: input.name,
@@ -30,7 +29,7 @@ export const businessRouter = router({
       return place;
     }),
   getForUser: protectedProcedure.query(async ({ ctx }) => {
-    const { data, error } = await supabaseAdminClient
+    const { data, error } = await ctx.supabase
       .from("businesses")
       .select()
       .eq("user_id", ctx.user.id)
@@ -51,8 +50,8 @@ export const businessRouter = router({
         businessId: z.uuid(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const { data, error } = await supabaseAdminClient
+    .mutation(async ({ input, ctx }) => {
+      const { data, error } = await ctx.supabase
         .from("businesses")
         .delete()
         .eq("id", input.businessId)
