@@ -76,16 +76,7 @@ export const routes = [
           },
           {
             path: "settings",
-            children: [
-              {
-                index: true,
-                element: <Navigate to="general" replace />,
-              },
-              {
-                path: "general",
-                element: <SettingsPage />,
-              },
-            ],
+            element: <SettingsPage />,
           },
         ],
       },
