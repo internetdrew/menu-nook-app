@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
-import { supabaseAdminClient } from "../supabase";
 import QRCode from "qrcode";
 import { generateQRFilePath } from "../utils/qrCode";
 
@@ -14,10 +13,10 @@ export const menuRouter = router({
         baseUrl: z.url(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { name, businessId, baseUrl } = input;
 
-      const { data: menu, error: menuCreationError } = await supabaseAdminClient
+      const { data: menu, error: menuCreationError } = await ctx.supabase
         .from("menus")
         .insert({
           name,
@@ -47,7 +46,7 @@ export const menuRouter = router({
 
       const filePath = generateQRFilePath(menu.id);
 
-      const { error: qrUploadError } = await supabaseAdminClient.storage
+      const { error: qrUploadError } = await ctx.supabase.storage
         .from("qr_codes")
         .upload(filePath, buffer, {
           contentType: "image/png",
@@ -56,7 +55,7 @@ export const menuRouter = router({
         });
 
       if (qrUploadError) {
-        await supabaseAdminClient.from("menus").delete().eq("id", menu.id);
+        await ctx.supabase.from("menus").delete().eq("id", menu.id);
 
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -66,9 +65,9 @@ export const menuRouter = router({
 
       const {
         data: { publicUrl },
-      } = supabaseAdminClient.storage.from("qr_codes").getPublicUrl(filePath);
+      } = ctx.supabase.storage.from("qr_codes").getPublicUrl(filePath);
 
-      const { error: insertError } = await supabaseAdminClient
+      const { error: insertError } = await ctx.supabase
         .from("menu_qr_codes")
         .insert({ menu_id: menu.id, public_url: publicUrl });
 
@@ -87,8 +86,8 @@ export const menuRouter = router({
         businessId: z.uuid(),
       }),
     )
-    .query(async ({ input }) => {
-      const { data, error } = await supabaseAdminClient
+    .query(async ({ input, ctx }) => {
+      const { data, error } = await ctx.supabase
         .from("menus")
         .select()
         .eq("business_id", input.businessId);
@@ -108,8 +107,8 @@ export const menuRouter = router({
         menuId: z.uuid(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const { data, error } = await supabaseAdminClient
+    .mutation(async ({ input, ctx }) => {
+      const { data, error } = await ctx.supabase
         .from("menus")
         .delete()
         .eq("id", input.menuId)
@@ -131,10 +130,10 @@ export const menuRouter = router({
         menuId: z.uuid(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { menuId } = input;
 
-      const { data: menu, error: menuError } = await supabaseAdminClient
+      const { data: menu, error: menuError } = await ctx.supabase
         .from("menus")
         .select(
           `
@@ -158,11 +157,10 @@ export const menuRouter = router({
         return null;
       }
 
-      const { data: sortedCategories, error: catError } =
-        await supabaseAdminClient
-          .from("menu_category_sort_indexes")
-          .select(
-            `
+      const { data: sortedCategories, error: catError } = await ctx.supabase
+        .from("menu_category_sort_indexes")
+        .select(
+          `
           *,
           category:menu_categories(*, 
             items:menu_category_items(
@@ -171,9 +169,9 @@ export const menuRouter = router({
             )
           )
         `,
-          )
-          .eq("menu_id", menuId)
-          .order("order_index", { ascending: true });
+        )
+        .eq("menu_id", menuId)
+        .order("order_index", { ascending: true });
 
       if (catError) {
         throw new TRPCError({
