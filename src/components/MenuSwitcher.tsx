@@ -89,9 +89,7 @@ export function MenuSwitcher() {
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
               </div>
-              <div className="text-muted-foreground font-medium">
-                Create Menu
-              </div>
+              <div className="text-muted-foreground font-medium">Add Menu</div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -99,7 +97,7 @@ export function MenuSwitcher() {
       <FormDialog
         isDialogOpen={isDialogOpen}
         setIsDialogOpen={setIsDialogOpen}
-        title="Create Menu"
+        title="Add Menu"
         description="Add a new menu to your business."
         formComponent={
           <CreateMenuForm onSuccess={() => setIsDialogOpen(false)} />

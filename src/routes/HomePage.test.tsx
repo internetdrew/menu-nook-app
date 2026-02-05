@@ -276,7 +276,7 @@ describe("Dashboard Home Page", () => {
       screen.getByText(/add your first menu to get started./i),
     ).toBeInTheDocument();
     const button = screen.getByRole("button", {
-      name: /create menu/i,
+      name: /add menu/i,
     });
     expect(button).toBeInTheDocument();
   });
@@ -331,7 +331,7 @@ describe("Dashboard Home Page", () => {
       screen.getByText(/add your first menu to get started./i),
     ).toBeInTheDocument();
     const button = screen.getByRole("button", {
-      name: /create menu/i,
+      name: /add menu/i,
     });
     expect(button).toBeInTheDocument();
     await user.click(button);
@@ -402,7 +402,7 @@ describe("Dashboard Home Page", () => {
       screen.getByText(/add your first menu to get started./i),
     ).toBeInTheDocument();
     const button = screen.getByRole("button", {
-      name: /create menu/i,
+      name: /add menu/i,
     });
     expect(button).toBeInTheDocument();
     await user.click(button);
@@ -799,7 +799,7 @@ describe("Dashboard Home Page", () => {
       within(feedbackForm).getByText(/Please add feedback to submit./i),
     ).toBeInTheDocument();
   });
-  it(`disables the create menu button when user has ${MAX_MENUS_PER_BUSINESS} menus`, async () => {
+  it(`disables the add menu button when user has ${MAX_MENUS_PER_BUSINESS} menus`, async () => {
     const maxMenus = Array.from({ length: MAX_MENUS_PER_BUSINESS }, (_, i) => ({
       id: `${i + 1}`,
       name: `Menu ${i + 1}`,
@@ -841,11 +841,12 @@ describe("Dashboard Home Page", () => {
       screen.getByText(`Menu ${MAX_MENUS_PER_BUSINESS}`),
     ).toBeInTheDocument();
 
-    expect(
-      screen.getByRole("menuitem", { name: /create menu/i }),
-    ).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("menuitem", { name: /add menu/i })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   });
-  it(`enables the create menu button when user has less than ${MAX_MENUS_PER_BUSINESS} menus`, async () => {
+  it(`enables the add menu button when user has less than ${MAX_MENUS_PER_BUSINESS} menus`, async () => {
     const belowMaxMenus = Array.from(
       { length: MAX_MENUS_PER_BUSINESS - 1 },
       (_, i) => ({
@@ -888,7 +889,7 @@ describe("Dashboard Home Page", () => {
     expect(screen.getByText("Menu 3")).toBeInTheDocument();
 
     expect(
-      screen.getByRole("menuitem", { name: /create menu/i }),
+      screen.getByRole("menuitem", { name: /add menu/i }),
     ).not.toHaveAttribute("aria-disabled", "true");
   });
 });

@@ -51,7 +51,7 @@ export function DashboardPage() {
       <EmptyStatePrompt
         cardTitle="No Menus Found"
         cardDescription="Add your first menu to get started."
-        buttonText="Create Menu"
+        buttonText="Add Menu"
         isDialogOpen={isDialogOpen}
         setIsDialogOpen={setIsDialogOpen}
         formComponent={CreateMenuForm}
