@@ -1,10 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
-import { supabaseAdminClient } from "../supabase";
 
 export const subscriptionRouter = router({
   getForUser: protectedProcedure.query(async ({ ctx }) => {
-    const { data: subscription, error } = await supabaseAdminClient
+    const { data: subscription, error } = await ctx.supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", ctx.user.id)
