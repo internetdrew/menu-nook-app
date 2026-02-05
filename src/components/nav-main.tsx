@@ -12,7 +12,7 @@ import {
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { Cog, Eye } from "lucide-react";
+import { Settings, List } from "lucide-react";
 import { Link, NavLink } from "react-router";
 import { Skeleton } from "./ui/skeleton";
 
@@ -41,12 +41,8 @@ export function NavMain() {
       url: subscription
         ? `/menu/${activeMenu?.id}`
         : `/preview/menu/${activeMenu?.id}`,
-      icon: Eye,
+      icon: List,
     },
-  ];
-
-  const settingsItems = [
-    { title: "Menu Settings", url: `/settings`, icon: Cog },
   ];
 
   if (!menus.length) {
@@ -128,16 +124,14 @@ export function NavMain() {
         <SidebarGroupLabel>Settings</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            {settingsItems?.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton tooltip={item.title} asChild>
-                  <Link to={item.url} onClick={() => setOpenMobile(false)}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="General Settings" asChild>
+                <Link to={`/settings`} onClick={() => setOpenMobile(false)}>
+                  <Settings />
+                  <span>General</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
