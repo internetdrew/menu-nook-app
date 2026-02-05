@@ -138,9 +138,6 @@ export const MenuDetails = () => {
             </div>
           </form>
         </ItemContent>
-        {/* <ItemActions className="mb-auto">
-        
-        </ItemActions> */}
       </Item>
 
       <DeleteMenuAlertDialog
