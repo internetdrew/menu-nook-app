@@ -101,6 +101,32 @@ export const menuRouter = router({
 
       return data;
     }),
+  update: protectedProcedure
+    .input(
+      z.object({
+        menuId: z.uuid(),
+        name: z.string().min(1).max(32),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { menuId, name } = input;
+
+      const { data, error } = await ctx.supabase
+        .from("menus")
+        .update({ name })
+        .eq("id", menuId)
+        .select()
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+        });
+      }
+
+      return data;
+    }),
   delete: protectedProcedure
     .input(
       z.object({
