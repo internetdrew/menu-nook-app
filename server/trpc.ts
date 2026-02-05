@@ -16,8 +16,10 @@ export const createContext = async ({
     req,
     res,
     user,
+    supabase,
   };
 };
+
 type Context = Awaited<ReturnType<typeof createContext>>;
 
 const t = initTRPC.context<Context>().create();
@@ -35,6 +37,7 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
     ctx: {
       ...ctx,
       user: ctx.user,
+      supabase: ctx.supabase,
     },
   });
 });
