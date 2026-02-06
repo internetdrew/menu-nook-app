@@ -11,22 +11,43 @@ import { NotFound } from "./NotFound";
 import MenuUnavailable from "../components/MenuUnavailable";
 import { toast } from "sonner";
 
-interface MenuProps {
-  isPreview?: boolean;
-}
-
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
 
-export const Menu = ({ isPreview = false }: MenuProps) => {
+export const Menu = () => {
   const { menuId } = useParams<{ menuId: string }>();
-  const { hash } = useLocation();
+  const { hash, pathname } = useLocation();
+
+  const isPreview = pathname.startsWith("/preview/");
+
+  const {
+    data: menu,
+    isLoading,
+    error,
+  } = useQuery(
+    isPreview
+      ? trpc.menu.getPreview.queryOptions(
+          { menuId: menuId ?? "" },
+          { enabled: !!menuId },
+        )
+      : trpc.menu.getPublic.queryOptions(
+          { menuId: menuId ?? "" },
+          { enabled: !!menuId },
+        ),
+  );
 
   const stripeCheckoutMutation = useMutation(
     trpc.stripe.createCheckoutSession.mutationOptions(),
   );
 
   const { data: subscription } = useQuery(
-    trpc.subscription.getForUser.queryOptions(),
+    trpc.subscription.getForBusiness.queryOptions(
+      {
+        businessId: menu?.business_id ?? "",
+      },
+      {
+        enabled: !!menu?.business_id,
+      },
+    ),
   );
 
   const subscriptionIsActive =
@@ -41,21 +62,6 @@ export const Menu = ({ isPreview = false }: MenuProps) => {
       }
     }
   }, [hash]);
-
-  const {
-    data: menu,
-    isLoading,
-    error,
-  } = useQuery(
-    trpc.menu.getById.queryOptions(
-      {
-        menuId: menuId ?? "",
-      },
-      {
-        enabled: !!menuId,
-      },
-    ),
-  );
 
   const categoriesWithItems = menu?.menu_categories.filter(
     (category) => category.items && category.items.length > 0,
@@ -102,10 +108,10 @@ export const Menu = ({ isPreview = false }: MenuProps) => {
   return (
     <div className="flex min-h-screen flex-col">
       {isPreview && (
-        <div className="sticky top-0 z-10 border-b border-yellow-300 bg-yellow-100 py-2 text-center text-sm text-yellow-800">
+        <div className="sticky top-16 z-10 rounded-lg border-b bg-neutral-600/5 py-4 text-center text-sm backdrop-blur-sm">
           <div className="mx-auto flex max-w-screen-sm flex-col items-center justify-center gap-2">
-            <span>
-              This is a preview. To enable the live menu, please subscribe.
+            <span className="font-medium">
+              Your customers can't see this menu.
             </span>
             {subscriptionIsActive ? (
               <a href={`${liveSiteUrl}/${menu.id}`} className={linkClasses}>
@@ -113,16 +119,15 @@ export const Menu = ({ isPreview = false }: MenuProps) => {
               </a>
             ) : (
               <Button
-                type="submit"
-                variant="outline"
+                size={"sm"}
                 onClick={handleSubscribe}
-                className="text-xs"
                 disabled={
                   stripeCheckoutMutation.isPending ||
                   stripeCheckoutMutation.isSuccess
                 }
               >
-                {stripeCheckoutMutation.isPending && <Spinner />} Subscribe
+                {stripeCheckoutMutation.isPending && <Spinner />} Subscribe to
+                publish
               </Button>
             )}
           </div>
