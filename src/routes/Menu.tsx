@@ -5,7 +5,8 @@ import { linkClasses } from "@/constants";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { ArrowUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { NotFound } from "./NotFound";
 import MenuUnavailable from "../components/MenuUnavailable";
@@ -54,11 +55,45 @@ export const Menu = () => {
     subscription?.status === "active" &&
     new Date(subscription.current_period_end) > new Date();
 
+  const navRef = useRef<HTMLElement>(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowScrollToTop(!entry.isIntersecting);
+      },
+      { threshold: 0 },
+    );
+
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [menu]);
+
+  const scrollToTop = () => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? "instant" : "smooth",
+    });
+  };
+
   useEffect(() => {
     if (hash) {
       const el = document.querySelector(hash);
       if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        const prefersReducedMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        el.scrollIntoView({
+          behavior: prefersReducedMotion ? "instant" : "smooth",
+          block: "start",
+        });
       }
     }
   }, [hash]);
@@ -139,7 +174,10 @@ export const Menu = () => {
           {menu.business.name}
         </h1>
         <h2 className="text-muted-foreground mt-2 text-center">{menu.name}</h2>
-        <nav className="my-8 flex flex-wrap items-center justify-center gap-4">
+        <nav
+          ref={navRef}
+          className="my-8 flex flex-wrap items-center justify-center gap-4"
+        >
           <ul className="flex flex-wrap items-center justify-center gap-4">
             {categoriesWithItems?.map((category) => {
               return (
@@ -205,6 +243,17 @@ export const Menu = () => {
           </span>
         </div>
       </footer>
+
+      <Button
+        onClick={scrollToTop}
+        size="icon"
+        className={`fixed right-4 bottom-4 rounded-full shadow-lg motion-safe:transition-transform motion-safe:duration-300 ${
+          showScrollToTop ? "translate-x-0" : "translate-x-20"
+        }`}
+        aria-label="Scroll to top"
+      >
+        <ArrowUp className="h-5 w-5" />
+      </Button>
     </div>
   );
 };
