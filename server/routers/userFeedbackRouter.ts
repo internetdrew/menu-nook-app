@@ -1,7 +1,6 @@
 import z from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
-import { supabaseAdminClient } from "../supabase";
 
 export const userFeedbackRouter = router({
   submit: protectedProcedure
@@ -13,15 +12,14 @@ export const userFeedbackRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { feedback } = input;
 
-      const { data: newFeedback, error: feedbackError } =
-        await supabaseAdminClient
-          .from("user_feedback")
-          .insert({
-            user_id: ctx.user.id,
-            feedback,
-          })
-          .select()
-          .single();
+      const { data: newFeedback, error: feedbackError } = await ctx.supabase
+        .from("user_feedback")
+        .insert({
+          user_id: ctx.user.id,
+          feedback,
+        })
+        .select()
+        .single();
 
       if (feedbackError) {
         throw new TRPCError({

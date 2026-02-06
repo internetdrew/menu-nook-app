@@ -140,7 +140,9 @@ export const CategoriesPage = () => {
   return (
     <>
       <div className="my-4 flex items-center">
-        <h1 className="font-medium">Categories</h1>
+        <h1 className="font-medium">
+          {activeMenu?.name && `${activeMenu.name} `} Categories
+        </h1>
         <Popover>
           <PopoverTrigger>
             <Info className="ml-1 size-3" />
@@ -180,7 +182,7 @@ export const CategoriesPage = () => {
                 ))
               : indexedCategories.map((index) => (
                   <SortableCategory
-                    key={index?.id}
+                    key={index?.category?.name}
                     categoryIndex={index}
                     onEditButtonClick={() => {
                       setSelectedCategory(index.category);

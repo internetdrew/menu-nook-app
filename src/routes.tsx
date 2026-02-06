@@ -9,7 +9,7 @@ import { CategoryItemsPage } from "./routes/CategoryItemsPage.tsx";
 import { SettingsPage } from "./routes/SettingsPage.tsx";
 import { DashboardPage } from "./components/Dashboard.tsx";
 import { NotFound } from "./routes/NotFound.tsx";
-import { Navigate, Outlet } from "react-router";
+import { Navigate } from "react-router";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated.tsx";
 
 export const routes = [
@@ -19,24 +19,6 @@ export const routes = [
       {
         path: "/login",
         element: <Login />,
-      },
-    ],
-  },
-  {
-    path: "/preview",
-    element: (
-      <ProtectedRoute>
-        <Outlet />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        path: "menu",
-        element: <Navigate to="/" replace />,
-      },
-      {
-        path: "menu/:menuId",
-        element: <Menu isPreview={true} />,
       },
     ],
   },
@@ -54,6 +36,14 @@ export const routes = [
       </ProtectedRoute>
     ),
     children: [
+      {
+        path: "preview",
+        element: <Navigate to="/" replace />,
+      },
+      {
+        path: "preview/:menuId",
+        element: <Menu />,
+      },
       {
         element: <DashboardPage />,
         children: [
@@ -76,16 +66,7 @@ export const routes = [
           },
           {
             path: "settings",
-            children: [
-              {
-                index: true,
-                element: <Navigate to="general" replace />,
-              },
-              {
-                path: "general",
-                element: <SettingsPage />,
-              },
-            ],
+            element: <SettingsPage />,
           },
         ],
       },

@@ -44,14 +44,14 @@ export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
       { ...values, businessId: business.id, baseUrl: window.location.origin },
       {
         onError: (error) => {
-          console.error("Failed to create menu:", error);
-          toast.error("Failed to create menu. Please try again.");
+          console.error("Failed to add menu:", error);
+          toast.error("Failed to add menu. Please try again.");
         },
         onSuccess: async (menu) => {
           await queryClient.invalidateQueries({
             queryKey: trpc.menu.getAllForBusiness.queryKey(),
           });
-          toast.success(`${menu.name} created successfully!`);
+          toast.success(`${menu.name} added successfully!`);
           onSuccess();
         },
       },

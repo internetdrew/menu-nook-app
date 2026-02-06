@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
-import { supabaseAdminClient } from "../supabase";
 
 export const menuQRCodeRouter = router({
   getPublicUrlForMenu: protectedProcedure
@@ -10,9 +9,9 @@ export const menuQRCodeRouter = router({
         menuId: z.uuid(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { menuId } = input;
-      const { data, error } = await supabaseAdminClient
+      const { data, error } = await ctx.supabase
         .from("menu_qr_codes")
         .select("public_url")
         .eq("menu_id", menuId)
