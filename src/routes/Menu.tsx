@@ -7,7 +7,7 @@ import { trpc } from "@/utils/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { NotFound } from "./NotFound";
 import MenuUnavailable from "../components/MenuUnavailable";
 import { toast } from "sonner";
@@ -17,12 +17,13 @@ const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
 export const Menu = () => {
   const { menuId } = useParams<{ menuId: string }>();
   const { hash, pathname } = useLocation();
+  const navigate = useNavigate();
 
   const isPreview = pathname.startsWith("/preview/");
 
   const {
     data: menu,
-    isLoading,
+    isLoading: menuIsLoading,
     error,
   } = useQuery(
     isPreview
@@ -40,7 +41,7 @@ export const Menu = () => {
     trpc.stripe.createCheckoutSession.mutationOptions(),
   );
 
-  const { data: subscription } = useQuery(
+  const { data: subscription, isLoading: subscriptionIsLoading } = useQuery(
     trpc.subscription.getForBusiness.queryOptions(
       {
         businessId: menu?.business_id ?? "",
@@ -71,7 +72,7 @@ export const Menu = () => {
 
     observer.observe(nav);
     return () => observer.disconnect();
-  }, [menu]);
+  }, [menu, subscriptionIsActive]);
 
   const scrollToTop = () => {
     const prefersReducedMotion = window.matchMedia(
@@ -81,6 +82,10 @@ export const Menu = () => {
       top: 0,
       behavior: prefersReducedMotion ? "instant" : "smooth",
     });
+    // Reset the hash so clicking the same category link works again
+    if (hash) {
+      navigate(pathname, { replace: true });
+    }
   };
 
   useEffect(() => {
@@ -103,18 +108,21 @@ export const Menu = () => {
   );
 
   const handleSubscribe = async () => {
-    await stripeCheckoutMutation.mutateAsync(undefined, {
-      onSuccess: (data) => {
-        window.location.assign(data.url);
+    await stripeCheckoutMutation.mutateAsync(
+      { businessId: menu?.business_id ?? "" },
+      {
+        onSuccess: (data) => {
+          window.location.assign(data.url);
+        },
+        onError: (error) => {
+          console.error("Error creating checkout session:", error);
+          toast.error("Error creating checkout session: " + error.message);
+        },
       },
-      onError: (error) => {
-        console.error("Error creating checkout session:", error);
-        toast.error("Error creating checkout session: ");
-      },
-    });
+    );
   };
 
-  if (isLoading) {
+  if (menuIsLoading || subscriptionIsLoading) {
     return (
       <div className="mx-auto w-full max-w-screen-sm px-4 py-8">
         <Skeleton className="mx-auto mb-6 h-8 w-1/4" />
@@ -146,10 +154,15 @@ export const Menu = () => {
         <div className="sticky top-16 z-10 rounded-lg border-b bg-neutral-600/5 py-4 text-center text-sm backdrop-blur-sm">
           <div className="mx-auto flex max-w-screen-sm flex-col items-center justify-center gap-2">
             <span className="font-medium">
-              Your customers can't see this menu.
+              {subscriptionIsActive
+                ? "This is a preview of your live menu."
+                : "Your menu is not live because your subscription is inactive."}
             </span>
             {subscriptionIsActive ? (
-              <a href={`${liveSiteUrl}/${menu.id}`} className={linkClasses}>
+              <a
+                href={`${liveSiteUrl}/menu/${menu.id}`}
+                className={linkClasses}
+              >
                 View Live Menu
               </a>
             ) : (
