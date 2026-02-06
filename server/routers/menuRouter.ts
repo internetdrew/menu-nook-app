@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../trpc";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
 import QRCode from "qrcode";
 import { generateQRFilePath } from "../utils/qrCode";
+import { supabaseAdminClient } from "../supabase";
 
 export const menuRouter = router({
   create: protectedProcedure
@@ -150,7 +151,7 @@ export const menuRouter = router({
 
       return data;
     }),
-  getById: protectedProcedure
+  getById: publicProcedure
     .input(
       z.object({
         menuId: z.uuid(),
@@ -159,13 +160,13 @@ export const menuRouter = router({
     .query(async ({ input, ctx }) => {
       const { menuId } = input;
 
-      const { data: menu, error: menuError } = await ctx.supabase
+      const { data: menu, error: menuError } = await supabaseAdminClient
         .from("menus")
         .select(
           `
-        *,
-        business:businesses(*)
-      `,
+          *,
+          business:businesses(*)
+        `,
         )
         .eq("id", menuId)
         .maybeSingle();
