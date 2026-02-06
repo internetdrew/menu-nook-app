@@ -182,7 +182,7 @@ export const CategoriesPage = () => {
                 ))
               : indexedCategories.map((index) => (
                   <SortableCategory
-                    key={index?.id}
+                    key={index?.category?.name}
                     categoryIndex={index}
                     onEditButtonClick={() => {
                       setSelectedCategory(index.category);
