@@ -96,7 +96,7 @@ export function NavMain() {
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Menu Preview" asChild>
                 <Link
-                  to={`/preview/menu/${activeMenu?.id}`}
+                  to={`/preview/${activeMenu?.id}`}
                   onClick={() => setOpenMobile(false)}
                 >
                   <List />
