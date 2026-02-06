@@ -441,7 +441,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForBusiness": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -475,7 +475,7 @@ describe("Dashboard Home Page", () => {
     expect(within(sidebar).getByText(/Mock User/i)).toBeInTheDocument();
     expect(within(sidebar).getByText(/test@example.com/i)).toBeInTheDocument();
   });
-  it("renders link to live menu when user has a valid subscription", async () => {
+  it("renders link to preview menu when user has a menu", async () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({
@@ -487,7 +487,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({
+        "subscription.getForBusiness": () => ({
           result: {
             data: {
               id: "sub-123",
@@ -521,7 +521,7 @@ describe("Dashboard Home Page", () => {
     ).not.toBeInTheDocument();
 
     expect(
-      await within(sidebar).findByRole("link", { name: /live menu/i }),
+      await within(sidebar).findByRole("link", { name: /menu preview/i }),
     ).toBeInTheDocument();
   });
 
