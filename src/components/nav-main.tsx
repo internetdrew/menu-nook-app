@@ -79,19 +79,19 @@ export function NavMain() {
                       <Skeleton key={index} className="h-8" />
                     ))
                   : indexedCategories?.map((index) => (
-                      <SidebarMenuSubItem key={index.category.name}>
+                      <SidebarMenuSubItem key={index?.category?.name}>
                         <SidebarMenuButton
-                          title={index.category.name}
-                          tooltip={index.category.name}
+                          title={index?.category?.name}
+                          tooltip={index?.category?.name}
                           asChild
                         >
                           <NavLink
-                            to={`/categories/${index.category.id}`}
+                            to={`/categories/${index.category?.id}`}
                             onClick={() => setOpenMobile(false)}
                           >
                             {({ isActive }) => (
                               <span className={isActive ? "font-semibold" : ""}>
-                                {index.category.name}
+                                {index.category?.name}
                               </span>
                             )}
                           </NavLink>
