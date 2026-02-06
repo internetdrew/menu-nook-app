@@ -20,10 +20,6 @@ export function NavMain() {
   const { menus, activeMenu } = useMenuContext();
   const { setOpenMobile } = useSidebar();
 
-  const { data: subscription } = useQuery(
-    trpc.subscription.getForUser.queryOptions(),
-  );
-
   const { data: indexedCategories, isLoading: isLoadingCategories } = useQuery(
     trpc.menuCategory.getAllSortedByIndex.queryOptions(
       {
@@ -34,16 +30,6 @@ export function NavMain() {
       },
     ),
   );
-
-  const viewItems = [
-    {
-      title: subscription ? "Live Menu" : "Menu Preview",
-      url: subscription
-        ? `/menu/${activeMenu?.id}`
-        : `/preview/menu/${activeMenu?.id}`,
-      icon: List,
-    },
-  ];
 
   if (!menus.length) {
     return null;
@@ -75,7 +61,7 @@ export function NavMain() {
               </SidebarMenuButton>
               <SidebarMenuSub>
                 {isLoadingCategories
-                  ? Array.from({ length: 5 }).map((_, index) => (
+                  ? Array.from({ length: 3 }).map((_, index) => (
                       <Skeleton key={index} className="h-8" />
                     ))
                   : indexedCategories?.map((index) => (
@@ -107,16 +93,17 @@ export function NavMain() {
         <SidebarGroupLabel>View</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            {viewItems?.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton tooltip={item.title} asChild>
-                  <Link to={item.url} onClick={() => setOpenMobile(false)}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Menu Preview" asChild>
+                <Link
+                  to={`/preview/menu/${activeMenu?.id}`}
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <List />
+                  <span>Menu Preview</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
