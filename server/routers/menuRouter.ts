@@ -4,6 +4,7 @@ import { protectedProcedure, publicProcedure, router } from "../trpc";
 import QRCode from "qrcode";
 import { generateQRFilePath } from "../utils/qrCode";
 import { supabaseAdminClient } from "../supabase";
+import { fetchMenuWithCategories } from "../utils/fetchMenuWithCategories";
 
 export const menuRouter = router({
   create: protectedProcedure
@@ -151,84 +152,14 @@ export const menuRouter = router({
 
       return data;
     }),
-  getById: publicProcedure
-    .input(
-      z.object({
-        menuId: z.uuid(),
-      }),
-    )
+  getPreview: protectedProcedure
+    .input(z.object({ menuId: z.uuid() }))
     .query(async ({ input, ctx }) => {
-      const { menuId } = input;
-
-      const { data: menu, error: menuError } = await supabaseAdminClient
-        .from("menus")
-        .select(
-          `
-          *,
-          business:businesses(*)
-        `,
-        )
-        .eq("id", menuId)
-        .maybeSingle();
-
-      if (menuError) {
-        console.error("Error fetching menu:", menuError);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to fetch menu: ${menuError.message}`,
-        });
-      }
-
-      if (!menu) {
-        console.warn("Menu not found for ID:", menuId);
-        return null;
-      }
-
-      const { data: sortedCategories, error: catError } = await ctx.supabase
-        .from("menu_category_sort_indexes")
-        .select(
-          `
-          *,
-          category:menu_categories(*, 
-            items:menu_category_items(
-              *,
-              sort_index:menu_category_item_sort_indexes(order_index)
-            )
-          )
-        `,
-        )
-        .eq("menu_id", menuId)
-        .order("order_index", { ascending: true });
-
-      if (catError) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to fetch category sort order: ${catError.message}`,
-        });
-      }
-
-      const categoriesWithSortedItems = sortedCategories.map((row) => {
-        const items =
-          row.category.items
-            ?.map((item) => {
-              const { sort_index, ...rest } = item;
-
-              return {
-                ...rest,
-                order_index: sort_index?.[0]?.order_index ?? 0,
-              };
-            })
-            .sort((a, b) => a.order_index - b.order_index) ?? [];
-
-        return {
-          ...row.category,
-          items,
-        };
-      });
-
-      return {
-        ...menu,
-        menu_categories: categoriesWithSortedItems,
-      };
+      return fetchMenuWithCategories(ctx.supabase, input.menuId);
+    }),
+  getPublic: publicProcedure
+    .input(z.object({ menuId: z.uuid() }))
+    .query(async ({ input }) => {
+      return fetchMenuWithCategories(supabaseAdminClient, input.menuId);
     }),
 });
