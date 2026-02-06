@@ -161,7 +161,9 @@ describe("Settings Page", () => {
       renderApp({ initialEntries: ["/settings"], authMock: authedUserState });
 
       await waitFor(() => {
-        expect(screen.getByText(/Delete Menu/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /delete menu/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -172,10 +174,12 @@ describe("Settings Page", () => {
       renderApp({ initialEntries: ["/settings"], authMock: authedUserState });
 
       await waitFor(() => {
-        expect(screen.getByText(/Delete Menu/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /delete menu/i }),
+        ).toBeInTheDocument();
       });
 
-      const deleteButton = screen.getByText(/Delete Menu/i);
+      const deleteButton = screen.getByRole("button", { name: /delete menu/i });
       await user.click(deleteButton);
 
       const alertDialog = await screen.findByRole("alertdialog");
@@ -199,10 +203,12 @@ describe("Settings Page", () => {
       renderApp({ initialEntries: ["/settings"], authMock: authedUserState });
 
       await waitFor(() => {
-        expect(screen.getByText(/Delete Menu/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /delete menu/i }),
+        ).toBeInTheDocument();
       });
 
-      const deleteButton = screen.getByText(/Delete Menu/i);
+      const deleteButton = screen.getByRole("button", { name: /delete menu/i });
       await user.click(deleteButton);
 
       const alertDialog = await screen.findByRole("alertdialog");
@@ -225,10 +231,10 @@ describe("Settings Page", () => {
       renderApp({ initialEntries: ["/settings"], authMock: authedUserState });
 
       await waitFor(() => {
-        expect(screen.getByText(/Delete Menu/i)).toBeInTheDocument();
+        expect(screen.getByText(/menu details/i)).toBeInTheDocument();
       });
 
-      const deleteButton = screen.getByText(/Delete Menu/i);
+      const deleteButton = screen.getByRole("button", { name: /delete menu/i });
       await user.click(deleteButton);
 
       const alertDialog = await screen.findByRole("alertdialog");
