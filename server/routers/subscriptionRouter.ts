@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "../trpc";
+import { supabaseAdminClient } from "../supabase";
 
 export const subscriptionRouter = router({
   getForBusiness: publicProcedure
     .input(z.object({ businessId: z.uuid() }))
-    .query(async ({ ctx, input }) => {
-      const { data: subscription, error } = await ctx.supabase
+    .query(async ({ input }) => {
+      const { data: subscription, error } = await supabaseAdminClient
         .from("subscriptions")
         .select("*")
         .eq("business_id", input.businessId)
