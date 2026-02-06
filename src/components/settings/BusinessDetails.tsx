@@ -1,14 +1,12 @@
 import { queryClient, trpc } from "@/utils/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Building } from "lucide-react";
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
@@ -69,18 +67,17 @@ export const BusinessDetails = () => {
   }
 
   return (
-    <Item variant={"outline"}>
-      <ItemMedia variant="icon">
-        <Building />
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle>Business Details</ItemTitle>
-        <ItemDescription>
+    <Card>
+      <CardHeader>
+        <CardTitle>Business Details</CardTitle>
+        <CardDescription>
           If it involves your business, it can be updated here.
-        </ItemDescription>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
         <form
           id="business-name"
-          className="mt-4 grid grid-cols-[1fr_auto] items-end gap-2"
+          className="grid grid-cols-[1fr_auto] items-end gap-2"
           onSubmit={businessForm.handleSubmit(onBusinessSubmit)}
         >
           <Controller
@@ -123,8 +120,7 @@ export const BusinessDetails = () => {
             </Button>
           </div>
         </form>
-      </ItemContent>
-      <ItemActions className="mb-auto"></ItemActions>
-    </Item>
+      </CardContent>
+    </Card>
   );
 };

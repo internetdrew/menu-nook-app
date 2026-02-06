@@ -36,7 +36,7 @@ export const SettingsPage = () => {
       </header>
 
       <section className="mt-8">
-        <div className="grid max-w-xl gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <BusinessDetails />
           <MenuDetails />
         </div>

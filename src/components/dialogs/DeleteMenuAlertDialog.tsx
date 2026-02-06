@@ -14,6 +14,8 @@ import {
 } from "../ui/alert-dialog";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "../../../server";
+import { Button } from "../ui/button";
+import { Trash } from "lucide-react";
 
 type Menu = inferRouterOutputs<AppRouter>["menu"]["getAllForBusiness"][number];
 
@@ -56,8 +58,10 @@ const DeleteMenuAlertDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogTrigger className="text-destructive ml-auto text-sm">
-        Delete Menu
+      <AlertDialogTrigger className="ml-auto">
+        <Button size={"icon-sm"} variant="outline">
+          <Trash className="text-destructive" />
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

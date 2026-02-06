@@ -1,13 +1,13 @@
 import { queryClient, trpc } from "@/utils/trpc";
 import { useMutation } from "@tanstack/react-query";
-import { List } from "lucide-react";
 import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
@@ -16,9 +16,9 @@ import * as z from "zod";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { useEffect, useState } from "react";
 import DeleteMenuAlertDialog from "@/components/dialogs/DeleteMenuAlertDialog";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { useNavigate } from "react-router";
 
 const menuFormSchema = z.object({
@@ -29,8 +29,8 @@ const menuFormSchema = z.object({
 });
 
 export const MenuDetails = () => {
-  const { menus, activeMenu, setActiveMenu } = useMenuContext();
   const [deleteMenuDialogOpen, setDeleteMenuDialogOpen] = useState(false);
+  const { activeMenu, menus, setActiveMenu } = useMenuContext();
   const navigate = useNavigate();
 
   const menuForm = useForm<z.infer<typeof menuFormSchema>>({
@@ -81,71 +81,69 @@ export const MenuDetails = () => {
   };
 
   return (
-    <>
-      <Item variant={"outline"}>
-        <ItemMedia variant="icon">
-          <List />
-        </ItemMedia>
-        <ItemContent>
-          <ItemTitle>Menu Details</ItemTitle>
-          <ItemDescription>
-            Manage settings for{" "}
-            <span className="font-semibold">{activeMenu?.name}</span>.
-          </ItemDescription>
-          <form
-            id="menu-name"
-            className="mt-4 grid grid-cols-[1fr_auto] items-end gap-2"
-            onSubmit={menuForm.handleSubmit(onMenuSubmit)}
+    <Card>
+      <CardHeader>
+        <CardAction>
+          <DeleteMenuAlertDialog
+            menu={activeMenu}
+            open={deleteMenuDialogOpen}
+            onOpenChange={setDeleteMenuDialogOpen}
+            onDeleted={handleMenuDeleted}
+          />
+        </CardAction>
+        <CardTitle>Menu Details</CardTitle>
+        <CardDescription>
+          Manage settings for{" "}
+          <span className="font-semibold">{activeMenu?.name}</span>.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form
+          id="menu-name"
+          className="grid grid-cols-[1fr_auto] items-end gap-2"
+          onSubmit={menuForm.handleSubmit(onMenuSubmit)}
+        >
+          <Controller
+            name="name"
+            control={menuForm.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="menu-name">Menu Name</FieldLabel>
+                <Input
+                  {...field}
+                  id="menu-name"
+                  aria-invalid={fieldState.invalid}
+                  placeholder="Eg. Lunch Menu"
+                  autoComplete="off"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+          <div
+            className={cn(
+              "grid transition-all duration-150 ease-in-out",
+              menuForm.formState.isDirty
+                ? "grid-cols-[1fr] opacity-100"
+                : "grid-cols-[0fr] opacity-0",
+            )}
           >
-            <Controller
-              name="name"
-              control={menuForm.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="menu-name">Menu Name</FieldLabel>
-                  <Input
-                    {...field}
-                    id="menu-name"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="Eg. Lunch Menu"
-                    autoComplete="off"
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-            <div
-              className={cn(
-                "grid transition-all duration-150 ease-in-out",
-                menuForm.formState.isDirty
-                  ? "grid-cols-[1fr] opacity-100"
-                  : "grid-cols-[0fr] opacity-0",
-              )}
+            <Button
+              type="submit"
+              form="menu-name"
+              size={"sm"}
+              className="overflow-hidden"
+              disabled={menuForm.formState.isSubmitting}
+              tabIndex={menuForm.formState.isDirty ? 0 : -1}
+              aria-hidden={!menuForm.formState.isDirty}
             >
-              <Button
-                type="submit"
-                form="menu-name"
-                size={"sm"}
-                className="overflow-hidden"
-                disabled={menuForm.formState.isSubmitting}
-                tabIndex={menuForm.formState.isDirty ? 0 : -1}
-                aria-hidden={!menuForm.formState.isDirty}
-              >
-                {menuForm.formState.isSubmitting ? "Saving..." : "Save"}
-              </Button>
-            </div>
-          </form>
-        </ItemContent>
-      </Item>
-
-      <DeleteMenuAlertDialog
-        menu={activeMenu}
-        open={deleteMenuDialogOpen}
-        onOpenChange={setDeleteMenuDialogOpen}
-        onDeleted={handleMenuDeleted}
-      />
-    </>
+              {menuForm.formState.isSubmitting ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
