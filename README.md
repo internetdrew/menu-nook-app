@@ -1,5 +1,7 @@
 # MenuNook
 
+[MenuNook Banner](./public/og.png)
+
 A digital menu platform for chef-driven restaurants, letting guests explore dishes through photos, videos, and audio, bringing excitement to choosing what to order.
 
 ## Why MenuNook?
