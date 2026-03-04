@@ -1,24 +1,24 @@
 # MenuNook
 
-A simple, lightweight menu app built for pop-up sellers and small batch makers.
-
-Customers get a clean, always up-to-date view of what you're offering, accessible via QR code or link.
+A digital menu platform for chef-driven restaurants, letting guests explore dishes through photos, videos, and audio, bringing excitement to choosing what to order.
 
 ## Why MenuNook?
 
-- Launch-ready in minutes: set up a polished menu without touching code, design tools, or domains.
-- Built for pop-ups and makers: swap items or prices mid-service and updates are live instantly.
-- Frictionless sharing: every menu has a link and QR that customers can scan from flyers, receipts, or table tents.
-- Mobile-first by default: clean, distraction-free layout that keeps the focus on your offerings.
+After doing some research on QR code menus, I found that many people actually hate them. But, BUT, many also shared that if they're going to visit a digital menu, they:
+
+- Want it to actually be made for mobile, not a PDF they have to pinch and zoom around
+- Want it to be a more engaging experience, not just a digital version of what might already be on the table or on their website
+
+So I've decided to build a platform that allows chef-driven restaurants — the types that already have photo and video they use on social media and know the value of that experience — to bring a multimedia experience to their menus.
 
 ## Features
 
+- Add beautiful photos, engaging video, and nuanced audio to every item on your menu.
 - Build multiple menus per business, organized by categories with names, blurbs, and optional images.
 - Add items in seconds with names, prices, descriptions, and photos when you have them.
-- Reorder categories and items without breaking links.
 - Each menu auto-generates a shareable link and printable QR.
-- Customer view is mobile-first and distraction-free.
-- Manage from phone or laptop and update instantly for customers.
+- Customer view is responsive and distraction-free.
+- Easily manage your menus from a phone or laptop and update instantly for customers.
 
 ## Screenshots
 
