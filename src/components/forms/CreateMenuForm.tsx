@@ -71,7 +71,7 @@ export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
                 <Input placeholder="E.g. Dinner Menu" {...field} />
               </FormControl>
               <FormDescription>
-                This will allow you to discern between multiple menus.
+                Use a clear label if you plan to manage multiple menus.
               </FormDescription>
               <FormMessage />
             </FormItem>

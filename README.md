@@ -2,64 +2,157 @@
 
 ![MenuNook Banner](./public/og.png)
 
-A simple menu platform for publishing clean, mobile-friendly menus that are easy to update and easy to browse by link or QR code.
+MenuNook is an open-source menu management app built to show how I approach product design, frontend craft, backend boundaries, and local-first developer setup.
 
-## Why MenuNook?
+It started as a small commercial product idea. It now lives as a runnable reference app: a real React + Express + tRPC + Supabase codebase that developers can inspect, run locally, and adapt.
 
-Many menu tools feel heavier than they need to be. They either turn a simple menu into a bloated product experience, or they make basic updates harder than they should be.
+## What It Does
 
-MenuNook is built around a simpler idea:
+- Create a business workspace
+- Create one or more menus for that business
+- Organize menus into categories and items
+- Publish public menu pages for phone-friendly browsing
+- Generate and share QR codes for each menu
 
-- Menus should be easy to publish
-- Menus should be easy to update
-- Menus should be easy to open and browse on a phone
+## Why Open Source
 
-The goal is not to turn menus into a complicated media product. The goal is to give businesses a clean menu they can manage without friction.
+I want this project to show:
 
-## The Challenge
+- how I scope product decisions
+- how I structure app state and server boundaries
+- how I keep CRUD-heavy UI readable
+- how I make local setup concrete instead of hand-wavy
 
-Even simple menu software can get messy quickly. The challenge here is building something that stays fast, clear, and easy to maintain while still handling real business needs like categories, item updates, link sharing, and QR access.
+## Stack
 
-Performance still matters. A menu should load quickly, feel obvious on a phone, and stay usable even in less-than-ideal network conditions.
+- Frontend: Vite, React 19, TypeScript, React Router 7, Tailwind CSS, shadcn/ui
+- App data: tRPC with TanStack Query
+- Backend: Express + tRPC
+- Auth, database, storage: Supabase
+- Testing: Vitest, Testing Library, MSW
 
-A few things I'm considering as I build:
+## Local Setup
 
-- Keeping the public menu lightweight and mobile-friendly
-- Making updates feel immediate and low-friction for operators
-- Using caching and efficient fetching so menus stay responsive
-- Preserving a clear editing model as menus grow
-- Making link and QR sharing feel automatic, not bolted on
+MenuNook is set up to run against a local Supabase stack from this repository.
 
-In all, the overall experience I want to build treats:
+Supabase local development docs:
+https://supabase.com/docs/guides/local-development
 
-- Text as primary
-- Optional visuals as an enhancement
-- Speed and clarity as core product features
+### Prerequisites
 
-## Features
+- Node.js 20+
+- Docker-compatible container runtime
+- Supabase CLI
 
-- Build and manage menus with categories, item names, descriptions, and prices.
-- Publish clean public menu pages that work well on phones.
-- Share each menu by direct link or printable QR code.
-- Update menu content quickly from a phone or laptop.
-- Keep menus clear, fast, and easy to browse.
+You can install the Supabase CLI either globally or from the repo. The current official local-dev flow is:
 
-## Screenshots
+1. Install the Supabase CLI.
+2. Initialize or use the repo's `supabase/` project.
+3. Start the local stack with `supabase start`.
 
-![MenuNook dashboard](public/menu-nook-screenshot-0.png)
-![MenuNook dashboard - Create menu](public/menu-nook-screenshot-1.png)
-![MenuNook dashboard - Categories page](public/menu-nook-screenshot-2.png)
-![MenuNook dashboard - Dynamic Category page](public/menu-nook-screenshot-3.png)
-![MenuNook dashboard - Public menu page](public/menu-nook-screenshot-4.png)
-![MenuNook feedback dialog](public/menu-nook-screenshot-5.png)
-![MenuNook add item dialog](public/menu-nook-screenshot-6.png)
-![MenuNook collapsing sidebar view ](public/menu-nook-screenshot-7.png)
-![MenuNook category deletion dialog ](public/menu-nook-screenshot-8.png)
+### First Run
 
-## Tech Stack
+1. Install app dependencies:
 
-- Frontend: Vite + React 19 with TypeScript, React Router 7, shadcn/ui (Radix), Tailwind CSS, and dnd-kit for drag-and-drop ordering.
-- Data layer: tRPC (client + server) paired with TanStack Query for caching and mutations.
-- Backend: Express with tRPC handlers, Supabase for auth/database/storage, and Stripe for billing.
-- Testing: Vitest with Testing Library (React, DOM, user-event), jsdom test environment, and MSW for API mocking.
-- Tooling: ESLint, Prettier, tsx, nodemon, concurrently, and Tailwind merge utilities.
+```bash
+npm install
+```
+
+2. Start your container runtime:
+   For example:
+
+```
+open -a docker
+```
+
+2. Start the local Supabase stack:
+
+```bash
+npm run supabase:start
+```
+
+3. Copy the env template:
+
+```bash
+cp .env.example .env
+```
+
+4. Get your local Supabase keys:
+
+```bash
+npm run supabase:status
+```
+
+5. Update `.env` with:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_KEY`
+- `SUPABASE_SECRET_KEY`
+
+6. Start the app:
+
+```bash
+npm run dev
+```
+
+The app runs at `http://localhost:5173`.
+The local Supabase Studio runs at `http://localhost:54323`.
+
+## Local Auth With Google
+
+This repo keeps Google OAuth as the sign-in path.
+
+For local development, configure Google against the local Supabase Auth callback URL:
+
+`http://127.0.0.1:54321/auth/v1/callback`
+
+Recommended flow:
+
+1. Create a Google OAuth application for local development.
+2. Add the callback URL above in Google Cloud.
+3. Start Supabase locally.
+4. In local Supabase Studio, enable the Google provider and add your local client ID and client secret.
+
+The app redirects back through `/auth/callback`, which is proxied to the local Express server during development.
+
+## Database and Storage
+
+This repo now includes a committed local Supabase project:
+
+- [`supabase/config.toml`](/Users/andrewrowley/dev/menu-nook/app/supabase/config.toml)
+- [`supabase/migrations/20260324150000_init_schema.sql`](/Users/andrewrowley/dev/menu-nook/app/supabase/migrations/20260324150000_init_schema.sql)
+
+The initial migration creates:
+
+- business, menu, category, and item tables
+- sort-index tables for ordering categories and items
+- QR code metadata storage
+- user feedback storage
+- row-level security policies for authenticated ownership
+- a public `qr_codes` storage bucket
+
+No seed data is included. A fresh local project starts empty.
+
+## Development Notes
+
+- Public menus are not paywalled.
+- Preview mode exists to inspect a menu before sharing the public URL.
+- The repo is optimized to be understandable as a working product codebase, not just a static demo.
+
+## Scripts
+
+- `npm run dev` starts frontend and backend together
+- `npm run dev:frontend` starts Vite
+- `npm run dev:backend` starts the Express server
+- `npm run supabase:start` starts the local Supabase stack
+- `npm run supabase:stop` stops the local Supabase stack
+- `npm run supabase:status` prints local keys and service URLs
+- `npm test -- --run` runs the test suite once
+
+## Production Notes
+
+The default path is local-first. Once you want to deploy this for real, replace the local Supabase values in `.env` with your hosted project values and regenerate types as needed.
+
+## Contributing
+
+This is intentionally lightweight for now. If you open an issue or PR, optimize for clarity, scoped changes, and concrete reasoning.

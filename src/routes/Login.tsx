@@ -34,7 +34,7 @@ const Login = () => {
           <CardHeader className="text-center">
             <CardTitle>Welcome to {title}</CardTitle>
             <CardDescription>
-              Sign in to create your online menu in minutes.
+              Sign in to manage menus, categories, items, and QR sharing.
             </CardDescription>
           </CardHeader>
           <CardFooter className="mt-6 flex justify-center">

@@ -94,13 +94,13 @@ export function NavMain() {
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Menu Preview" asChild>
+              <SidebarMenuButton tooltip="Preview Menu" asChild>
                 <Link
                   to={`/preview/${activeMenu?.id}`}
                   onClick={() => setOpenMobile(false)}
                 >
                   <List />
-                  <span>Menu Preview</span>
+                  <span>Preview Menu</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

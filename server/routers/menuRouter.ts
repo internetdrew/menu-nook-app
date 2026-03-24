@@ -48,7 +48,7 @@ export const menuRouter = router({
 
       const filePath = generateQRFilePath(menu.id);
 
-      const { error: qrUploadError } = await ctx.supabase.storage
+      const { error: qrUploadError } = await supabaseAdminClient.storage
         .from("qr_codes")
         .upload(filePath, buffer, {
           contentType: "image/png",
