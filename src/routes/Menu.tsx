@@ -1,18 +1,13 @@
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { linkClasses } from "@/constants";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { NotFound } from "./NotFound";
-import MenuUnavailable from "../components/MenuUnavailable";
-import { toast } from "sonner";
-
-const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
+import { Button } from "@/components/ui/button";
 
 export const Menu = () => {
   const { menuId } = useParams<{ menuId: string }>();
@@ -37,25 +32,6 @@ export const Menu = () => {
         ),
   );
 
-  const stripeCheckoutMutation = useMutation(
-    trpc.stripe.createCheckoutSession.mutationOptions(),
-  );
-
-  const { data: subscription, isLoading: subscriptionIsLoading } = useQuery(
-    trpc.subscription.getForBusiness.queryOptions(
-      {
-        businessId: menu?.business_id ?? "",
-      },
-      {
-        enabled: !!menu?.business_id,
-      },
-    ),
-  );
-
-  const subscriptionIsActive =
-    subscription?.status === "active" &&
-    new Date(subscription.current_period_end) > new Date();
-
   const navRef = useRef<HTMLElement>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
@@ -72,7 +48,7 @@ export const Menu = () => {
 
     observer.observe(nav);
     return () => observer.disconnect();
-  }, [menu, subscriptionIsActive]);
+  }, [menu]);
 
   const scrollToTop = () => {
     const prefersReducedMotion = window.matchMedia(
@@ -107,22 +83,7 @@ export const Menu = () => {
     (category) => category.items && category.items.length > 0,
   );
 
-  const handleSubscribe = async () => {
-    await stripeCheckoutMutation.mutateAsync(
-      { businessId: menu?.business_id ?? "" },
-      {
-        onSuccess: (data) => {
-          window.location.assign(data.url);
-        },
-        onError: (error) => {
-          console.error("Error creating checkout session:", error);
-          toast.error("Error creating checkout session: " + error.message);
-        },
-      },
-    );
-  };
-
-  if (menuIsLoading || subscriptionIsLoading) {
+  if (menuIsLoading) {
     return (
       <div className="mx-auto w-full max-w-screen-sm px-4 py-8">
         <Skeleton className="mx-auto mb-6 h-8 w-1/4" />
@@ -144,40 +105,17 @@ export const Menu = () => {
     );
   }
 
-  if (!isPreview && menu && !subscriptionIsActive) {
-    return <MenuUnavailable placeName={menu.name} />;
-  }
-
   return (
     <div className="flex min-h-screen flex-col">
       {isPreview && (
         <div className="sticky top-16 z-10 rounded-lg border-b bg-neutral-600/5 py-4 text-center text-sm backdrop-blur-sm">
           <div className="mx-auto flex max-w-screen-sm flex-col items-center justify-center gap-2">
             <span className="font-medium">
-              {subscriptionIsActive
-                ? "This is a preview of your live menu."
-                : "Your menu is not live because your subscription is inactive."}
+              This is a preview of your public menu.
             </span>
-            {subscriptionIsActive ? (
-              <a
-                href={`${liveSiteUrl}/menu/${menu.id}`}
-                className={linkClasses}
-              >
-                View Live Menu
-              </a>
-            ) : (
-              <Button
-                size={"sm"}
-                onClick={handleSubscribe}
-                disabled={
-                  stripeCheckoutMutation.isPending ||
-                  stripeCheckoutMutation.isSuccess
-                }
-              >
-                {stripeCheckoutMutation.isPending && <Spinner />} Subscribe to
-                publish
-              </Button>
-            )}
+            <Link to={`/menu/${menu.id}`} className={linkClasses}>
+              View public menu
+            </Link>
           </div>
         </div>
       )}
@@ -248,12 +186,7 @@ export const Menu = () => {
       </main>
       <footer className="mt-auto">
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-sm">
-          <span>
-            Powered by{" "}
-            <a href="https://menunook.com" className={linkClasses}>
-              MenuNook
-            </a>
-          </span>
+          <span>Built with MenuNook</span>
         </div>
       </footer>
 

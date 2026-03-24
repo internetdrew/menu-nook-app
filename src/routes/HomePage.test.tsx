@@ -470,7 +470,7 @@ describe("Dashboard Home Page", () => {
       within(sidebar).getByRole("link", { name: /categories/i }),
     ).toBeInTheDocument();
 
-    expect(within(sidebar).getByText(/Menu Preview/i)).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Preview Menu/i)).toBeInTheDocument();
 
     expect(within(sidebar).getByText(/Mock User/i)).toBeInTheDocument();
     expect(within(sidebar).getByText(/test@example.com/i)).toBeInTheDocument();
@@ -517,11 +517,11 @@ describe("Dashboard Home Page", () => {
     expect(sidebar).toBeInTheDocument();
 
     expect(
-      within(sidebar).queryByText(/Menu Preview/i),
+      within(sidebar).queryByText(/Preview Menu/i),
     ).not.toBeInTheDocument();
 
     expect(
-      await within(sidebar).findByRole("link", { name: /menu preview/i }),
+      await within(sidebar).findByRole("link", { name: /preview menu/i }),
     ).toBeInTheDocument();
   });
 

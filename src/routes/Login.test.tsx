@@ -26,7 +26,9 @@ describe("Login Component", () => {
 
     expect(screen.getByText(/Welcome to MenuNook/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Sign in to create your online menu in minutes/i),
+      screen.getByText(
+        /Sign in to manage menus, categories, items, and QR sharing./i,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -38,7 +40,9 @@ describe("Login Component", () => {
 
     expect(screen.queryByText(/Welcome to MenuNook/i)).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/Sign in to create your online menu in minutes/i),
+      screen.queryByText(
+        /Sign in to manage menus, categories, items, and QR sharing./i,
+      ),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/Continue with Google/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/MenuNook/i)).toBeInTheDocument();

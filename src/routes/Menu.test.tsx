@@ -28,10 +28,9 @@ describe("Preview Route (/preview/:id)", () => {
     vi.clearAllMocks();
   });
 
-  it("renders a preview banner when user has no subscription", async () => {
+  it("renders a preview banner for the public menu preview route", async () => {
     server.use(
       createTrpcQueryHandler({
-        "subscription.getForBusiness": () => ({ result: { data: null } }),
         "menu.getPreview": () => ({
           result: {
             data: {
@@ -83,15 +82,11 @@ describe("Preview Route (/preview/:id)", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          /Your menu is not live because your subscription is inactive./i,
-        ),
+        screen.getByText(/This is a preview of your public menu./i),
       ).toBeInTheDocument();
     });
 
-    expect(
-      screen.getByRole("button", { name: "Subscribe to publish" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view public menu/i })).toBeInTheDocument();
 
     expect(screen.getByText("Test Business")).toBeInTheDocument();
     expect(screen.getByText("Test Menu")).toBeInTheDocument();
@@ -109,12 +104,9 @@ describe("Live Menu Route (/menu/:id)", () => {
     vi.clearAllMocks();
   });
 
-  it("renders menu unavailable message when no subscription is found", async () => {
+  it("renders the public menu when the route is visited directly", async () => {
     server.use(
       createTrpcQueryHandler({
-        "subscription.getForBusiness": () => ({
-          result: { data: null },
-        }),
         "menu.getPublic": () => ({
           result: {
             data: {
@@ -165,9 +157,11 @@ describe("Live Menu Route (/menu/:id)", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("Menu Not Available")).toBeInTheDocument();
+      expect(screen.getByText("Test Business")).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Are you the account owner?/i)).toBeInTheDocument();
+    expect(screen.getByText("Test Menu")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Category 2" })).toBeInTheDocument();
+    expect(screen.queryByText("Menu Not Available")).not.toBeInTheDocument();
   });
 });

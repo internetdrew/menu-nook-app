@@ -32,7 +32,7 @@ export const HomePage = () => {
   useEffect(() => {
     if (!showToast) return;
 
-    toast("Your menu is live!", {
+    toast("Menu created.", {
       position: "top-center",
       duration: 5000,
       action: (
@@ -40,7 +40,7 @@ export const HomePage = () => {
           className="ml-auto text-pink-600 underline underline-offset-4"
           to={`/menu/${activeMenu?.id}`}
         >
-          View Menu
+          View Public Menu
         </Link>
       ),
     });

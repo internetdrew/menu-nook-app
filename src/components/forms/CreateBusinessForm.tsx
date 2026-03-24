@@ -68,7 +68,7 @@ export const CreateBusinessForm = ({
                 <Input placeholder="The Blonde Wolf" {...field} />
               </FormControl>
               <FormDescription>
-                Make sure this is the name your customers will recognize.
+                Use the name that should appear across your menus.
               </FormDescription>
               <FormMessage />
             </FormItem>
