@@ -9,6 +9,7 @@ import { trpc } from "@/utils/trpc";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "../../server";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "./auth";
 
 type Menu = inferRouterOutputs<AppRouter>["menu"]["getAllForBusiness"][number];
 
@@ -24,8 +25,11 @@ const MenuContext = createContext<MenuContextValue | undefined>(undefined);
 export const MenuProvider: React.FC<React.PropsWithChildren> = ({
   children,
 }) => {
+  const { user, isLoading: authLoading } = useAuth();
   const { data: business, isLoading: businessLoading } = useQuery(
-    trpc.business.getForUser.queryOptions(),
+    trpc.business.getForUser.queryOptions(undefined, {
+      enabled: !!user && !authLoading,
+    }),
   );
 
   const { data, isLoading } = useQuery(
@@ -34,7 +38,7 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
         businessId: business?.id ?? "",
       },
       {
-        enabled: !businessLoading && !!business,
+        enabled: !!user && !authLoading && !businessLoading && !!business,
       },
     ),
   );
