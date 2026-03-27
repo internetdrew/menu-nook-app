@@ -2,7 +2,7 @@ import { supabaseBrowserClient } from "@/lib/supabase";
 import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
-import { authedUserState } from "@/utils/test/userStates";
+import { authedUserState, noUserState } from "@/utils/test/userStates";
 import { screen, waitFor, within } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -45,6 +45,22 @@ describe("Dashboard Home Page", () => {
 
     expect(screen.getByText(/Mock User/i)).toBeInTheDocument();
     expect(screen.getByText(/test@example.com/i)).toBeInTheDocument();
+  });
+
+  it("renders the dashboard shell with a login prompt for guests", async () => {
+    renderApp({ initialEntries: ["/"], authMock: noUserState });
+
+    expect(screen.getByText(/MenuNook/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/See your dashboard from the start/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Continue with Google/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Feedback/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Mock User/i)).not.toBeInTheDocument();
   });
 
   it("allows user to log out", async () => {
