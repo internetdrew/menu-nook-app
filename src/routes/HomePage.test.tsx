@@ -1,6 +1,7 @@
 import { supabaseBrowserClient } from "@/lib/supabase";
 import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
+import { createTestQueryClient } from "@/utils/test/createTestQueryClient";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
 import { screen, waitFor, within } from "@testing-library/dom";
@@ -31,6 +32,9 @@ vi.mock("sonner", () => ({
 describe("Dashboard Home Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(supabaseBrowserClient.auth.signOut).mockResolvedValue({
+      error: null,
+    });
   });
 
   it("renders dashboard layout", async () => {
@@ -99,6 +103,72 @@ describe("Dashboard Home Page", () => {
     await user.click(logoutButton);
 
     expect(supabaseBrowserClient.auth.signOut).toHaveBeenCalled();
+  });
+
+  it("does not show cached business and menu UI to signed out users", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Bistro",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                name: "Dinner",
+                business_id: "business-123",
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+            ],
+          },
+        }),
+        "subscription.getForUser": () => ({
+          result: {
+            data: null,
+          },
+        }),
+      }),
+    );
+
+    const queryClient = createTestQueryClient();
+    const { unmount } = renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+      queryClient,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Bistro")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Dinner Overview")).toBeInTheDocument();
+    });
+
+    unmount();
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: noUserState,
+      queryClient,
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Continue with Google/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Test Bistro")).not.toBeInTheDocument();
+    expect(screen.queryByText("Dinner Overview")).not.toBeInTheDocument();
   });
 
   it("shows no business message card when user has no business", async () => {

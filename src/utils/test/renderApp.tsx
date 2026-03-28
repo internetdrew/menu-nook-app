@@ -8,23 +8,25 @@ import { createTestQueryClient } from "./createTestQueryClient";
 interface RenderAppOptions {
   initialEntries?: string[];
   authMock?: AuthContextType;
+  queryClient?: ReturnType<typeof createTestQueryClient>;
 }
 
 export function renderApp({
   initialEntries = ["/"],
   authMock,
+  queryClient: providedQueryClient,
 }: RenderAppOptions) {
   const router = createMemoryRouter(routes, {
     initialEntries,
   });
 
-  const queryClient = createTestQueryClient();
+  const queryClient = providedQueryClient ?? createTestQueryClient();
 
   return render(
-    <AuthProvider initialMock={authMock}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider initialMock={authMock}>
         <RouterProvider router={router} />
-      </QueryClientProvider>
-    </AuthProvider>,
+      </AuthProvider>
+    </QueryClientProvider>,
   );
 }
