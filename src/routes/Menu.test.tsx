@@ -30,13 +30,15 @@ describe("Preview Route (/preview/:id)", () => {
 
   it("redirects unauthenticated users away from preview routes", async () => {
     renderApp({
-      initialEntries: ["/preview/123"],
+      initialEntries: ["/preview/menu/123"],
       authMock: noUserState,
     });
 
     await waitFor(() => {
       expect(
-        screen.getByText(/see your dashboard from the start/i),
+        screen.getByText(
+          /sign in to give your menu a clean, simple home of its own./i,
+        ),
       ).toBeInTheDocument();
     });
 
@@ -99,7 +101,7 @@ describe("Preview Route (/preview/:id)", () => {
     );
 
     renderApp({
-      initialEntries: ["/preview/123"],
+      initialEntries: ["/preview/menu/123"],
       authMock: authedUserState,
     });
 
