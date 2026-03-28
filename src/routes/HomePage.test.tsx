@@ -42,13 +42,13 @@ describe("Dashboard Home Page", () => {
 
     expect(screen.getByText(/MenuNook/i)).toBeInTheDocument();
 
-    const button = screen.getByRole("button", {
+    const button = await screen.findByRole("button", {
       name: /feedback/i,
     });
     expect(button).toBeInTheDocument();
 
-    expect(screen.getByText(/Mock User/i)).toBeInTheDocument();
-    expect(screen.getByText(/test@example.com/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Mock User/i)).toBeInTheDocument();
+    expect(await screen.findByText(/test@example.com/i)).toBeInTheDocument();
   });
 
   it("renders the dashboard shell with a login prompt for guests", async () => {
@@ -67,6 +67,77 @@ describe("Dashboard Home Page", () => {
       screen.queryByRole("button", { name: /Feedback/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/Mock User/i)).not.toBeInTheDocument();
+  });
+
+  it("shows the dashboard skeleton while auth is resolving", async () => {
+    renderApp({
+      initialEntries: ["/"],
+      authMock: {
+        user: null,
+        isLoading: true,
+        error: null,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("dashboard-skeleton")).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByRole("button", { name: /Continue with Google/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the dashboard skeleton while menus are loading", async () => {
+    server.use(
+      http.get("/trpc/*", async ({ request }) => {
+        const url = new URL(request.url);
+        const procedure = url.pathname.replace("/trpc/", "");
+
+        if (procedure === "business.getForUser") {
+          return HttpResponse.json({
+            result: {
+              data: {
+                id: "business-123",
+                name: "Test Bistro",
+                user_id: "user-123",
+              },
+            },
+          });
+        }
+
+        if (procedure === "menu.getAllForBusiness") {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          return HttpResponse.json({
+            result: {
+              data: [],
+            },
+          });
+        }
+
+        if (procedure === "subscription.getForUser") {
+          return HttpResponse.json({
+            result: {
+              data: null,
+            },
+          });
+        }
+
+        return HttpResponse.json({
+          result: {
+            data: null,
+          },
+        });
+      }),
+    );
+
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    expect(screen.getByTestId("dashboard-skeleton")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText(/No menus found/i)).toBeInTheDocument();
+    });
   });
 
   it("allows user to log out", async () => {
@@ -826,7 +897,7 @@ describe("Dashboard Home Page", () => {
 
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
-    const feedbackButton = screen.getByRole("button", {
+    const feedbackButton = await screen.findByRole("button", {
       name: /feedback/i,
     });
     expect(feedbackButton).toBeInTheDocument();
@@ -864,7 +935,7 @@ describe("Dashboard Home Page", () => {
 
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
-    const feedbackButton = screen.getByRole("button", {
+    const feedbackButton = await screen.findByRole("button", {
       name: /feedback/i,
     });
     expect(feedbackButton).toBeInTheDocument();

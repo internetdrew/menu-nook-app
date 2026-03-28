@@ -13,18 +13,9 @@ import {
 } from "@/components/ui/sidebar";
 import { Link } from "react-router";
 import { title } from "@/constants";
-import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
-import { useAuth } from "@/contexts/auth";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile } = useSidebar();
-  const { user, isLoading: authLoading } = useAuth();
-  const { data: business } = useQuery(
-    trpc.business.getForUser.queryOptions(undefined, {
-      enabled: !!user && !authLoading,
-    }),
-  );
 
   return (
     <Sidebar
@@ -43,7 +34,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <span className="title text-lg font-bold">{title}</span>
           </Link>
         </SidebarMenuButton>
-        {user && business && <MenuSwitcher />}
+        <MenuSwitcher />
       </SidebarHeader>
       <SidebarContent className="bg-neutral-300/20">
         <NavMain />

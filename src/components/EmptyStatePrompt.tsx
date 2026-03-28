@@ -31,7 +31,7 @@ const EmptyStatePrompt = ({
 }: EmptyStatePromptProps) => {
   return (
     <>
-      <Card className="mx-auto mt-28 max-w-sm text-center">
+      <Card className="mx-auto mt-40 max-w-sm text-center">
         <CardHeader className="text-center">
           <CardTitle>{cardTitle}</CardTitle>
           <CardDescription>{cardDescription}</CardDescription>
