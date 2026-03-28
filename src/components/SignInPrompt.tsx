@@ -40,7 +40,7 @@ export function SignInPrompt() {
       </CardHeader>
       <CardFooter className="flex justify-center">
         <Button
-          className="relative min-w-52 overflow-hidden"
+          className="relative overflow-hidden"
           onClick={handleSignIn}
           disabled={isSigningIn}
           aria-busy={isSigningIn}
