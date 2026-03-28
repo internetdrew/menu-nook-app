@@ -1,4 +1,3 @@
-import Login from "./routes/Login.tsx";
 import { Menu } from "./routes/Menu.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { MenuProvider } from "./contexts/ActiveMenuContext.tsx";
@@ -10,18 +9,8 @@ import { SettingsPage } from "./routes/SettingsPage.tsx";
 import { DashboardPage } from "./components/Dashboard.tsx";
 import { NotFound } from "./routes/NotFound.tsx";
 import { Navigate } from "react-router";
-import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated.tsx";
 
 export const routes = [
-  {
-    element: <RedirectIfAuthenticated />,
-    children: [
-      {
-        path: "/login",
-        element: <Login />,
-      },
-    ],
-  },
   {
     path: "/menu/:menuId",
     element: <Menu />,
@@ -29,27 +18,30 @@ export const routes = [
   {
     path: "/",
     element: (
-      <ProtectedRoute>
-        <MenuProvider>
-          <App />
-        </MenuProvider>
-      </ProtectedRoute>
+      <MenuProvider>
+        <App />
+      </MenuProvider>
     ),
     children: [
-      {
-        path: "preview",
-        element: <Navigate to="/" replace />,
-      },
-      {
-        path: "preview/:menuId",
-        element: <Menu />,
-      },
       {
         element: <DashboardPage />,
         children: [
           {
             index: true,
             element: <HomePage />,
+          },
+        ],
+      },
+      {
+        element: <ProtectedRoute redirectTo="/" />,
+        children: [
+          {
+            path: "preview",
+            element: <Navigate to="/" replace />,
+          },
+          {
+            path: "preview/menu/:menuId",
+            element: <Menu />,
           },
           {
             path: "categories",

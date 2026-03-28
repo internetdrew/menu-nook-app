@@ -1,13 +1,15 @@
 // src/components/ProtectedRoute.tsx
-import { Navigate } from "react-router";
+import { Navigate, Outlet } from "react-router";
 import { useAuth } from "@/contexts/auth";
 import type { JSX } from "react";
 import { Spinner } from "./ui/spinner";
 
 export default function ProtectedRoute({
   children,
+  redirectTo = "/",
 }: {
-  children: JSX.Element;
+  children?: JSX.Element;
+  redirectTo?: string;
 }) {
   const { user, isLoading } = useAuth();
 
@@ -18,6 +20,6 @@ export default function ProtectedRoute({
       </div>
     );
 
-  if (!user) return <Navigate to="/login" replace />;
-  return children;
+  if (!user) return <Navigate to={redirectTo} replace />;
+  return children ?? <Outlet />;
 }

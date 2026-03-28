@@ -42,7 +42,7 @@ export function Header() {
             </Breadcrumb>
           </>
         )}
-        <UserFeedbackTrigger />
+        {user && <UserFeedbackTrigger />}
       </div>
     </header>
   );

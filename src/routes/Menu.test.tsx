@@ -1,7 +1,7 @@
 import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
-import { authedUserState } from "@/utils/test/userStates";
+import { authedUserState, noUserState } from "@/utils/test/userStates";
 import { screen, waitFor } from "@testing-library/dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -26,6 +26,30 @@ afterEach(() => {
 describe("Preview Route (/preview/:id)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("redirects unauthenticated users away from preview routes", async () => {
+    renderApp({
+      initialEntries: ["/preview/menu/123"],
+      authMock: noUserState,
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /sign in to give your menu a clean, simple home of its own./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText(/this is a preview of your live menu/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /your menu is not live because your subscription is inactive/i,
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("renders a preview banner when user has no subscription", async () => {
@@ -77,7 +101,7 @@ describe("Preview Route (/preview/:id)", () => {
     );
 
     renderApp({
-      initialEntries: ["/preview/123"],
+      initialEntries: ["/preview/menu/123"],
       authMock: authedUserState,
     });
 

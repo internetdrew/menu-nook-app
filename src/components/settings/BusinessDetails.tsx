@@ -16,6 +16,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth";
+import { useEffect } from "react";
 
 const businessFormSchema = z.object({
   name: z
@@ -41,6 +42,12 @@ export const BusinessDetails = () => {
   });
 
   const updateBusiness = useMutation(trpc.business.update.mutationOptions());
+
+  useEffect(() => {
+    if (business) {
+      businessForm.reset({ name: business.name });
+    }
+  }, [business, businessForm]);
 
   async function onBusinessSubmit(data: z.infer<typeof businessFormSchema>) {
     if (!business?.id) return;

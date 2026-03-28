@@ -60,10 +60,11 @@ describe("Settings Page", () => {
         expect(screen.getByText("Business Details")).toBeInTheDocument();
       });
 
-      const businessNameInput =
-        screen.getByPlaceholderText(/Eg. The Blonde Wolf/i);
-      expect(businessNameInput).toBeInTheDocument();
-      expect(businessNameInput).toHaveValue("Test Business");
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText(/Eg. The Blonde Wolf/i)).toHaveValue(
+          "Test Business",
+        );
+      });
     });
 
     it("allows users to update the business name", async () => {
@@ -114,9 +115,11 @@ describe("Settings Page", () => {
         expect(screen.getByText("Menu Details")).toBeInTheDocument();
       });
 
-      const menuNameInput = screen.getByPlaceholderText(/Eg. Lunch Menu/i);
-      expect(menuNameInput).toBeInTheDocument();
-      expect(menuNameInput).toHaveValue("Test Menu");
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText(/Eg. Lunch Menu/i)).toHaveValue(
+          "Test Menu",
+        );
+      });
     });
 
     it("allows users to update the menu name", async () => {

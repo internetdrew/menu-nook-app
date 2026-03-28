@@ -7,6 +7,7 @@ import EmptyStatePrompt from "./EmptyStatePrompt";
 import { CreateBusinessForm } from "./forms/CreateBusinessForm";
 import { CreateMenuForm } from "./forms/CreateMenuForm";
 import { useState } from "react";
+import { SignInPrompt } from "./SignInPrompt";
 
 export function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -29,6 +30,10 @@ export function DashboardPage() {
 
   if (authLoading || businessLoading || menusLoading) {
     return <Spinner className="mx-auto mt-36 size-6 text-pink-600" />;
+  }
+
+  if (!user) {
+    return <SignInPrompt />;
   }
 
   if (!business) {

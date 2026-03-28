@@ -1,5 +1,4 @@
 import * as React from "react";
-import { ScrollText } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { MenuSwitcher } from "@/components/MenuSwitcher";
@@ -16,10 +15,16 @@ import { Link } from "react-router";
 import { title } from "@/constants";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
+import { useAuth } from "@/contexts/auth";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile } = useSidebar();
-  const { data: business } = useQuery(trpc.business.getForUser.queryOptions());
+  const { user, isLoading: authLoading } = useAuth();
+  const { data: business } = useQuery(
+    trpc.business.getForUser.queryOptions(undefined, {
+      enabled: !!user && !authLoading,
+    }),
+  );
 
   return (
     <Sidebar
@@ -28,23 +33,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       collapsible="icon"
       {...props}
     >
-      <SidebarHeader>
+      <SidebarHeader className="bg-neutral-300/20">
         <SidebarMenuButton asChild tooltip={"Home"}>
           <Link
             to="/"
             className="flex items-center"
             onClick={() => setOpenMobile(false)}
           >
-            <ScrollText className="size-4 text-pink-600" />
-            <span className="font-semibold">{title}</span>
+            <span className="title text-lg font-bold">{title}</span>
           </Link>
         </SidebarMenuButton>
         {business && <MenuSwitcher />}
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="bg-neutral-300/20">
         <NavMain />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="bg-neutral-300/20">
         <NavUser />
       </SidebarFooter>
       <SidebarRail />
