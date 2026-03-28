@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/eb-garamond/wght.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -118,5 +119,9 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Geist Variable", sans-serif;
+  }
+
+  .title {
+    font-family: "EB Garamond Variable", serif;
   }
 }
