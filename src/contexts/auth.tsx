@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { type User } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabaseBrowserClient } from "@/lib/supabase";
 
 export interface AuthContextType {
@@ -23,6 +24,7 @@ export function AuthProvider({
   children: ReactNode;
   initialMock?: AuthContextType;
 }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(initialMock?.user ?? null);
   const [isLoading, setIsLoading] = useState(initialMock?.isLoading ?? true);
   const [error, setError] = useState<Error | null>(initialMock?.error ?? null);
@@ -46,6 +48,8 @@ export function AuthProvider({
     } = supabaseBrowserClient.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         setUser(null);
+        setError(null);
+        queryClient.clear();
       } else if (session) {
         setUser(session.user);
       }
@@ -56,7 +60,7 @@ export function AuthProvider({
     return () => {
       subscription.unsubscribe();
     };
-  }, [initialMock]);
+  }, [initialMock, queryClient]);
 
   const value: AuthContextType = {
     user,

@@ -10,6 +10,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
+import { useAuth } from "@/contexts/auth";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Settings, List } from "lucide-react";
@@ -17,6 +18,7 @@ import { Link, NavLink } from "react-router";
 import { Skeleton } from "./ui/skeleton";
 
 export function NavMain() {
+  const { user } = useAuth();
   const { menus, activeMenu } = useMenuContext();
   const { setOpenMobile } = useSidebar();
 
@@ -31,7 +33,7 @@ export function NavMain() {
     ),
   );
 
-  if (!menus.length) {
+  if (!user || !menus.length) {
     return null;
   }
 

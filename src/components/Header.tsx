@@ -25,7 +25,7 @@ export function Header() {
     <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
       <div className="flex flex-1 items-center gap-2">
         <SidebarTrigger />
-        {business && (
+        {user && business && (
           <>
             <Separator
               orientation="vertical"
