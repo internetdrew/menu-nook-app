@@ -50,9 +50,11 @@ describe("Dashboard Home Page", () => {
   it("renders the dashboard shell with a login prompt for guests", async () => {
     renderApp({ initialEntries: ["/"], authMock: noUserState });
 
-    expect(screen.getByText(/MenuNook/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/MenuNook/i)).toHaveLength(2);
     expect(
-      screen.getByText(/See your dashboard from the start/i),
+      screen.getByText(
+        /Sign in to give your menu a clean, simple home of its own./i,
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Continue with Google/i }),
