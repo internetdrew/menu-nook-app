@@ -9,21 +9,24 @@ import { Button } from "@/components/ui/button";
 import { signInWithGoogle } from "@/lib/auth";
 import { Spinner } from "./ui/spinner";
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 
 export function SignInPrompt() {
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [buttonLabel, setButtonLabel] = useState("Continue with Google");
+  const buttonState = isSigningIn ? "loading" : "idle";
+  const buttonLabel =
+    buttonState === "loading"
+      ? "Connecting to Google..."
+      : "Continue with Google";
 
   const handleSignIn = async () => {
     setIsSigningIn(true);
-    setButtonLabel("Connecting to Google...");
 
     try {
       await signInWithGoogle();
     } catch (error) {
       console.error(error);
       setIsSigningIn(false);
-      setButtonLabel("Continue with Google");
     }
   };
 
@@ -37,12 +40,24 @@ export function SignInPrompt() {
       </CardHeader>
       <CardFooter className="flex justify-center">
         <Button
+          className="relative min-w-52 overflow-hidden"
           onClick={handleSignIn}
           disabled={isSigningIn}
           aria-busy={isSigningIn}
         >
-          {isSigningIn && <Spinner />}
-          {buttonLabel}
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.span
+              className="inline-flex items-center justify-center gap-2"
+              transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+              initial={{ opacity: 0, y: -25 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 25 }}
+              key={buttonState}
+            >
+              {buttonState === "loading" ? <Spinner /> : null}
+              {buttonLabel}
+            </motion.span>
+          </AnimatePresence>
         </Button>
       </CardFooter>
     </Card>
