@@ -2,12 +2,12 @@ import { Outlet } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/auth";
 import { trpc } from "../utils/trpc";
-import { Spinner } from "./ui/spinner";
 import EmptyStatePrompt from "./EmptyStatePrompt";
 import { CreateBusinessForm } from "./forms/CreateBusinessForm";
 import { CreateMenuForm } from "./forms/CreateMenuForm";
 import { useState } from "react";
 import { SignInPrompt } from "./SignInPrompt";
+import { DashboardSkeleton } from "./DashboardSkeleton";
 
 export function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -28,12 +28,16 @@ export function DashboardPage() {
     ),
   );
 
-  if (authLoading || businessLoading || menusLoading) {
-    return <Spinner className="mx-auto mt-36 size-6 text-pink-600" />;
+  if (authLoading) {
+    return <DashboardSkeleton />;
   }
 
   if (!user) {
     return <SignInPrompt />;
+  }
+
+  if (businessLoading) {
+    return <DashboardSkeleton />;
   }
 
   if (!business) {
@@ -49,6 +53,10 @@ export function DashboardPage() {
         formDialogDescription="Add your business to start managing your menus."
       />
     );
+  }
+
+  if (menusLoading) {
+    return <DashboardSkeleton />;
   }
 
   if (menus?.length === 0) {
