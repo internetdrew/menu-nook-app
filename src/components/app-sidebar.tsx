@@ -43,7 +43,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <span className="title text-lg font-bold">{title}</span>
           </Link>
         </SidebarMenuButton>
-        {business && <MenuSwitcher />}
+        {user && business && <MenuSwitcher />}
       </SidebarHeader>
       <SidebarContent className="bg-neutral-300/20">
         <NavMain />
