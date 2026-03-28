@@ -20,6 +20,9 @@ import { CreateMenuForm } from "./forms/CreateMenuForm";
 import { useNavigate } from "react-router";
 import { Skeleton } from "./ui/skeleton";
 import { MAX_MENUS_PER_BUSINESS } from "@/constants";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+import { useAuth } from "@/contexts/auth";
 
 export function MenuSwitcher() {
   const { isMobile, setOpenMobile } = useSidebar();
@@ -27,15 +30,31 @@ export function MenuSwitcher() {
   const [renderDropdown, setRenderDropdown] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { menus, activeMenu, setActiveMenu, loading } = useMenuContext();
+  const { user, isLoading: authLoading } = useAuth();
+  const { data: business, isLoading: businessLoading } = useQuery(
+    trpc.business.getForUser.queryOptions(undefined, {
+      enabled: !!user && !authLoading,
+    }),
+  );
+
+  const {
+    menus,
+    activeMenu,
+    setActiveMenu,
+    loading: menuContextLoading,
+  } = useMenuContext();
 
   const triggerDialog = () => {
     setRenderDropdown(false);
     setIsDialogOpen(true);
   };
 
-  if (loading) {
-    return <Skeleton className="mt-2 h-10 w-full rounded-lg" />;
+  if (authLoading || businessLoading || menuContextLoading) {
+    return <Skeleton className="mt-2 h-10 w-full rounded-lg bg-neutral-200" />;
+  }
+
+  if (!business) {
+    return null;
   }
 
   return (
