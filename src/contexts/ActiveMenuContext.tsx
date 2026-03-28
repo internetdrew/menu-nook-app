@@ -45,7 +45,13 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
   const [activeMenu, setActiveMenuState] = useState<Menu | null>(null);
 
   useEffect(() => {
-    if (!data || data.length === 0) return;
+    if (!user || !business || !data || data.length === 0) {
+      setActiveMenuState(null);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("activeMenuId");
+      }
+      return;
+    }
 
     const savedId =
       typeof window !== "undefined"
@@ -56,7 +62,7 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
       data.find((m) => savedId !== null && String(m.id) === savedId) ?? data[0];
 
     setActiveMenuState(found);
-  }, [data]);
+  }, [business, data, user]);
 
   const setActiveMenu = useCallback((m: Menu) => {
     setActiveMenuState(m);
