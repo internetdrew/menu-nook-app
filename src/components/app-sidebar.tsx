@@ -24,7 +24,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       collapsible="icon"
       {...props}
     >
-      <SidebarHeader className="bg-neutral-300/20">
+      <SidebarHeader>
         <SidebarMenuButton asChild tooltip={"Home"}>
           <Link
             to="/"
@@ -36,10 +36,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenuButton>
         <MenuSwitcher />
       </SidebarHeader>
-      <SidebarContent className="bg-neutral-300/20">
+      <SidebarContent>
         <NavMain />
       </SidebarContent>
-      <SidebarFooter className="bg-neutral-300/20">
+      <SidebarFooter>
         <NavUser />
       </SidebarFooter>
       <SidebarRail />
