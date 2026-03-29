@@ -13,7 +13,7 @@ import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { useAuth } from "@/contexts/auth";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { Settings, List } from "lucide-react";
+import { Settings, List, ScrollText } from "lucide-react";
 import { Link, NavLink } from "react-router";
 import { Skeleton } from "./ui/skeleton";
 
@@ -55,9 +55,12 @@ export function NavMain() {
                   onClick={() => setOpenMobile(false)}
                 >
                   {({ isActive }) => (
-                    <span className={isActive ? "font-semibold" : ""}>
-                      Categories
-                    </span>
+                    <>
+                      <List />
+                      <span className={isActive ? "font-semibold" : ""}>
+                        Categories
+                      </span>
+                    </>
                   )}
                 </NavLink>
               </SidebarMenuButton>
@@ -101,7 +104,7 @@ export function NavMain() {
                   to={`/preview/menu/${activeMenu?.id}`}
                   onClick={() => setOpenMobile(false)}
                 >
-                  <List />
+                  <ScrollText />
                   <span>Menu Preview</span>
                 </Link>
               </SidebarMenuButton>
@@ -110,14 +113,14 @@ export function NavMain() {
         </SidebarGroupContent>
       </SidebarGroup>
       <SidebarGroup>
-        <SidebarGroupLabel>Settings</SidebarGroupLabel>
+        <SidebarGroupLabel>Update</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="General Settings" asChild>
+              <SidebarMenuButton tooltip="Settings" asChild>
                 <Link to={`/settings`} onClick={() => setOpenMobile(false)}>
                   <Settings />
-                  <span>General</span>
+                  <span>Settings</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
