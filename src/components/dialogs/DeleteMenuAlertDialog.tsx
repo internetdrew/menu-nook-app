@@ -58,9 +58,10 @@ const DeleteMenuAlertDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogTrigger asChild className="ml-auto">
-        <Button size={"icon-sm"} variant="outline" aria-label="Delete menu">
-          <Trash className="text-destructive" />
+      <AlertDialogTrigger asChild>
+        <Button size={"sm"} variant="destructive" aria-label="Delete menu">
+          <Trash />
+          Delete Menu
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

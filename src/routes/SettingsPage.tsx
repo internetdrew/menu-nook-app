@@ -1,45 +1,25 @@
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { useAuth } from "@/contexts/auth";
-import { trpc } from "@/utils/trpc";
-import { useQuery } from "@tanstack/react-query";
-import { Info } from "lucide-react";
 import { BusinessDetails } from "@/components/settings/BusinessDetails";
 import { MenuDetails } from "@/components/settings/MenuDetails";
+import { Separator } from "@/components/ui/separator";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
 export const SettingsPage = () => {
-  const { user, isLoading: authLoading } = useAuth();
-
-  const { data: business } = useQuery(
-    trpc.business.getForUser.queryOptions(undefined, {
-      enabled: !!user && !authLoading,
-    }),
-  );
+  const { activeMenu } = useMenuContext();
 
   return (
-    <div className="my-4">
+    <div className="mx-auto mt-12 max-w-lg px-2">
       <header className="flex items-center">
-        <h1 className="font-medium">Settings</h1>
-        <Popover>
-          <PopoverTrigger>
-            <Info className="ml-1 size-3" />
-          </PopoverTrigger>
-          <PopoverContent className="text-sm">
-            This is where you can manage your settings and preferences for{" "}
-            <span className="font-semibold">{business?.name}</span> and its
-            menus.
-          </PopoverContent>
-        </Popover>
+        <h1 className="text-lg font-medium">Settings</h1>
       </header>
 
-      <section className="mt-8">
-        <div className="grid gap-4 md:grid-cols-2">
-          <BusinessDetails />
-          <MenuDetails />
-        </div>
+      <section className="mt-6 space-y-6">
+        <BusinessDetails />
+        {activeMenu && (
+          <>
+            <Separator />
+            <MenuDetails />
+          </>
+        )}
       </section>
     </div>
   );
