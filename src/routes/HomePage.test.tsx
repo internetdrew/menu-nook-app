@@ -588,7 +588,7 @@ describe("Dashboard Home Page", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders full sidebar items when a business and menu are created", async () => {
+  it("renders menu preview and settings links when a business and menu are created", async () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({
@@ -624,7 +624,12 @@ describe("Dashboard Home Page", () => {
 
     expect(await within(sidebar).findByText(/Test Menu/i)).toBeInTheDocument();
 
-    expect(within(sidebar).getByText(/Manage/i)).toBeInTheDocument();
+    expect(
+      within(sidebar).getByRole("link", { name: /menu preview/i }),
+    ).toBeInTheDocument();
+    expect(
+      within(sidebar).getByRole("link", { name: /settings/i }),
+    ).toBeInTheDocument();
     expect(
       within(sidebar).getByRole("link", { name: /categories/i }),
     ).toBeInTheDocument();
