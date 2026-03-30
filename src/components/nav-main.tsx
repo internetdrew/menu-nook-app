@@ -19,8 +19,14 @@ import { Skeleton } from "./ui/skeleton";
 
 export function NavMain() {
   const { user } = useAuth();
-  const { menus, activeMenu } = useMenuContext();
+  const { activeMenu } = useMenuContext();
   const { setOpenMobile } = useSidebar();
+
+  const { data: business } = useQuery(
+    trpc.business.getForUser.queryOptions(undefined, {
+      enabled: !!user,
+    }),
+  );
 
   const { data: indexedCategories, isLoading: isLoadingCategories } = useQuery(
     trpc.menuCategory.getAllSortedByIndex.queryOptions(
@@ -33,100 +39,108 @@ export function NavMain() {
     ),
   );
 
-  if (!user || !menus.length) {
+  if (!user) {
     return null;
   }
 
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupLabel>Manage</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                title={"Categories"}
-                tooltip={"Categories"}
-                asChild
-              >
-                <NavLink
-                  to={`/categories`}
-                  end
-                  onClick={() => setOpenMobile(false)}
+      {indexedCategories && indexedCategories.length > 0 && (
+        <SidebarGroup>
+          <SidebarGroupLabel>Manage</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  title={"Categories"}
+                  tooltip={"Categories"}
+                  asChild
                 >
-                  {({ isActive }) => (
-                    <>
-                      <List />
-                      <span className={isActive ? "font-semibold" : ""}>
-                        Categories
-                      </span>
-                    </>
-                  )}
-                </NavLink>
-              </SidebarMenuButton>
-              <SidebarMenuSub>
-                {isLoadingCategories
-                  ? Array.from({ length: 3 }).map((_, index) => (
-                      <Skeleton key={index} className="h-8" />
-                    ))
-                  : indexedCategories?.map((index) => (
-                      <SidebarMenuSubItem key={index?.category?.name}>
-                        <SidebarMenuButton
-                          title={index?.category?.name}
-                          tooltip={index?.category?.name}
-                          asChild
-                        >
-                          <NavLink
-                            to={`/categories/${index.category?.id}`}
-                            onClick={() => setOpenMobile(false)}
+                  <NavLink
+                    to={`/categories`}
+                    end
+                    onClick={() => setOpenMobile(false)}
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <List />
+                        <span className={isActive ? "font-semibold" : ""}>
+                          Categories
+                        </span>
+                      </>
+                    )}
+                  </NavLink>
+                </SidebarMenuButton>
+                <SidebarMenuSub>
+                  {isLoadingCategories
+                    ? Array.from({ length: 3 }).map((_, index) => (
+                        <Skeleton key={index} className="h-8" />
+                      ))
+                    : indexedCategories?.map((index) => (
+                        <SidebarMenuSubItem key={index?.category?.name}>
+                          <SidebarMenuButton
+                            title={index?.category?.name}
+                            tooltip={index?.category?.name}
+                            asChild
                           >
-                            {({ isActive }) => (
-                              <span className={isActive ? "font-semibold" : ""}>
-                                {index.category?.name}
-                              </span>
-                            )}
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuSubItem>
-                    ))}
-              </SidebarMenuSub>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-      <SidebarGroup>
-        <SidebarGroupLabel>View</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Menu Preview" asChild>
-                <Link
-                  to={`/preview/menu/${activeMenu?.id}`}
-                  onClick={() => setOpenMobile(false)}
-                >
-                  <ScrollText />
-                  <span>Menu Preview</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-      <SidebarGroup>
-        <SidebarGroupLabel>Update</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Settings" asChild>
-                <Link to={`/settings`} onClick={() => setOpenMobile(false)}>
-                  <Settings />
-                  <span>Settings</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+                            <NavLink
+                              to={`/categories/${index.category?.id}`}
+                              onClick={() => setOpenMobile(false)}
+                            >
+                              {({ isActive }) => (
+                                <span
+                                  className={isActive ? "font-semibold" : ""}
+                                >
+                                  {index.category?.name}
+                                </span>
+                              )}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                </SidebarMenuSub>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
+      {activeMenu && (
+        <SidebarGroup>
+          <SidebarGroupLabel>View</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Menu Preview" asChild>
+                  <Link
+                    to={`/preview/menu/${activeMenu?.id}`}
+                    onClick={() => setOpenMobile(false)}
+                  >
+                    <ScrollText />
+                    <span>Menu Preview</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
+      {business && (
+        <SidebarGroup>
+          <SidebarGroupLabel>Update</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Settings" asChild>
+                  <Link to={`/settings`} onClick={() => setOpenMobile(false)}>
+                    <Settings />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
     </>
   );
 }
