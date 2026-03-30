@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/auth";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Settings, List, ScrollText } from "lucide-react";
-import { Link, NavLink } from "react-router";
+import { NavLink } from "react-router";
 import { Skeleton } from "./ui/skeleton";
 
 export function NavMain() {
@@ -45,7 +45,7 @@ export function NavMain() {
 
   return (
     <>
-      {indexedCategories && indexedCategories.length > 0 && (
+      {activeMenu && (
         <SidebarGroup>
           <SidebarGroupLabel>Manage</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -111,13 +111,19 @@ export function NavMain() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Menu Preview" asChild>
-                  <Link
+                  <NavLink
                     to={`/preview/menu/${activeMenu?.id}`}
                     onClick={() => setOpenMobile(false)}
                   >
-                    <ScrollText />
-                    <span>Menu Preview</span>
-                  </Link>
+                    {({ isActive }) => (
+                      <>
+                        <ScrollText />
+                        <span className={isActive ? "font-semibold" : ""}>
+                          Menu Preview
+                        </span>
+                      </>
+                    )}
+                  </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -131,10 +137,19 @@ export function NavMain() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Settings" asChild>
-                  <Link to={`/settings`} onClick={() => setOpenMobile(false)}>
-                    <Settings />
-                    <span>Settings</span>
-                  </Link>
+                  <NavLink
+                    to={`/settings`}
+                    onClick={() => setOpenMobile(false)}
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <Settings />
+                        <span className={isActive ? "font-semibold" : ""}>
+                          Settings
+                        </span>
+                      </>
+                    )}
+                  </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
