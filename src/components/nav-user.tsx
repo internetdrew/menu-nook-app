@@ -14,23 +14,15 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth";
 import { supabaseBrowserClient } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { user, isLoading } = useAuth();
-  const enterTransition = {
-    duration: 0.34,
-    ease: [0.19, 1, 0.22, 1] as const,
-  };
-  const exitTransition = {
-    duration: 0.18,
-    ease: [0.215, 0.61, 0.355, 1] as const,
-  };
 
   const signOut = async () => {
     try {
@@ -50,7 +42,7 @@ export function NavUser() {
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -24 }}
-          transition={exitTransition}
+          transition={{ type: "spring", duration: 0.34, bounce: 0 }}
         >
           <SidebarMenu>
             <SidebarMenuItem>
@@ -70,8 +62,8 @@ export function NavUser() {
           key={user.id}
           initial={{ opacity: 0, x: -56 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -36, transition: exitTransition }}
-          transition={enterTransition}
+          exit={{ opacity: 0, x: -36 }}
+          transition={{ type: "spring", duration: 0.34, bounce: 0 }}
         >
           <SidebarMenu>
             <SidebarMenuItem>
