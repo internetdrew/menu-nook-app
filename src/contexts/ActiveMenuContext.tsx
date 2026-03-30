@@ -21,6 +21,7 @@ interface MenuContextValue {
 }
 
 const MenuContext = createContext<MenuContextValue | undefined>(undefined);
+const ACTIVE_MENU_STORAGE_KEY = "activeMenuId";
 
 export const MenuProvider: React.FC<React.PropsWithChildren> = ({
   children,
@@ -45,28 +46,40 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
   const [activeMenu, setActiveMenuState] = useState<Menu | null>(null);
 
   useEffect(() => {
-    if (!user || !business || !data || data.length === 0) {
+    if (authLoading || businessLoading || isLoading) {
+      return;
+    }
+
+    if (!user) {
       setActiveMenuState(null);
       if (typeof window !== "undefined") {
-        localStorage.removeItem("activeMenuId");
+        localStorage.removeItem(ACTIVE_MENU_STORAGE_KEY);
       }
+      return;
+    }
+
+    if (!business || !data || data.length === 0) {
+      setActiveMenuState(null);
       return;
     }
 
     const savedId =
       typeof window !== "undefined"
-        ? localStorage.getItem("activeMenuId")
+        ? localStorage.getItem(ACTIVE_MENU_STORAGE_KEY)
         : null;
 
     const found =
       data.find((m) => savedId !== null && String(m.id) === savedId) ?? data[0];
 
     setActiveMenuState(found);
-  }, [business, data, user]);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, String(found.id));
+    }
+  }, [authLoading, business, businessLoading, data, isLoading, user]);
 
   const setActiveMenu = useCallback((m: Menu) => {
     setActiveMenuState(m);
-    localStorage.setItem("activeMenuId", String(m.id));
+    localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, String(m.id));
   }, []);
 
   const value: MenuContextValue = {

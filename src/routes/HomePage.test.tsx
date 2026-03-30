@@ -32,6 +32,7 @@ vi.mock("sonner", () => ({
 describe("Dashboard Home Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     vi.mocked(supabaseBrowserClient.auth.signOut).mockResolvedValue({
       error: null,
     });
@@ -240,6 +241,79 @@ describe("Dashboard Home Page", () => {
 
     expect(screen.queryByText("Test Bistro")).not.toBeInTheDocument();
     expect(screen.queryByText("Dinner Overview")).not.toBeInTheDocument();
+  });
+
+  it("keeps the last selected menu after reload", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Bistro",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                name: "Dinner",
+                business_id: "business-123",
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+              {
+                id: "menu-456",
+                name: "Lunch",
+                business_id: "business-123",
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+            ],
+          },
+        }),
+        "subscription.getForUser": () => ({
+          result: {
+            data: null,
+          },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+    const firstRender = renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Dinner Overview")).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /dinner/i,
+      }),
+    );
+    await user.click(screen.getByRole("menuitem", { name: "Lunch" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Lunch Overview")).toBeInTheDocument();
+    });
+
+    firstRender.unmount();
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Lunch Overview")).toBeInTheDocument();
+    });
   });
 
   it("shows no business message card when user has no business", async () => {
