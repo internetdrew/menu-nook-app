@@ -57,7 +57,7 @@ describe("Settings Page", () => {
       renderApp({ initialEntries: ["/settings"], authMock: authedUserState });
 
       await waitFor(() => {
-        expect(screen.getByText("Business Details")).toBeInTheDocument();
+        expect(screen.getByText("Business Settings")).toBeInTheDocument();
       });
 
       await waitFor(() => {
@@ -112,7 +112,7 @@ describe("Settings Page", () => {
       renderApp({ initialEntries: ["/settings"], authMock: authedUserState });
 
       await waitFor(() => {
-        expect(screen.getByText("Menu Details")).toBeInTheDocument();
+        expect(screen.getByText("Menu Settings")).toBeInTheDocument();
       });
 
       await waitFor(() => {
@@ -234,7 +234,7 @@ describe("Settings Page", () => {
       renderApp({ initialEntries: ["/settings"], authMock: authedUserState });
 
       await waitFor(() => {
-        expect(screen.getByText(/menu details/i)).toBeInTheDocument();
+        expect(screen.getByText(/menu settings/i)).toBeInTheDocument();
       });
 
       const deleteButton = screen.getByRole("button", { name: /delete menu/i });
