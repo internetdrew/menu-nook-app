@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { linkClasses } from "@/constants";
@@ -13,6 +14,17 @@ import MenuUnavailable from "../components/MenuUnavailable";
 import { toast } from "sonner";
 
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
+
+const getBusinessInitials = (name: string) => {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join("");
+
+  return initials || "Logo";
+};
 
 export const Menu = () => {
   const { menuId } = useParams<{ menuId: string }>();
@@ -183,6 +195,22 @@ export const Menu = () => {
       )}
 
       <main className="mx-auto w-full max-w-screen-sm px-4 py-8">
+        {menu.business.image_url && (
+          <Avatar
+            className="mx-auto mb-4 size-24"
+            role="img"
+            aria-label={`${menu.business.name} logo`}
+          >
+            <AvatarImage
+              src={menu.business.image_url}
+              alt={menu.business.name}
+              className="object-cover object-center"
+            />
+            <AvatarFallback className="text-sm font-medium">
+              {getBusinessInitials(menu.business.name)}
+            </AvatarFallback>
+          </Avatar>
+        )}
         <h1 className="text-center text-xl font-semibold">
           {menu.business.name}
         </h1>
