@@ -113,8 +113,13 @@ file_size_limit = "50MiB"
 
 [storage.buckets.qr_codes]
 public = true
-file_size_limit = "10MiB"
+file_size_limit = "2MiB"
 allowed_mime_types = ["image/png"]
+
+[storage.buckets.menu_item_images]
+public = true
+file_size_limit = "2MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/webp", "image/gif"]
 
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
