@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth";
 import { useEffect } from "react";
 import { Skeleton } from "../ui/skeleton";
+import { BusinessLogoUpload } from "./BusinessLogoUpload";
+import { Link } from "react-router";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
 const businessFormSchema = z.object({
   name: z
@@ -20,6 +23,7 @@ const businessFormSchema = z.object({
 
 export const BusinessDetails = () => {
   const { user, isLoading: authLoading } = useAuth();
+  const { activeMenu } = useMenuContext();
 
   const { data: business, isLoading: businessLoading } = useQuery(
     trpc.business.getForUser.queryOptions(undefined, {
@@ -70,8 +74,22 @@ export const BusinessDetails = () => {
     return (
       <div>
         <Skeleton className="h-10 w-1/2" />
-        <Skeleton className="mt-8 mb-1 h-5 w-1/4" />
-        <Skeleton className="h-10 w-full" />
+        <div className="mt-8 space-y-6">
+          <div>
+            <Skeleton className="mb-2 h-5 w-1/4" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="size-20 rounded-full" />
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-9 w-28" />
+                <Skeleton className="h-9 w-20" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <Skeleton className="mb-1 h-5 w-1/4" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
         <Skeleton className="mt-2 ml-auto h-10 w-1/8" />
       </div>
     );
@@ -85,7 +103,21 @@ export const BusinessDetails = () => {
       <form
         id="business-name"
         onSubmit={businessForm.handleSubmit(onBusinessSubmit)}
+        className="space-y-6"
       >
+        {business && <BusinessLogoUpload business={business} />}
+        <p className="text-muted-foreground text-xs">
+          Your business logo will appear above your business name on your menu.
+          To see what it looks like, head on over to the{" "}
+          <Link
+            to={`/preview/menu/${activeMenu?.id}`}
+            className="hover:decoration-muted-foreground underline decoration-neutral-300 underline-offset-4 transition duration-300"
+          >
+            menu preview page
+          </Link>
+          . We recommend using an image with a transparent background for best
+          results.
+        </p>
         <Controller
           name="name"
           control={businessForm.control}

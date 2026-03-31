@@ -92,6 +92,7 @@ describe("Preview Route (/preview/:id)", () => {
               ],
               business: {
                 id: "business_123",
+                image_url: "https://cdn.example.com/business-logo.png",
                 name: "Test Business",
               },
             },
@@ -119,6 +120,9 @@ describe("Preview Route (/preview/:id)", () => {
 
     expect(screen.getByText("Test Business")).toBeInTheDocument();
     expect(screen.getByText("Test Menu")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Test Business logo" }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: "Category 1" }),
     ).not.toBeInTheDocument();
@@ -175,6 +179,7 @@ describe("Live Menu Route (/menu/:id)", () => {
               ],
               business: {
                 id: "business_123",
+                image_url: null,
                 name: "Test Business",
               },
             },

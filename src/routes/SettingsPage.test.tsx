@@ -1,3 +1,4 @@
+import { supabaseBrowserClient } from "@/lib/supabase";
 import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
@@ -7,6 +8,18 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, it, describe, vi, expect } from "vitest";
 import { toast } from "sonner";
+
+type StorageBucketApi = ReturnType<typeof supabaseBrowserClient.storage.from>;
+
+vi.mock("@/lib/supabase", () => {
+  return {
+    supabaseBrowserClient: {
+      storage: {
+        from: vi.fn(),
+      },
+    },
+  };
+});
 
 vi.mock("sonner", () => ({
   toast: {
@@ -21,6 +34,8 @@ const defaultHandlers = {
     result: {
       data: {
         id: "business-123",
+        image_path: null,
+        image_url: null,
         name: "Test Business",
         user_id: "user-123",
       },
@@ -48,6 +63,29 @@ const defaultHandlers = {
 describe("Settings Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(window.URL, "createObjectURL", {
+      writable: true,
+      value: vi.fn(() => "blob:preview-url"),
+    });
+    Object.defineProperty(window.URL, "revokeObjectURL", {
+      writable: true,
+      value: vi.fn(),
+    });
+
+    const currentPublicUrl = "https://cdn.example.com/business-logo.png";
+    const storageBucket = {
+      getPublicUrl: vi.fn(() => ({
+        data: { publicUrl: currentPublicUrl },
+      })),
+      upload: vi.fn().mockResolvedValue({
+        data: { path: "business/business-123/logo_1.png" },
+        error: null,
+      }),
+    } as unknown as StorageBucketApi;
+
+    vi.mocked(supabaseBrowserClient.storage.from).mockReturnValue(
+      storageBucket,
+    );
   });
 
   describe("Business Details", () => {
@@ -65,6 +103,13 @@ describe("Settings Page", () => {
           "Test Business",
         );
       });
+
+      expect(
+        screen.getByRole("button", { name: /upload logo/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /remove/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("allows users to update the business name", async () => {
@@ -100,6 +145,102 @@ describe("Settings Page", () => {
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith(
           "Business name updated successfully!",
+        );
+      });
+    });
+
+    it("uploads a business logo immediately after file selection", async () => {
+      server.use(
+        createTrpcQueryHandler(defaultHandlers),
+        http.post("/trpc/business.update", async ({ request }) => {
+          const rawBody = await request.text();
+
+          expect(rawBody).toContain(
+            '"imageUrl":"https://cdn.example.com/business-logo.png"',
+          );
+          expect(rawBody).toMatch(
+            /"imagePath":"business\/business-123\/logo_\d+\.png"/,
+          );
+
+          return HttpResponse.json({
+            result: {
+              data: {
+                id: "business-123",
+                image_path: "business/business-123/logo_1.png",
+                image_url: "https://cdn.example.com/business-logo.png",
+                name: "Test Business",
+              },
+            },
+          });
+        }),
+      );
+
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ["/settings"], authMock: authedUserState });
+
+      const fileInput = await screen.findByLabelText(/business logo/i, {
+        selector: "input",
+      });
+      const file = new File(["logo"], "logo.png", { type: "image/png" });
+
+      await user.upload(fileInput, file);
+
+      await waitFor(() => {
+        expect(supabaseBrowserClient.storage.from).toHaveBeenCalledWith(
+          "business_logos",
+        );
+        expect(toast.success).toHaveBeenCalledWith(
+          "Business logo updated successfully!",
+        );
+      });
+    });
+
+    it("removes an existing business logo immediately", async () => {
+      server.use(
+        createTrpcQueryHandler({
+          ...defaultHandlers,
+          "business.getForUser": () => ({
+            result: {
+              data: {
+                id: "business-123",
+                image_path: "business/business-123/logo_123.png",
+                image_url: "https://cdn.example.com/existing-logo.png",
+                name: "Test Business",
+                user_id: "user-123",
+              },
+            },
+          }),
+        }),
+        http.post("/trpc/business.update", async ({ request }) => {
+          const rawBody = await request.text();
+
+          expect(rawBody).toContain('"imagePath":null');
+          expect(rawBody).toContain('"imageUrl":null');
+
+          return HttpResponse.json({
+            result: {
+              data: {
+                id: "business-123",
+                image_path: null,
+                image_url: null,
+                name: "Test Business",
+              },
+            },
+          });
+        }),
+      );
+
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ["/settings"], authMock: authedUserState });
+
+      const removeButton = await screen.findByRole("button", {
+        name: /remove/i,
+      });
+      await user.click(removeButton);
+
+      await waitFor(() => {
+        expect(toast.success).toHaveBeenCalledWith(
+          "Business logo removed successfully!",
         );
       });
     });
