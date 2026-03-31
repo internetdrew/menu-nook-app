@@ -1,2 +1,2 @@
-  alter table public.businesses
-  add column image_path text;
+alter table public.businesses
+add column if not exists image_path text;
