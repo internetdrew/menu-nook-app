@@ -76,6 +76,7 @@ describe("Preview Route (/preview/:id)", () => {
                       id: "item1",
                       name: "Item 1",
                       description: "Delicious item",
+                      image_url: "https://cdn.example.com/item-1.png",
                       price: 12.65,
                       sort_index: 0,
                     },
@@ -83,6 +84,7 @@ describe("Preview Route (/preview/:id)", () => {
                       id: "item2",
                       name: "Item 2",
                       description: "Scrumptious item",
+                      image_url: null,
                       price: 15.99,
                       sort_index: 1,
                     },
@@ -129,6 +131,7 @@ describe("Preview Route (/preview/:id)", () => {
     expect(
       screen.getByRole("link", { name: "Category 2" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Item 1" })).toBeInTheDocument();
   });
 });
 
