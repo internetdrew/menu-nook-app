@@ -381,7 +381,7 @@ describe("Categories Page", () => {
       expect(appetizers).toBeInTheDocument();
     });
 
-    const deleteButton = screen.getByRole("button", {
+    const deleteButton = screen.getByRole("menuitem", {
       name: /delete category/i,
     });
     await user.click(deleteButton);
