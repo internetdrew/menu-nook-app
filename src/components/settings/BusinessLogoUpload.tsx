@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { supabaseBrowserClient } from "@/lib/supabase";
 import { queryClient, trpc } from "@/utils/trpc";
 import { useMutation } from "@tanstack/react-query";
@@ -137,24 +136,27 @@ export const BusinessLogoUpload = ({ business }: BusinessLogoUploadProps) => {
   return (
     <Field>
       <FieldLabel htmlFor={fileInputId}>Business Logo</FieldLabel>
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-4">
         <button
           type="button"
-          className="rounded-full transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full max-w-44 rounded-2xl border bg-white/80 p-4 text-left shadow-sm transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
           onClick={openFilePicker}
           disabled={isUpdatingLogo}
           aria-label="Upload business logo"
         >
-          <Avatar className="size-20 border">
-            <AvatarImage
-              src={displayedLogo}
-              alt={business?.name}
-              className="object-cover"
-            />
-            <AvatarFallback className="text-sm font-medium">
-              Logo
-            </AvatarFallback>
-          </Avatar>
+          <div className="flex aspect-[3/2] items-center justify-center overflow-hidden rounded-xl">
+            {displayedLogo ? (
+              <img
+                src={displayedLogo}
+                alt={`${business.name} logo`}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <span className="text-muted-foreground text-sm font-medium">
+                Logo
+              </span>
+            )}
+          </div>
         </button>
         <div className="flex flex-col gap-2">
           <input
