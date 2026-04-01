@@ -5,18 +5,57 @@ import { protectedProcedure, router } from "../trpc";
 export const menuCategoryItemRouter = router({
   create: protectedProcedure
     .input(
-      z.object({
-        menuId: z.uuid(),
-        menuCategoryId: z.number(),
-        name: z.string().min(1).max(100),
-        description: z.string().max(255).optional(),
-        price: z.number().min(0),
-        imageUrl: z.url().optional(),
-      }),
+      z
+        .object({
+          menuId: z.uuid(),
+          menuCategoryId: z.number(),
+          name: z.string().min(1).max(100),
+          description: z.string().max(255).optional(),
+          price: z.number().min(0),
+          imagePath: z.string().nullable().optional(),
+          imageUrl: z.url().nullable().optional(),
+        })
+        .superRefine((input, ctx) => {
+          const imageUrlProvided = input.imageUrl !== undefined;
+          const imagePathProvided = input.imagePath !== undefined;
+
+          if (imageUrlProvided !== imagePathProvided) {
+            ctx.addIssue({
+              code: "custom",
+              message: "Image updates must include both imageUrl and imagePath",
+              path: ["imageUrl"],
+            });
+          }
+
+          if (input.imageUrl === null && input.imagePath !== null) {
+            ctx.addIssue({
+              code: "custom",
+              message:
+                "Removing an image must clear both imageUrl and imagePath",
+              path: ["imagePath"],
+            });
+          }
+
+          if (input.imagePath === null && input.imageUrl !== null) {
+            ctx.addIssue({
+              code: "custom",
+              message:
+                "Removing an image must clear both imageUrl and imagePath",
+              path: ["imageUrl"],
+            });
+          }
+        }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { name, description, price, imageUrl, menuCategoryId, menuId } =
-        input;
+      const {
+        name,
+        description,
+        price,
+        imagePath,
+        imageUrl,
+        menuCategoryId,
+        menuId,
+      } = input;
 
       const { data: newItem, error: newItemError } = await ctx.supabase
         .from("menu_category_items")
@@ -26,6 +65,7 @@ export const menuCategoryItemRouter = router({
           name,
           description,
           price,
+          image_path: imagePath,
           image_url: imageUrl,
         })
         .select()
@@ -78,17 +118,71 @@ export const menuCategoryItemRouter = router({
     }),
   update: protectedProcedure
     .input(
-      z.object({
-        id: z.number(),
-        name: z.string().min(1).max(100),
-        description: z.string().max(255).optional(),
-        price: z.number().min(0),
-        imageUrl: z.url().optional(),
-        menuCategoryId: z.number(),
-      }),
+      z
+        .object({
+          id: z.number(),
+          name: z.string().min(1).max(100),
+          description: z.string().max(255).optional(),
+          price: z.number().min(0),
+          imagePath: z.string().nullable().optional(),
+          imageUrl: z.url().nullable().optional(),
+          menuCategoryId: z.number(),
+        })
+        .superRefine((input, ctx) => {
+          const imageUrlProvided = input.imageUrl !== undefined;
+          const imagePathProvided = input.imagePath !== undefined;
+
+          if (imageUrlProvided !== imagePathProvided) {
+            ctx.addIssue({
+              code: "custom",
+              message: "Image updates must include both imageUrl and imagePath",
+              path: ["imageUrl"],
+            });
+          }
+
+          if (input.imageUrl === null && input.imagePath !== null) {
+            ctx.addIssue({
+              code: "custom",
+              message:
+                "Removing an image must clear both imageUrl and imagePath",
+              path: ["imagePath"],
+            });
+          }
+
+          if (input.imagePath === null && input.imageUrl !== null) {
+            ctx.addIssue({
+              code: "custom",
+              message:
+                "Removing an image must clear both imageUrl and imagePath",
+              path: ["imageUrl"],
+            });
+          }
+        }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, name, menuCategoryId, description, price, imageUrl } = input;
+      const {
+        id,
+        name,
+        menuCategoryId,
+        description,
+        price,
+        imagePath,
+        imageUrl,
+      } = input;
+
+      const { data: existingItem, error: existingItemError } =
+        await ctx.supabase
+          .from("menu_category_items")
+          .select("id, image_path")
+          .eq("id", id)
+          .single();
+
+      if (existingItemError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch existing item: ${existingItemError.message}`,
+        });
+      }
 
       const { data, error } = await ctx.supabase
         .from("menu_category_items")
@@ -97,6 +191,7 @@ export const menuCategoryItemRouter = router({
           description,
           menu_category_id: menuCategoryId,
           price,
+          image_path: imagePath,
           image_url: imageUrl,
           updated_at: new Date().toISOString(),
         })
@@ -111,6 +206,23 @@ export const menuCategoryItemRouter = router({
         });
       }
 
+      const oldImagePath = existingItem.image_path;
+      const nextImagePath = input.imagePath;
+      const shouldDeleteOldImage =
+        input.imagePath !== undefined &&
+        oldImagePath &&
+        oldImagePath !== nextImagePath;
+
+      if (shouldDeleteOldImage) {
+        const { error: deleteError } = await ctx.supabase.storage
+          .from("menu_item_images")
+          .remove([oldImagePath]);
+
+        if (deleteError) {
+          console.error("Failed to delete old menu item image:", deleteError);
+        }
+      }
+
       return data;
     }),
   delete: protectedProcedure
@@ -121,6 +233,21 @@ export const menuCategoryItemRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { id } = input;
+
+      const { data: existingItem, error: existingItemError } =
+        await ctx.supabase
+          .from("menu_category_items")
+          .select("id, image_path")
+          .eq("id", id)
+          .single();
+
+      if (existingItemError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch existing item: ${existingItemError.message}`,
+        });
+      }
+
       const { data, error } = await ctx.supabase
         .from("menu_category_items")
         .delete()
@@ -133,6 +260,16 @@ export const menuCategoryItemRouter = router({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to delete item: ${error.message}`,
         });
+      }
+
+      if (existingItem.image_path) {
+        const { error: deleteError } = await ctx.supabase.storage
+          .from("menu_item_images")
+          .remove([existingItem.image_path]);
+
+        if (deleteError) {
+          console.error("Failed to delete menu item image:", deleteError);
+        }
       }
 
       return data;

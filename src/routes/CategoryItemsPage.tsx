@@ -8,7 +8,13 @@ import {
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { queryClient, trpc } from "@/utils/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ClipboardPen, GripVertical, Info, Trash } from "lucide-react";
+import {
+  ClipboardPen,
+  EllipsisVertical,
+  GripVertical,
+  Info,
+  Trash,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   DndContext,
@@ -41,6 +47,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ItemIndex =
   inferRouterOutputs<AppRouter>["menuCategoryItem"]["getSortedForCategory"][number];
@@ -164,7 +177,7 @@ export const CategoryItemsPage = () => {
             <Skeleton className="h-7 w-48" />
           ) : (
             <>
-              <h1 className="font-medium">{category?.name}</h1>
+              <h1 className="ml-2 font-medium">{category?.name}</h1>
               {category?.description && (
                 <Popover>
                   <PopoverTrigger>
@@ -281,49 +294,64 @@ const SortableMenuItem = ({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
-      <Item variant="outline" size="sm" className="max-w-full lg:max-w-1/2">
-        <ItemMedia variant="icon" className="my-auto border-0 bg-transparent">
-          <button
-            className="cursor-grab px-2 active:cursor-grabbing"
-            {...attributes}
-            {...listeners}
-          >
-            <GripVertical className="text-muted-foreground h-4 w-4" />
-          </button>
-        </ItemMedia>
-        <ItemContent className="select-none">
-          <span className="flex items-center">
+    <div ref={setNodeRef} style={style} className="flex items-center">
+      <button
+        className="cursor-grab px-2 active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="text-muted-foreground h-4 w-4" />
+      </button>
+      <Item variant="outline" size="sm" className="w-full lg:max-w-1/2">
+        {itemIndex.item.image_url && (
+          <ItemMedia variant="image" className="size-12 rounded-md border">
+            <img
+              src={itemIndex.item.image_url}
+              alt={itemIndex.item.name}
+              className="h-full w-full object-cover"
+            />
+          </ItemMedia>
+        )}
+
+        <ItemContent>
+          <span className="flex items-center justify-between">
             <ItemTitle>{itemIndex?.item?.name}</ItemTitle>
+            <span className="font-medium">
+              {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: "USD",
+              }).format(itemIndex?.item?.price ?? 0)}
+            </span>
           </span>
-          <span className="text-muted-foreground">
+          <span className="text-muted-foreground line-clamp-1">
             {itemIndex?.item?.description}
           </span>
-          <span className="mt-1">
-            {new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-            }).format(itemIndex?.item?.price ?? 0)}
-          </span>
         </ItemContent>
-        <ItemActions className="ml-6">
-          <Button
-            aria-label="Edit item"
-            size={"icon-sm"}
-            variant={"ghost"}
-            onClick={() => onEditButtonClick(itemIndex.item)}
-          >
-            <ClipboardPen />
-          </Button>
-          <Button
-            aria-label="Delete item"
-            size={"icon-sm"}
-            variant={"ghost"}
-            className="text-red-600 hover:text-red-600"
-            onClick={() => onDeleteButtonClick(itemIndex.item)}
-          >
-            <Trash />
-          </Button>
+        <ItemActions className="ml-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" aria-label="Item actions">
+                <EllipsisVertical />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  aria-label="Edit item"
+                  onClick={() => onEditButtonClick(itemIndex.item)}
+                >
+                  <ClipboardPen /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  aria-label="Delete item"
+                  onClick={() => onDeleteButtonClick(itemIndex.item)}
+                >
+                  <Trash />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </ItemActions>
       </Item>
     </div>

@@ -137,6 +137,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: number
+          image_path: string | null
           image_url: string | null
           menu_category_id: number
           menu_id: string
@@ -148,6 +149,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: number
+          image_path?: string | null
           image_url?: string | null
           menu_category_id: number
           menu_id: string
@@ -159,6 +161,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: number
+          image_path?: string | null
           image_url?: string | null
           menu_category_id?: number
           menu_id?: string

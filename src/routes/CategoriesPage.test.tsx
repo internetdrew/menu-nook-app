@@ -240,7 +240,12 @@ describe("Categories Page", () => {
       expect(appetizers).toBeInTheDocument();
     });
 
-    const editButton = screen.getByRole("button", { name: /edit category/i });
+    const categoryActionsButton = screen.getByRole("button", {
+      name: /category actions/i,
+    });
+    await user.click(categoryActionsButton);
+
+    const editButton = screen.getByRole("menuitem", { name: /edit category/i });
     await user.click(editButton);
 
     const dialog = await screen.findByRole("dialog");
@@ -310,7 +315,12 @@ describe("Categories Page", () => {
       expect(appetizers).toBeInTheDocument();
     });
 
-    const editButton = screen.getByRole("button", { name: /edit category/i });
+    const categoryActionsButton = screen.getByRole("button", {
+      name: /category actions/i,
+    });
+    await user.click(categoryActionsButton);
+
+    const editButton = screen.getByRole("menuitem", { name: /edit category/i });
     await user.click(editButton);
 
     const dialog = await screen.findByRole("dialog");
@@ -381,7 +391,12 @@ describe("Categories Page", () => {
       expect(appetizers).toBeInTheDocument();
     });
 
-    const deleteButton = screen.getByRole("button", {
+    const categoryActionsButton = screen.getByRole("button", {
+      name: /category actions/i,
+    });
+    await user.click(categoryActionsButton);
+
+    const deleteButton = screen.getByRole("menuitem", {
       name: /delete category/i,
     });
     await user.click(deleteButton);

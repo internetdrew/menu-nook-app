@@ -77,8 +77,8 @@ export const BusinessDetails = () => {
         <div className="mt-8 space-y-6">
           <div>
             <Skeleton className="mb-2 h-5 w-1/4" />
-            <div className="flex items-center gap-4">
-              <Skeleton className="size-20 rounded-full" />
+            <div className="flex items-start gap-4">
+              <Skeleton className="aspect-[3/2] w-full max-w-44 rounded-2xl" />
               <div className="flex flex-col gap-2">
                 <Skeleton className="h-9 w-28" />
                 <Skeleton className="h-9 w-20" />

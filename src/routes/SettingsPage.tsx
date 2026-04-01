@@ -7,7 +7,7 @@ export const SettingsPage = () => {
   const { activeMenu } = useMenuContext();
 
   return (
-    <div className="mx-auto mt-12 max-w-lg px-2">
+    <div className="mx-auto my-12 max-w-lg px-2">
       <header className="flex items-center">
         <h1 className="text-lg font-medium">Settings</h1>
       </header>
