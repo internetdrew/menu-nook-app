@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { linkClasses } from "@/constants";
@@ -14,17 +13,6 @@ import MenuUnavailable from "../components/MenuUnavailable";
 import { toast } from "sonner";
 
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
-
-const getBusinessInitials = (name: string) => {
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase())
-    .join("");
-
-  return initials || "Logo";
-};
 
 export const Menu = () => {
   const { menuId } = useParams<{ menuId: string }>();
@@ -171,12 +159,12 @@ export const Menu = () => {
                 : "Your menu is not live because your subscription is inactive."}
             </span>
             {subscriptionIsActive ? (
-              <a
-                href={`${liveSiteUrl}/menu/${menu.id}`}
+              <Link
+                to={`${liveSiteUrl}/menu/${menu.id}`}
                 className={linkClasses}
               >
                 View Live Menu
-              </a>
+              </Link>
             ) : (
               <Button
                 size={"sm"}
@@ -194,27 +182,24 @@ export const Menu = () => {
         </div>
       )}
 
-      <main className="mx-auto w-full max-w-screen-sm px-4 py-8">
+      <main className="mx-auto w-full max-w-xl px-4 py-8">
         {menu.business.image_url && (
-          <Avatar
-            className="mx-auto mb-4 size-24"
-            role="img"
-            aria-label={`${menu.business.name} logo`}
-          >
-            <AvatarImage
-              src={menu.business.image_url}
-              alt={menu.business.name}
-              className="object-cover object-center"
-            />
-            <AvatarFallback className="text-sm font-medium">
-              {getBusinessInitials(menu.business.name)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="mx-auto mb-5 w-full max-w-48 p-4">
+            <div className="flex aspect-[3/2] items-center justify-center">
+              <img
+                src={menu.business.image_url}
+                alt={`${menu.business.name} logo`}
+                className="h-full w-full object-contain"
+              />
+            </div>
+          </div>
         )}
-        <h1 className="text-center text-xl font-semibold">
+        <h1 className="text-center text-2xl font-semibold">
           {menu.business.name}
         </h1>
-        <h2 className="text-muted-foreground mt-2 text-center">{menu.name}</h2>
+        <h2 className="text-muted-foreground mt-2 text-center text-lg">
+          {menu.name}
+        </h2>
         <nav
           ref={navRef}
           className="my-8 flex flex-wrap items-center justify-center gap-4"
@@ -226,7 +211,7 @@ export const Menu = () => {
                   <Link
                     replace
                     to={{ hash: `#${createSlug(category.name)}` }}
-                    className="underline-offset-4 duration-300 hover:underline"
+                    className="underline decoration-neutral-400 underline-offset-4 transition duration-300 hover:decoration-neutral-600"
                   >
                     {category.name}
                   </Link>
@@ -253,20 +238,31 @@ export const Menu = () => {
               <ul className="space-y-6">
                 {category.items?.map((item) => (
                   <li key={item.id}>
-                    <div className="flex justify-between">
-                      <span>{item.name}</span>
-                      <span>
-                        {new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: "USD",
-                        }).format(item.price)}
-                      </span>
+                    <div className="flex gap-4">
+                      {item.image_url && (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="mt-1 h-20 w-20 shrink-0 rounded-md object-cover"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex justify-between gap-4">
+                          <span>{item.name}</span>
+                          <span className="shrink-0">
+                            {new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: "USD",
+                            }).format(item.price)}
+                          </span>
+                        </div>
+                        {item.description && (
+                          <p className="text-muted-foreground mt-1 line-clamp-2 max-w-sm text-sm">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    {item.description && (
-                      <p className="text-muted-foreground max-w-md text-sm">
-                        {item.description}
-                      </p>
-                    )}
                   </li>
                 ))}
               </ul>
