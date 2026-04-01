@@ -289,20 +289,24 @@ const SortableCategory = ({
         <ItemActions className="ml-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Item actions">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Category actions"
+              >
                 <EllipsisVertical />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuGroup>
                 <DropdownMenuItem
-                  aria-label="Edit item"
+                  aria-label="Edit category"
                   onClick={onEditButtonClick}
                 >
                   <ClipboardPen /> Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  aria-label="Delete item"
+                  aria-label="Delete category"
                   onClick={onDeleteButtonClick}
                 >
                   <Trash />
