@@ -55,7 +55,7 @@ describe("Preview Route (/preview/:id)", () => {
   it("renders a preview banner when user has no subscription", async () => {
     server.use(
       createTrpcQueryHandler({
-        "subscription.getForBusiness": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getPreview": () => ({
           result: {
             data: {
@@ -133,6 +133,59 @@ describe("Preview Route (/preview/:id)", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Item 1" })).toBeInTheDocument();
   });
+
+  it("renders a live preview banner when the current menu is subscribed", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "subscription.getForMenu": () => ({
+          result: {
+            data: {
+              id: "sub_123",
+              menu_id: "123",
+              status: "active",
+              current_period_start: new Date().toISOString(),
+              current_period_end: new Date(Date.now() + 86_400_000).toISOString(),
+              stripe_customer_id: "cus_123",
+              stripe_price_id: "price_123",
+              stripe_subscription_id: "sub_stripe_123",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          },
+        }),
+        "menu.getPreview": () => ({
+          result: {
+            data: {
+              id: "123",
+              name: "Test Menu",
+              menu_categories: [],
+              business: {
+                id: "business_123",
+                image_url: null,
+                name: "Test Business",
+              },
+            },
+          },
+        }),
+      }),
+    );
+
+    renderApp({
+      initialEntries: ["/preview/menu/123"],
+      authMock: authedUserState,
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/This is a preview of your live menu./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("link", { name: "View Live Menu" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Subscribe to publish" }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe("Live Menu Route (/menu/:id)", () => {
@@ -143,7 +196,7 @@ describe("Live Menu Route (/menu/:id)", () => {
   it("renders menu unavailable message when no subscription is found", async () => {
     server.use(
       createTrpcQueryHandler({
-        "subscription.getForBusiness": () => ({
+        "subscription.getForMenu": () => ({
           result: { data: null },
         }),
         "menu.getPublic": () => ({

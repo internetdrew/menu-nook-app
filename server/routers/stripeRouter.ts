@@ -17,8 +17,28 @@ if (!SUBSCRIPTION_PRICE_ID) {
 
 export const stripeRouter = router({
   createCheckoutSession: protectedProcedure
-    .input(z.object({ businessId: z.uuid() }))
+    .input(z.object({ menuId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const { data: menu, error: menuError } = await ctx.supabase
+        .from("menus")
+        .select("id")
+        .eq("id", input.menuId)
+        .maybeSingle();
+
+      if (menuError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: menuError.message,
+        });
+      }
+
+      if (!menu) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have access to this menu.",
+        });
+      }
+
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer_email: ctx.user.email,
@@ -29,14 +49,14 @@ export const stripeRouter = router({
             quantity: 1,
           },
         ],
-        success_url: `${APP_DOMAIN}/?success=true`,
-        cancel_url: `${APP_DOMAIN}/?canceled=true`,
+        success_url: `${APP_DOMAIN}/preview/menu/${input.menuId}?success=true`,
+        cancel_url: `${APP_DOMAIN}/preview/menu/${input.menuId}?canceled=true`,
         metadata: {
-          businessId: input.businessId,
+          menuId: input.menuId,
         },
         subscription_data: {
           metadata: {
-            businessId: input.businessId,
+            menuId: input.menuId,
           },
         },
       });

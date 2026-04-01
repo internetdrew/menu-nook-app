@@ -33,7 +33,7 @@ describe("Categories Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -75,7 +75,7 @@ describe("Categories Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => {
           return {
             result: {
@@ -141,7 +141,7 @@ describe("Categories Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -199,7 +199,7 @@ describe("Categories Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -280,7 +280,7 @@ describe("Categories Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -350,7 +350,7 @@ describe("Categories Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
