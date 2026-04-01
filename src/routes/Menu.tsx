@@ -16,10 +16,12 @@ const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
 
 export const Menu = () => {
   const { menuId } = useParams<{ menuId: string }>();
-  const { hash, pathname } = useLocation();
+  const { hash, pathname, search } = useLocation();
   const navigate = useNavigate();
 
   const isPreview = pathname.startsWith("/preview/");
+  const successfulSubscription =
+    new URLSearchParams(search).get("success") === "true";
 
   const {
     data: menu,
@@ -42,12 +44,12 @@ export const Menu = () => {
   );
 
   const { data: subscription, isLoading: subscriptionIsLoading } = useQuery(
-    trpc.subscription.getForBusiness.queryOptions(
+    trpc.subscription.getForMenu.queryOptions(
       {
-        businessId: menu?.business_id ?? "",
+        menuId: menu?.id ?? "",
       },
       {
-        enabled: !!menu?.business_id,
+        enabled: !!menu?.id,
       },
     ),
   );
@@ -103,13 +105,31 @@ export const Menu = () => {
     }
   }, [hash]);
 
+  useEffect(() => {
+    if (!isPreview || !successfulSubscription || !menu) return;
+
+    toast.success(`${menu.name} is now live.`);
+    const nextSearchParams = new URLSearchParams(search);
+    nextSearchParams.delete("success");
+    navigate(
+      {
+        pathname,
+        search: nextSearchParams.toString()
+          ? `?${nextSearchParams.toString()}`
+          : "",
+        hash,
+      },
+      { replace: true },
+    );
+  }, [hash, isPreview, menu, navigate, pathname, search, successfulSubscription]);
+
   const categoriesWithItems = menu?.menu_categories.filter(
     (category) => category.items && category.items.length > 0,
   );
 
   const handleSubscribe = async () => {
     await stripeCheckoutMutation.mutateAsync(
-      { businessId: menu?.business_id ?? "" },
+      { menuId: menu?.id ?? "" },
       {
         onSuccess: (data) => {
           window.location.assign(data.url);
