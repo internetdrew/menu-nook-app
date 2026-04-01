@@ -19,6 +19,10 @@ import { Textarea } from "@/components/ui/textarea";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "server";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
+import { supabaseBrowserClient } from "@/lib/supabase";
+import type { ChangeEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { Field, FieldDescription, FieldLabel } from "../ui/field";
 
 type MenuCategory = NonNullable<
   inferRouterOutputs<AppRouter>["menuCategory"]["getById"]
@@ -56,12 +60,29 @@ const formSchema = z.object({
   categoryId: z.number(),
 });
 
+const MENU_ITEM_IMAGE_BUCKET = "menu_item_images";
+
+const getMenuItemImageFilePath = (
+  menuId: string,
+  itemId: number,
+  file: File,
+) => {
+  const extension = file.name.split(".").pop()?.toLowerCase() || "png";
+  return `menu/${menuId}/item/${itemId}/image_${Date.now()}.${extension}`;
+};
+
 const ItemForm = (props: ItemFormProps) => {
   const { onSuccess, item, chosenCategory } = props;
   const createItem = useMutation(
     trpc.menuCategoryItem.create.mutationOptions(),
   );
   const { activeMenu } = useMenuContext();
+  const fileInputId = useId();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [removedImage, setRemovedImage] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,61 +98,229 @@ const ItemForm = (props: ItemFormProps) => {
     trpc.menuCategoryItem.update.mutationOptions(),
   );
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const clearPreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+  };
+
+  const displayedImageUrl =
+    previewUrl || (removedImage ? null : item?.image_url);
+
+  const uploadItemImage = async (targetItemId: number, file: File) => {
+    const menuId = activeMenu?.id;
+
+    if (!menuId) {
+      throw new Error("No active menu found for this upload.");
+    }
+
+    const filePath = getMenuItemImageFilePath(menuId, targetItemId, file);
+    const { error: uploadError } = await supabaseBrowserClient.storage
+      .from(MENU_ITEM_IMAGE_BUCKET)
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabaseBrowserClient.storage
+      .from(MENU_ITEM_IMAGE_BUCKET)
+      .getPublicUrl(filePath);
+
+    return {
+      imagePath: filePath,
+      imageUrl: publicUrl,
+    };
+  };
+
+  const openFilePicker = () => {
+    if (form.formState.isSubmitting || isProcessingImage) {
+      return;
+    }
+
+    fileInputRef.current?.click();
+  };
+
+  const handleImageSelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      event.target.value = "";
+      return;
+    }
+
+    clearPreview();
+    setSelectedImageFile(file);
+    setRemovedImage(false);
+    setPreviewUrl(URL.createObjectURL(file));
+    event.target.value = "";
+  };
+
+  const handleRemoveImage = () => {
+    clearPreview();
+    setSelectedImageFile(null);
+    setRemovedImage(true);
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsProcessingImage(true);
+
     if (item) {
-      await updateItem.mutateAsync(
-        {
-          id: item.id,
-          name: values.name,
-          description: values.description,
-          price: values.price,
-          menuCategoryId: chosenCategory?.id,
-        },
-        {
-          onSuccess: () => {
-            queryClient.invalidateQueries({
-              queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
-            });
-            toast.success("Item updated successfully!");
-            onSuccess();
+      try {
+        const imagePayload = selectedImageFile
+          ? await uploadItemImage(item.id, selectedImageFile)
+          : removedImage
+            ? { imagePath: null, imageUrl: null }
+            : undefined;
+
+        await updateItem.mutateAsync(
+          {
+            id: item.id,
+            name: values.name,
+            description: values.description,
+            price: values.price,
+            menuCategoryId: chosenCategory?.id,
+            ...imagePayload,
           },
-          onError: (error) => {
-            console.error("Failed to update item:", error);
-            toast.error("Failed to update item. Please try again.");
+          {
+            onSuccess: () => {
+              queryClient.invalidateQueries({
+                queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
+              });
+              toast.success("Item updated successfully!");
+              onSuccess();
+            },
+            onError: (error) => {
+              console.error("Failed to update item:", error);
+              toast.error("Failed to update item. Please try again.");
+            },
           },
-        },
-      );
+        );
+      } finally {
+        setIsProcessingImage(false);
+      }
 
       return;
     }
 
-    await createItem.mutateAsync(
-      {
+    try {
+      const createdItem = await createItem.mutateAsync({
         name: values.name,
         description: values.description,
         price: values.price,
         menuCategoryId: chosenCategory.id,
         menuId: activeMenu?.id || "",
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
-          });
-          toast.success("Item created successfully!");
-          onSuccess();
-        },
-        onError: (error) => {
-          console.error("Failed to create item:", error);
-          toast.error("Failed to create item. Please try again.");
-        },
-      },
-    );
+      });
+
+      if (selectedImageFile) {
+        const imagePayload = await uploadItemImage(
+          createdItem.id,
+          selectedImageFile,
+        );
+
+        await updateItem.mutateAsync({
+          id: createdItem.id,
+          name: values.name,
+          description: values.description,
+          price: values.price,
+          menuCategoryId: chosenCategory.id,
+          ...imagePayload,
+        });
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
+      });
+      toast.success("Item created successfully!");
+      onSuccess();
+    } catch (error) {
+      console.error("Failed to create item:", error);
+      toast.error("Failed to create item. Please try again.");
+    } finally {
+      setIsProcessingImage(false);
+    }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <Field>
+          <FieldLabel htmlFor={fileInputId}>Item Image</FieldLabel>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              className="bg-muted flex h-20 w-20 items-center justify-center overflow-hidden rounded-md border transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={openFilePicker}
+              disabled={form.formState.isSubmitting || isProcessingImage}
+              aria-label="Upload item image"
+            >
+              {displayedImageUrl ? (
+                <img
+                  src={displayedImageUrl}
+                  alt={item?.name ? `${item.name} preview` : "Item preview"}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-muted-foreground text-xs">No image</span>
+              )}
+            </button>
+            <div className="flex flex-col gap-2">
+              <input
+                id={fileInputId}
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                tabIndex={-1}
+                onChange={handleImageSelected}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openFilePicker}
+                disabled={form.formState.isSubmitting || isProcessingImage}
+              >
+                {displayedImageUrl ? "Replace image" : "Upload image"}
+              </Button>
+              {(displayedImageUrl || item?.image_url) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-destructive"
+                  size="sm"
+                  onClick={handleRemoveImage}
+                  disabled={form.formState.isSubmitting || isProcessingImage}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+          </div>
+          <FieldDescription>
+            Add one optional image for this item. You can replace or remove it
+            later.
+          </FieldDescription>
+        </Field>
         <FormField
           control={form.control}
           name="name"
@@ -204,13 +393,17 @@ const ItemForm = (props: ItemFormProps) => {
         <div className="flex justify-end">
           <Button
             type="submit"
-            disabled={form.formState.isSubmitting || !form.formState.isDirty}
+            disabled={
+              form.formState.isSubmitting ||
+              isProcessingImage ||
+              (!form.formState.isDirty && !selectedImageFile && !removedImage)
+            }
           >
             {item
-              ? form.formState.isSubmitting
+              ? form.formState.isSubmitting || isProcessingImage
                 ? "Updating..."
                 : "Update"
-              : form.formState.isSubmitting
+              : form.formState.isSubmitting || isProcessingImage
                 ? "Creating..."
                 : "Create"}
           </Button>
