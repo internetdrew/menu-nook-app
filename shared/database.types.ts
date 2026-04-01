@@ -285,11 +285,11 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          business_id: string
           created_at: string
           current_period_end: string
           current_period_start: string
           id: string
+          menu_id: string
           status: Database["public"]["Enums"]["SUBSCRIPTION_STATUS"]
           stripe_customer_id: string
           stripe_price_id: string
@@ -297,11 +297,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          business_id: string
           created_at?: string
           current_period_end: string
           current_period_start: string
           id?: string
+          menu_id: string
           status: Database["public"]["Enums"]["SUBSCRIPTION_STATUS"]
           stripe_customer_id: string
           stripe_price_id: string
@@ -309,11 +309,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          business_id?: string
           created_at?: string
           current_period_end?: string
           current_period_start?: string
           id?: string
+          menu_id?: string
           status?: Database["public"]["Enums"]["SUBSCRIPTION_STATUS"]
           stripe_customer_id?: string
           stripe_price_id?: string
@@ -322,10 +322,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "subscriptions_business_id_fkey"
-            columns: ["business_id"]
+            foreignKeyName: "subscriptions_menu_id_fkey"
+            columns: ["menu_id"]
             isOneToOne: true
-            referencedRelation: "businesses"
+            referencedRelation: "menus"
             referencedColumns: ["id"]
           },
         ]
