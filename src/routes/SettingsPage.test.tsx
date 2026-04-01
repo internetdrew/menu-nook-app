@@ -41,7 +41,7 @@ const defaultHandlers = {
       },
     },
   }),
-  "subscription.getForUser": () => ({ result: { data: null } }),
+  "subscription.getForMenu": () => ({ result: { data: null } }),
   "menu.getAllForBusiness": () => ({
     result: {
       data: [

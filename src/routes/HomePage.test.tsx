@@ -116,7 +116,7 @@ describe("Dashboard Home Page", () => {
           });
         }
 
-        if (procedure === "subscription.getForUser") {
+        if (procedure === "subscription.getForMenu") {
           return HttpResponse.json({
             result: {
               data: null,
@@ -149,7 +149,7 @@ describe("Dashboard Home Page", () => {
             data: null,
           },
         }),
-        "subscription.getForUser": () => ({
+        "subscription.getForMenu": () => ({
           result: {
             data: null,
           },
@@ -202,7 +202,7 @@ describe("Dashboard Home Page", () => {
             ],
           },
         }),
-        "subscription.getForUser": () => ({
+        "subscription.getForMenu": () => ({
           result: {
             data: null,
           },
@@ -275,7 +275,7 @@ describe("Dashboard Home Page", () => {
             ],
           },
         }),
-        "subscription.getForUser": () => ({
+        "subscription.getForMenu": () => ({
           result: {
             data: null,
           },
@@ -324,7 +324,7 @@ describe("Dashboard Home Page", () => {
             data: null,
           },
         }),
-        "subscription.getForUser": () => ({
+        "subscription.getForMenu": () => ({
           result: {
             data: null,
           },
@@ -351,7 +351,7 @@ describe("Dashboard Home Page", () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({ result: { data: null } }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({ result: { data: null } }),
       }),
 
@@ -415,7 +415,7 @@ describe("Dashboard Home Page", () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({ result: { data: null } }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({ result: { data: null } }),
       }),
 
@@ -485,7 +485,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({
+        "subscription.getForMenu": () => ({
           result: {
             data: null,
           },
@@ -525,7 +525,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({
+        "subscription.getForMenu": () => ({
           result: {
             data: null,
           },
@@ -603,7 +603,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({ result: { data: [] } }),
       }),
 
@@ -674,7 +674,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForBusiness": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -725,7 +725,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForBusiness": () => ({
+        "subscription.getForMenu": () => ({
           result: {
             data: {
               id: "sub-123",
@@ -775,7 +775,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -836,7 +836,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -901,7 +901,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -959,7 +959,7 @@ describe("Dashboard Home Page", () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({ result: { data: null } }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({ result: { data: null } }),
       }),
 
@@ -1007,7 +1007,7 @@ describe("Dashboard Home Page", () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({ result: { data: null } }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({ result: { data: null } }),
       }),
     );
@@ -1055,7 +1055,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: maxMenus,
@@ -1105,7 +1105,7 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: belowMaxMenus,

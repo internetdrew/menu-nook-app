@@ -69,7 +69,7 @@ describe("Category Items Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -118,7 +118,7 @@ describe("Category Items Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -171,7 +171,7 @@ describe("Category Items Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -253,7 +253,7 @@ describe("Category Items Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -336,7 +336,7 @@ describe("Category Items Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -438,7 +438,7 @@ describe("Category Items Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -521,7 +521,7 @@ describe("Category Items Page", () => {
             },
           },
         }),
-        "subscription.getForUser": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
