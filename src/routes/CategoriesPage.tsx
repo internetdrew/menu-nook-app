@@ -35,12 +35,25 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { inferRouterOutputs } from "@trpc/server";
-import { ClipboardPen, GripVertical, Info, Trash } from "lucide-react";
+import {
+  ClipboardPen,
+  EllipsisVertical,
+  GripVertical,
+  Info,
+  Trash,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AppRouter } from "server";
 import { toast } from "sonner";
 import { Link } from "react-router";
 import EmptyStatePrompt from "@/components/EmptyStatePrompt";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export type CategoryIndex =
   inferRouterOutputs<AppRouter>["menuCategory"]["getAllSortedByIndex"][number];
@@ -140,7 +153,7 @@ export const CategoriesPage = () => {
   return (
     <>
       <div className="my-4 flex items-center">
-        <h1 className="font-medium">
+        <h1 className="ml-2 font-medium">
           {activeMenu?.name && `${activeMenu.name} `} Categories
         </h1>
         <Popover>
@@ -249,15 +262,20 @@ const SortableCategory = ({
   };
 
   return (
-    <li key={categoryIndex.id} ref={setNodeRef} style={style}>
-      <Item variant="outline" size="sm" className="max-w-full lg:max-w-1/2">
-        <button
-          className="cursor-grab px-2 active:cursor-grabbing"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="text-muted-foreground h-4 w-4" />
-        </button>
+    <li
+      key={categoryIndex.id}
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center"
+    >
+      <button
+        className="cursor-grab px-2 active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="text-muted-foreground h-4 w-4" />
+      </button>
+      <Item variant="outline" size="sm" className="w-full lg:max-w-1/2">
         <ItemContent>
           <ItemTitle className="select-none">
             <Link to={`/categories/${categoryIndex?.category?.id}`}>
@@ -268,24 +286,31 @@ const SortableCategory = ({
             {categoryIndex?.category?.description}
           </span>
         </ItemContent>
-        <ItemActions className="ml-6">
-          <Button
-            aria-label="Edit category"
-            size={"icon-sm"}
-            variant={"ghost"}
-            onClick={onEditButtonClick}
-          >
-            <ClipboardPen />
-          </Button>
-          <Button
-            aria-label="Delete category"
-            size={"icon-sm"}
-            variant={"ghost"}
-            className="text-red-600 hover:text-red-600"
-            onClick={onDeleteButtonClick}
-          >
-            <Trash />
-          </Button>
+        <ItemActions className="ml-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" aria-label="Item actions">
+                <EllipsisVertical />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  aria-label="Edit item"
+                  onClick={onEditButtonClick}
+                >
+                  <ClipboardPen /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  aria-label="Delete item"
+                  onClick={onDeleteButtonClick}
+                >
+                  <Trash />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </ItemActions>
       </Item>
     </li>
