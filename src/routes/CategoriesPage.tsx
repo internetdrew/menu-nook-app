@@ -282,7 +282,7 @@ const SortableCategory = ({
               {categoryIndex?.category?.name}
             </Link>
           </ItemTitle>
-          <span className="text-muted-foreground">
+          <span className="text-muted-foreground line-clamp-1">
             {categoryIndex?.category?.description}
           </span>
         </ItemContent>
