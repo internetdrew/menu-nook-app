@@ -293,7 +293,7 @@ export const Menu = () => {
                     transition={{ duration: 0.15 }}
                   />
                 </Dialog.Overlay>
-                <div className="absolute inset-0 z-50 grid h-dvh place-items-center">
+                <div className="absolute inset-0 z-50 grid h-svh place-items-center">
                   <Dialog.Content forceMount asChild>
                     <motion.div
                       key={selectedItem.id}
