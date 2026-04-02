@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { linkClasses } from "@/constants";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
@@ -47,10 +47,6 @@ export const Menu = () => {
           { menuId: menuId ?? "" },
           { enabled: !!menuId },
         ),
-  );
-
-  const stripeCheckoutMutation = useMutation(
-    trpc.stripe.createCheckoutSession.mutationOptions(),
   );
 
   const { data: subscription, isLoading: subscriptionIsLoading } = useQuery(
@@ -145,21 +141,6 @@ export const Menu = () => {
     (category) => category.items && category.items.length > 0,
   );
 
-  const handleSubscribe = async () => {
-    await stripeCheckoutMutation.mutateAsync(
-      { menuId: menu?.id ?? "" },
-      {
-        onSuccess: (data) => {
-          window.location.assign(data.url);
-        },
-        onError: (error) => {
-          console.error("Error creating checkout session:", error);
-          toast.error("Error creating checkout session: " + error.message);
-        },
-      },
-    );
-  };
-
   if (menuIsLoading || subscriptionIsLoading) {
     return (
       <div className="mx-auto w-full max-w-screen-sm px-4 py-8">
@@ -192,8 +173,6 @@ export const Menu = () => {
         subscriptionIsActive={subscriptionIsActive}
         liveSiteUrl={liveSiteUrl}
         menu={menu}
-        handleSubscribe={handleSubscribe}
-        stripeCheckoutMutation={stripeCheckoutMutation}
       />
 
       <div className="mx-auto w-full max-w-xl px-4 py-8">
