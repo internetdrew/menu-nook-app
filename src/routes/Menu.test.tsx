@@ -111,14 +111,12 @@ describe("Preview Route (/preview/:id)", () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Your menu is not live because your subscription is inactive./i,
+          /Your menu won't be visible to customers until you/i,
         ),
       ).toBeInTheDocument();
     });
 
-    expect(
-      screen.getByRole("button", { name: "Subscribe to publish" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "subscribe" })).toBeInTheDocument();
 
     expect(screen.getByText("Test Business")).toBeInTheDocument();
     expect(screen.getByText("Test Menu")).toBeInTheDocument();
@@ -177,11 +175,11 @@ describe("Preview Route (/preview/:id)", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/This is a preview of your live menu./i),
+        screen.getByText(/This is a preview of your/i),
       ).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("link", { name: "View Live Menu" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "live menu" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Subscribe to publish" }),
     ).not.toBeInTheDocument();
