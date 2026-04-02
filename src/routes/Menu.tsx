@@ -1,23 +1,33 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { linkClasses } from "@/constants";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { NotFound } from "./NotFound";
 import MenuUnavailable from "../components/MenuUnavailable";
 import { toast } from "sonner";
+import type { AppRouter } from "server";
+import type { inferRouterOutputs } from "@trpc/server";
+import { Dialog } from "radix-ui";
+import { AnimatePresence, motion } from "motion/react";
+import MenuPreviewBanner from "@/components/MenuPreviewBanner";
+import BusinessLogo from "@/components/BusinessLogo";
 
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
+export type MenuItem = NonNullable<
+  inferRouterOutputs<AppRouter>["menu"]["getPreview"]
+>["menu_categories"][number]["items"][number];
 
 export const Menu = () => {
   const { menuId } = useParams<{ menuId: string }>();
   const { hash, pathname, search } = useLocation();
   const navigate = useNavigate();
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
   const isPreview = pathname.startsWith("/preview/");
   const successfulSubscription =
@@ -37,10 +47,6 @@ export const Menu = () => {
           { menuId: menuId ?? "" },
           { enabled: !!menuId },
         ),
-  );
-
-  const stripeCheckoutMutation = useMutation(
-    trpc.stripe.createCheckoutSession.mutationOptions(),
   );
 
   const { data: subscription, isLoading: subscriptionIsLoading } = useQuery(
@@ -121,26 +127,19 @@ export const Menu = () => {
       },
       { replace: true },
     );
-  }, [hash, isPreview, menu, navigate, pathname, search, successfulSubscription]);
+  }, [
+    hash,
+    isPreview,
+    menu,
+    navigate,
+    pathname,
+    search,
+    successfulSubscription,
+  ]);
 
   const categoriesWithItems = menu?.menu_categories.filter(
     (category) => category.items && category.items.length > 0,
   );
-
-  const handleSubscribe = async () => {
-    await stripeCheckoutMutation.mutateAsync(
-      { menuId: menu?.id ?? "" },
-      {
-        onSuccess: (data) => {
-          window.location.assign(data.url);
-        },
-        onError: (error) => {
-          console.error("Error creating checkout session:", error);
-          toast.error("Error creating checkout session: " + error.message);
-        },
-      },
-    );
-  };
 
   if (menuIsLoading || subscriptionIsLoading) {
     return (
@@ -169,50 +168,19 @@ export const Menu = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {isPreview && (
-        <div className="sticky top-16 z-10 rounded-lg border-b bg-neutral-600/5 py-4 text-center text-sm backdrop-blur-sm">
-          <div className="mx-auto flex max-w-screen-sm flex-col items-center justify-center gap-2">
-            <span className="font-medium">
-              {subscriptionIsActive
-                ? "This is a preview of your live menu."
-                : "Your menu is not live because your subscription is inactive."}
-            </span>
-            {subscriptionIsActive ? (
-              <Link
-                to={`${liveSiteUrl}/menu/${menu.id}`}
-                className={linkClasses}
-              >
-                View Live Menu
-              </Link>
-            ) : (
-              <Button
-                size={"sm"}
-                onClick={handleSubscribe}
-                disabled={
-                  stripeCheckoutMutation.isPending ||
-                  stripeCheckoutMutation.isSuccess
-                }
-              >
-                {stripeCheckoutMutation.isPending && <Spinner />} Subscribe to
-                publish
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+    <div ref={setContainer} className="relative flex min-h-screen flex-col">
+      <MenuPreviewBanner
+        subscriptionIsActive={subscriptionIsActive}
+        liveSiteUrl={liveSiteUrl}
+        menu={menu}
+      />
 
-      <main className="mx-auto w-full max-w-xl px-4 py-8">
+      <div className="mx-auto w-full max-w-xl px-4 py-8">
         {menu.business.image_url && (
-          <div className="mx-auto mb-5 w-full max-w-48 p-4">
-            <div className="flex aspect-[3/2] items-center justify-center">
-              <img
-                src={menu.business.image_url}
-                alt={`${menu.business.name} logo`}
-                className="h-full w-full object-contain"
-              />
-            </div>
-          </div>
+          <BusinessLogo
+            imageUrl={menu.business.image_url}
+            businessName={menu.business.name}
+          />
         )}
         <h1 className="text-center text-2xl font-semibold">
           {menu.business.name}
@@ -240,56 +208,144 @@ export const Menu = () => {
             })}
           </ul>
         </nav>
+
+        {/* Categories and Items */}
         {categoriesWithItems?.length === 0 ? (
           <p className="mt-16 text-center">No categories available.</p>
         ) : (
           categoriesWithItems?.map((category) => (
             <section key={category.id} className="mt-16">
-              <h2
+              <h3
                 id={createSlug(category.name)}
                 className="scroll-mt-20 text-lg font-medium"
               >
                 {category.name}
-              </h2>
+              </h3>
               <p className="text-muted-foreground mb-4 border-b pb-3 text-sm">
                 {category.description}
               </p>
 
               <ul className="space-y-6">
                 {category.items?.map((item) => (
-                  <li key={item.id}>
+                  <motion.li
+                    key={item.id}
+                    layoutId={`item-wrapper-${item.id}`}
+                    onClick={() => {
+                      setSelectedItem(item);
+                    }}
+                    className="cursor-pointer"
+                  >
                     <div className="flex gap-4">
                       {item.image_url && (
-                        <img
+                        <motion.img
+                          layoutId={`item-image-${item.id}`}
                           src={item.image_url}
                           alt={item.name}
-                          className="mt-1 h-20 w-20 shrink-0 rounded-md object-cover"
+                          className="size-16 shrink-0 object-cover"
+                          style={{ borderRadius: "12px" }}
                         />
                       )}
-                      <div className="min-w-0 flex-1">
+                      <div className="flex-1">
                         <div className="flex justify-between gap-4">
-                          <span>{item.name}</span>
-                          <span className="shrink-0">
+                          <motion.h4
+                            layoutId={`item-name-${item.id}`}
+                            className="font-medium"
+                          >
+                            {item.name}
+                          </motion.h4>
+                          <motion.span layoutId={`item-price-${item.id}`}>
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
                               currency: "USD",
                             }).format(item.price)}
-                          </span>
+                          </motion.span>
                         </div>
-                        {item.description && (
-                          <p className="text-muted-foreground mt-1 line-clamp-2 max-w-sm text-sm">
-                            {item.description}
-                          </p>
-                        )}
+                        <motion.p
+                          layoutId={`item-description-${item.id}`}
+                          className="text-muted-foreground mt-1 line-clamp-2 max-w-sm text-sm"
+                        >
+                          {item?.description}
+                        </motion.p>
                       </div>
                     </div>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
             </section>
           ))
         )}
-      </main>
+
+        {/* Item Dialog */}
+        <Dialog.Root
+          open={!!selectedItem}
+          onOpenChange={() => setSelectedItem(null)}
+        >
+          <AnimatePresence>
+            {selectedItem && (
+              <Dialog.Portal forceMount container={container}>
+                <Dialog.Overlay asChild>
+                  <motion.div
+                    key={`overlay-${selectedItem.id}`}
+                    className="fixed inset-0 bg-black/20"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                  />
+                </Dialog.Overlay>
+                <div className="absolute inset-0 z-50 grid place-items-center">
+                  <Dialog.Content forceMount asChild>
+                    <motion.div
+                      key={selectedItem.id}
+                      layoutId={`item-wrapper-${selectedItem.id}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="w-full max-w-md outline-none"
+                    >
+                      <div className="flex gap-4 rounded-lg bg-white p-2.5">
+                        {selectedItem.image_url && (
+                          <motion.img
+                            layoutId={`item-image-${selectedItem.id}`}
+                            src={selectedItem.image_url}
+                            alt={selectedItem.name}
+                            className="size-16 shrink-0 object-cover"
+                            style={{ borderRadius: "12px" }}
+                          />
+                        )}
+                        <div className="flex-1 self-center">
+                          <div className="flex justify-between gap-4">
+                            <motion.h4
+                              layoutId={`item-name-${selectedItem.id}`}
+                              className="font-medium"
+                            >
+                              {selectedItem.name}
+                            </motion.h4>
+                            <motion.span
+                              layoutId={`item-price-${selectedItem.id}`}
+                            >
+                              {new Intl.NumberFormat("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                              }).format(selectedItem.price)}
+                            </motion.span>
+                          </div>
+                          <motion.p
+                            layoutId={`item-description-${selectedItem.id}`}
+                            className="text-muted-foreground mt-1"
+                          >
+                            {selectedItem?.description}
+                          </motion.p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Dialog.Content>
+                </div>
+              </Dialog.Portal>
+            )}
+          </AnimatePresence>
+        </Dialog.Root>
+      </div>
       <footer className="mt-auto">
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-sm">
           <span>
