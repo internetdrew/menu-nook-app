@@ -28,7 +28,9 @@ const FormDialog = ({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {formComponent}
+        <div className="no-scrollbar -mx-4 max-h-[60vh] overflow-y-auto px-4">
+          {formComponent}
+        </div>
       </DialogContent>
     </Dialog>
   );
