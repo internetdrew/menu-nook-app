@@ -113,6 +113,8 @@ export function NavMain() {
                 <SidebarMenuButton tooltip="Menu Preview" asChild>
                   <NavLink
                     to={`/preview/menu/${activeMenu?.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     onClick={() => setOpenMobile(false)}
                   >
                     {({ isActive }) => (

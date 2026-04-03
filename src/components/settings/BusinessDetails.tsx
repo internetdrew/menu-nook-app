@@ -111,6 +111,8 @@ export const BusinessDetails = () => {
           To see what it looks like, head on over to the{" "}
           <Link
             to={`/preview/menu/${activeMenu?.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:decoration-muted-foreground underline decoration-neutral-300 underline-offset-4 transition duration-300"
           >
             menu preview page
