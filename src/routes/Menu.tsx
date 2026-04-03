@@ -302,7 +302,7 @@ export const Menu = () => {
                       exit={{ opacity: 0 }}
                       className="w-full max-w-lg outline-none"
                     >
-                      <div className="flex gap-4 rounded-[12px] bg-white p-2.5">
+                      <div className="mx-2 flex gap-4 rounded-[12px] bg-white p-2.5 md:mx-0">
                         {selectedItem.image_url && (
                           <motion.img
                             layoutId={`item-image-${selectedItem.id}`}
