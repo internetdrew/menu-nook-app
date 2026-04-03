@@ -38,7 +38,7 @@ const MenuPreviewBanner: FC<MenuPreviewBannerProps> = ({
   };
 
   return (
-    <div className="sticky top-16 z-10 rounded-lg bg-neutral-600/5 py-4 text-center text-sm backdrop-blur-sm">
+    <div className="sticky top-0 z-10 rounded-lg bg-pink-600/5 py-4 text-center text-sm backdrop-blur-sm">
       <div className="space-x-2 text-center">
         {subscriptionIsActive ? (
           <p>

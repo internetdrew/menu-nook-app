@@ -16,6 +16,19 @@ export const routes = [
     element: <Menu />,
   },
   {
+    element: <ProtectedRoute redirectTo="/" />,
+    children: [
+      {
+        path: "/preview",
+        element: <Navigate to="/" replace />,
+      },
+      {
+        path: "/preview/menu/:menuId",
+        element: <Menu />,
+      },
+    ],
+  },
+  {
     path: "/",
     element: (
       <MenuProvider>
@@ -35,14 +48,6 @@ export const routes = [
       {
         element: <ProtectedRoute redirectTo="/" />,
         children: [
-          {
-            path: "preview",
-            element: <Navigate to="/" replace />,
-          },
-          {
-            path: "preview/menu/:menuId",
-            element: <Menu />,
-          },
           {
             path: "categories",
             children: [
