@@ -27,7 +27,6 @@ export const Menu = () => {
   const { hash, pathname, search } = useLocation();
   const navigate = useNavigate();
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
   const isPreview = pathname.startsWith("/preview/");
   const successfulSubscription =
@@ -168,7 +167,7 @@ export const Menu = () => {
   }
 
   return (
-    <div ref={setContainer} className="relative flex min-h-screen flex-col">
+    <div className="relative">
       <MenuPreviewBanner
         subscriptionIsActive={subscriptionIsActive}
         liveSiteUrl={liveSiteUrl}
@@ -282,18 +281,18 @@ export const Menu = () => {
         >
           <AnimatePresence>
             {selectedItem && (
-              <Dialog.Portal forceMount container={container}>
+              <Dialog.Portal forceMount>
                 <Dialog.Overlay asChild>
                   <motion.div
                     key={`overlay-${selectedItem.id}`}
-                    className="fixed inset-0 bg-black/20"
+                    className="absolute inset-0 h-dvh bg-black/20"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.15 }}
                   />
                 </Dialog.Overlay>
-                <div className="absolute inset-0 z-50 grid h-svh place-items-center">
+                <div className="absolute inset-0 z-50 grid h-dvh place-items-center">
                   <Dialog.Content forceMount asChild>
                     <motion.div
                       key={selectedItem.id}
@@ -301,16 +300,16 @@ export const Menu = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="w-full max-w-md outline-none"
+                      className="w-full max-w-lg outline-none"
                     >
-                      <div className="flex gap-4 rounded-lg bg-white p-2.5">
+                      <div className="flex gap-4 rounded-[12px] bg-white p-2.5">
                         {selectedItem.image_url && (
                           <motion.img
                             layoutId={`item-image-${selectedItem.id}`}
                             src={selectedItem.image_url}
                             alt={selectedItem.name}
                             className="size-16 shrink-0 object-cover"
-                            style={{ borderRadius: "12px" }}
+                            style={{ borderRadius: "6px" }}
                           />
                         )}
                         <div className="flex-1 self-center">
