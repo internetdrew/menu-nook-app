@@ -61,7 +61,7 @@ const MenuPreviewBanner: FC<MenuPreviewBannerProps> = ({
                   {"Your menu won't be visible to customers until you "}
                   <button
                     onClick={handleSubscribe}
-                    className="cursor-pointer font-medium underline decoration-neutral-300 underline-offset-4 transition duration-300 hover:decoration-neutral-500"
+                    className="cursor-pointer font-medium underline decoration-neutral-300 underline-offset-4 transition duration-200 hover:decoration-neutral-600"
                   >
                     subscribe
                   </button>

@@ -278,7 +278,10 @@ const SortableCategory = ({
       <Item variant="outline" size="sm" className="w-full lg:max-w-1/2">
         <ItemContent>
           <ItemTitle className="select-none">
-            <Link to={`/categories/${categoryIndex?.category?.id}`}>
+            <Link
+              to={`/categories/${categoryIndex?.category?.id}`}
+              className="underline decoration-neutral-400 underline-offset-4 transition duration-200 hover:decoration-neutral-600"
+            >
               {categoryIndex?.category?.name}
             </Link>
           </ItemTitle>

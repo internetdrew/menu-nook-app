@@ -198,7 +198,7 @@ export const Menu = () => {
                   <Link
                     replace
                     to={{ hash: `#${createSlug(category.name)}` }}
-                    className="underline decoration-neutral-400 underline-offset-4 transition duration-300 hover:decoration-neutral-600"
+                    className="underline decoration-neutral-300 underline-offset-4 transition duration-200 hover:decoration-neutral-600"
                   >
                     {category.name}
                   </Link>
