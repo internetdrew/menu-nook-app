@@ -174,22 +174,22 @@ export const Menu = () => {
         menu={menu}
       />
 
-      <div className="mx-auto w-full max-w-xl px-4 py-8">
+      <div className="mx-auto w-full max-w-xl px-4">
         {menu.business.image_url && (
           <BusinessLogo
             imageUrl={menu.business.image_url}
             businessName={menu.business.name}
           />
         )}
-        <h1 className="text-center text-2xl font-semibold">
+        <h1 className="text-center text-xl font-semibold">
           {menu.business.name}
         </h1>
-        <h2 className="text-muted-foreground mt-2 text-center text-lg">
+        <h2 className="text-muted-foreground mt-1 text-center text-lg">
           {menu.name}
         </h2>
         <nav
           ref={navRef}
-          className="my-8 flex flex-wrap items-center justify-center gap-4"
+          className="my-6 flex flex-wrap items-center justify-center gap-4"
         >
           <ul className="flex flex-wrap items-center justify-center gap-4">
             {categoriesWithItems?.map((category) => {
@@ -299,7 +299,7 @@ export const Menu = () => {
                       layoutId={`item-wrapper-${selectedItem.id}`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
+                      exit={{ opacity: 0, transition: { delay: 0.15 } }}
                       className="w-full max-w-lg outline-none"
                     >
                       <div className="mx-2 flex gap-4 rounded-[12px] bg-white p-2.5 md:mx-0">
