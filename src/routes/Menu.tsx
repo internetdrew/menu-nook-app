@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import type { AppRouter } from "server";
 import type { inferRouterOutputs } from "@trpc/server";
 import { Dialog } from "radix-ui";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import MenuPreviewBanner from "@/components/MenuPreviewBanner";
 import BusinessLogo from "@/components/BusinessLogo";
 
@@ -179,173 +179,202 @@ export const Menu = () => {
         menu={menu}
       />
 
-      <div className="mx-auto w-full max-w-xl px-4">
-        {menu.business.image_url && (
-          <BusinessLogo
-            imageUrl={menu.business.image_url}
-            businessName={menu.business.name}
-          />
-        )}
-        <h1 className="text-center text-xl font-semibold">
-          {menu.business.name}
-        </h1>
-        <h2 className="text-muted-foreground mt-1 text-center text-lg">
-          {menu.name}
-        </h2>
-        <nav
-          ref={navRef}
-          className="my-6 flex flex-wrap items-center justify-center gap-4"
-        >
-          <ul className="flex flex-wrap items-center justify-center gap-4">
-            {categoriesWithItems?.map((category) => {
-              return (
-                <li key={category.id}>
-                  <Link
-                    replace
-                    to={{ hash: `#${createSlug(category.name)}` }}
-                    className="underline decoration-neutral-300 underline-offset-4 transition duration-200 hover:decoration-neutral-600"
-                  >
-                    {category.name}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-
-        {/* Categories and Items */}
-        {categoriesWithItems?.length === 0 ? (
-          <p className="mt-16 text-center">No categories available.</p>
-        ) : (
-          categoriesWithItems?.map((category) => (
-            <section key={category.id} className="mt-16">
-              <h3
-                id={createSlug(category.name)}
-                className="scroll-mt-20 text-lg font-medium"
-              >
-                {category.name}
-              </h3>
-              <p className="text-muted-foreground mb-4 border-b pb-3 text-sm">
-                {category.description}
-              </p>
-
-              <ul className="space-y-6">
-                {category.items?.map((item) => (
-                  <motion.li
-                    key={item.id}
-                    layoutId={`item-wrapper-${item.id}`}
-                    onClick={() => {
-                      setSelectedItem(item);
-                    }}
-                    className="group cursor-pointer"
-                  >
-                    <div className="flex gap-4">
-                      {item.image_url && (
-                        <motion.img
-                          layoutId={`item-image-${item.id}`}
-                          src={item.image_url}
-                          alt={item.name}
-                          className="size-16 shrink-0 object-cover"
-                          style={{ borderRadius: "12px" }}
-                        />
-                      )}
-                      <div className="flex-1">
-                        <div className="flex justify-between gap-4">
-                          <h4 className="font-medium">{item.name}</h4>
-                          <span className="text-sm text-neutral-700 tabular-nums">
-                            {priceFormatter.format(item.price)}
-                          </span>
-                        </div>
-                        <p className="text-muted-foreground mt-1 line-clamp-2 max-w-md text-sm wrap-break-word">
-                          {item.tagline}
-                        </p>
-                        <motion.span className="mt-1 flex items-center gap-0.5 text-xs text-blue-600">
-                          View details <ArrowRight className="size-3" />
-                        </motion.span>
-                      </div>
-                    </div>
-                  </motion.li>
-                ))}
-              </ul>
-            </section>
-          ))
-        )}
-
-        {/* Item Dialog */}
-        <Dialog.Root
-          open={!!selectedItem}
-          onOpenChange={() => setSelectedItem(null)}
-        >
-          <AnimatePresence>
-            {selectedItem && (
-              <Dialog.Portal forceMount>
-                <Dialog.Overlay asChild>
-                  <motion.div
-                    key={`overlay-${selectedItem.id}`}
-                    className="absolute inset-0 h-dvh bg-black/20"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                  />
-                </Dialog.Overlay>
-                <div className="absolute inset-0 z-50 grid h-dvh place-items-center">
-                  <Dialog.Content forceMount asChild>
-                    <motion.div
-                      key={selectedItem.id}
-                      layoutId={`item-wrapper-${selectedItem.id}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0, transition: { delay: 0.15 } }}
-                      style={{ borderRadius: "12px" }}
-                      className="w-full max-w-lg bg-white p-6 outline-none"
+      <LayoutGroup id="menu-items">
+        <div className="mx-auto w-full max-w-xl px-4">
+          {menu.business.image_url && (
+            <BusinessLogo
+              imageUrl={menu.business.image_url}
+              businessName={menu.business.name}
+            />
+          )}
+          <h1 className="text-center text-xl font-semibold">
+            {menu.business.name}
+          </h1>
+          <h2 className="text-muted-foreground mt-1 text-center text-lg">
+            {menu.name}
+          </h2>
+          <nav
+            ref={navRef}
+            className="my-6 flex flex-wrap items-center justify-center gap-4"
+          >
+            <ul className="flex flex-wrap items-center justify-center gap-4">
+              {categoriesWithItems?.map((category) => {
+                return (
+                  <li key={category.id}>
+                    <Link
+                      replace
+                      to={{ hash: `#${createSlug(category.name)}` }}
+                      className="underline decoration-neutral-300 underline-offset-4 transition duration-200 hover:decoration-neutral-600"
                     >
-                      <motion.div className="flex gap-4 md:mx-0">
-                        {selectedItem.image_url && (
+                      {category.name}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          {/* Categories and Items */}
+          {categoriesWithItems?.length === 0 ? (
+            <p className="mt-16 text-center">No categories available.</p>
+          ) : (
+            categoriesWithItems?.map((category) => (
+              <section key={category.id} className="mt-16">
+                <h3
+                  id={createSlug(category.name)}
+                  className="scroll-mt-20 text-lg font-medium"
+                >
+                  {category.name}
+                </h3>
+                <p className="text-muted-foreground mb-4 border-b pb-3 text-sm">
+                  {category.description}
+                </p>
+
+                <ul className="space-y-6">
+                  {category.items?.map((item) => (
+                    <motion.li
+                      key={item.id}
+                      layoutId={`item-wrapper-${item.id}`}
+                      onClick={() => {
+                        setSelectedItem(item);
+                      }}
+                      className="group cursor-pointer"
+                    >
+                      <div className="flex gap-4">
+                        {item.image_url && (
                           <motion.img
-                            layoutId={`item-image-${selectedItem.id}`}
-                            src={selectedItem.image_url}
-                            alt={selectedItem.name}
+                            layoutId={`item-image-${item.id}`}
+                            src={item.image_url}
+                            alt={item.name}
                             className="size-16 shrink-0 object-cover"
-                            style={{ borderRadius: "6px" }}
+                            style={{ borderRadius: "12px" }}
                           />
                         )}
-                        <div className="flex-1 self-center">
+                        <div className="flex-1">
                           <div className="flex justify-between gap-4">
-                            <Dialog.Title asChild>
-                              <h4 className="font-medium">
-                                {selectedItem.name}
-                              </h4>
-                            </Dialog.Title>
-                            <span className="text-sm text-neutral-700 tabular-nums">
-                              {priceFormatter.format(selectedItem.price)}
-                            </span>
+                            <motion.h4
+                              layoutId={`item-name-${item.id}`}
+                              className="font-medium"
+                            >
+                              {item.name}
+                            </motion.h4>
+                            <motion.span
+                              layoutId={`item-price-${item.id}`}
+                              className="text-sm text-neutral-700 tabular-nums"
+                            >
+                              {priceFormatter.format(item.price)}
+                            </motion.span>
                           </div>
-                          <p className="text-muted-foreground mt-1 text-sm wrap-break-word">
-                            {selectedItem.tagline}
+                          <p className="text-muted-foreground mt-1 line-clamp-2 max-w-md text-sm wrap-break-word">
+                            {item.tagline}
                           </p>
+                          <motion.span className="mt-1 flex items-center gap-0.5 text-xs text-blue-600">
+                            View details <ArrowRight className="size-3" />
+                          </motion.span>
                         </div>
-                      </motion.div>
+                      </div>
+                    </motion.li>
+                  ))}
+                </ul>
+              </section>
+            ))
+          )}
 
-                      <Dialog.Description asChild>
-                        <motion.p
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.1 }}
-                          className="mt-6 text-neutral-600"
-                        >
-                          {selectedItem?.description}
-                        </motion.p>
-                      </Dialog.Description>
-                    </motion.div>
-                  </Dialog.Content>
-                </div>
-              </Dialog.Portal>
-            )}
-          </AnimatePresence>
-        </Dialog.Root>
-      </div>
+          {/* Item Dialog */}
+          <Dialog.Root
+            open={!!selectedItem}
+            onOpenChange={() => setSelectedItem(null)}
+          >
+            <AnimatePresence>
+              {selectedItem && (
+                <Dialog.Portal forceMount>
+                  <Dialog.Overlay asChild>
+                    <motion.div
+                      key={`overlay-${selectedItem.id}`}
+                      className="absolute inset-0 h-dvh bg-black/20"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    />
+                  </Dialog.Overlay>
+                  <div className="absolute inset-0 z-50 grid h-dvh place-items-center p-4">
+                    <Dialog.Content forceMount asChild>
+                      <motion.div
+                        key={selectedItem.id}
+                        layoutId={`item-wrapper-${selectedItem.id}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, transition: { delay: 0.15 } }}
+                        transition={{
+                          layout: {
+                            type: "spring",
+                            stiffness: 420,
+                            damping: 36,
+                          },
+                        }}
+                        style={{ borderRadius: "12px" }}
+                        className="w-full max-w-lg bg-white p-6 outline-none"
+                      >
+                        <div className="flex gap-4">
+                          {selectedItem.image_url && (
+                            <motion.img
+                              layoutId={`item-image-${selectedItem.id}`}
+                              src={selectedItem.image_url}
+                              alt={selectedItem.name}
+                              className="size-16 shrink-0 object-cover"
+                              style={{ borderRadius: "12px" }}
+                            />
+                          )}
+                          <div className="flex-1">
+                            <div className="flex justify-between gap-4">
+                              <Dialog.Title asChild>
+                                <motion.h4
+                                  layoutId={`item-name-${selectedItem.id}`}
+                                  className="font-medium"
+                                >
+                                  {selectedItem.name}
+                                </motion.h4>
+                              </Dialog.Title>
+                              <motion.span
+                                layoutId={`item-price-${selectedItem.id}`}
+                                className="text-sm text-neutral-700 tabular-nums"
+                              >
+                                {priceFormatter.format(selectedItem.price)}
+                              </motion.span>
+                            </div>
+                            <motion.p
+                              initial={{ opacity: 0, y: 4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 2 }}
+                              transition={{ duration: 0.14, delay: 0.03 }}
+                              className="text-muted-foreground mt-1 text-sm wrap-break-word"
+                            >
+                              {selectedItem.tagline}
+                            </motion.p>
+                          </div>
+                        </div>
+
+                        <Dialog.Description asChild>
+                          <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.12, delay: 0.05 }}
+                            className="mt-6 text-neutral-600"
+                          >
+                            {selectedItem.description}
+                          </motion.p>
+                        </Dialog.Description>
+                      </motion.div>
+                    </Dialog.Content>
+                  </div>
+                </Dialog.Portal>
+              )}
+            </AnimatePresence>
+          </Dialog.Root>
+        </div>
+      </LayoutGroup>
       <footer className="mt-12">
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-sm">
           <span>
