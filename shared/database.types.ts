@@ -143,6 +143,7 @@ export type Database = {
           menu_id: string
           name: string
           price: number
+          tagline: string | null
           updated_at: string
         }
         Insert: {
@@ -155,6 +156,7 @@ export type Database = {
           menu_id: string
           name: string
           price: number
+          tagline?: string | null
           updated_at?: string
         }
         Update: {
@@ -167,6 +169,7 @@ export type Database = {
           menu_id?: string
           name?: string
           price?: number
+          tagline?: string | null
           updated_at?: string
         }
         Relationships: [
