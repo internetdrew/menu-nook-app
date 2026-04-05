@@ -2,7 +2,8 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
-import { screen, waitFor } from "@testing-library/dom";
+import { screen, waitFor, within } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockObserve = vi.fn();
@@ -75,6 +76,7 @@ describe("Preview Route (/preview/:id)", () => {
                     {
                       id: "item1",
                       name: "Item 1",
+                      tagline: "Fast favorite",
                       description: "Delicious item",
                       image_url: "https://cdn.example.com/item-1.png",
                       price: 12.65,
@@ -83,6 +85,7 @@ describe("Preview Route (/preview/:id)", () => {
                     {
                       id: "item2",
                       name: "Item 2",
+                      tagline: "Scrumptious teaser",
                       description: "Scrumptious item",
                       image_url: null,
                       price: 15.99,
@@ -110,13 +113,13 @@ describe("Preview Route (/preview/:id)", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          /Your menu won't be visible to customers until you/i,
-        ),
+        screen.getByText(/Your menu won't be visible to customers until you/i),
       ).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("button", { name: "subscribe" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "subscribe" }),
+    ).toBeInTheDocument();
 
     expect(screen.getByText("Test Business")).toBeInTheDocument();
     expect(screen.getByText("Test Menu")).toBeInTheDocument();
@@ -130,6 +133,8 @@ describe("Preview Route (/preview/:id)", () => {
       screen.getByRole("link", { name: "Category 2" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Item 1" })).toBeInTheDocument();
+    expect(screen.getByText("Fast favorite")).toBeInTheDocument();
+    expect(screen.getAllByText(/view details/i)).toHaveLength(2);
   });
 
   it("renders a live preview banner when the current menu is subscribed", async () => {
@@ -142,7 +147,9 @@ describe("Preview Route (/preview/:id)", () => {
               menu_id: "123",
               status: "active",
               current_period_start: new Date().toISOString(),
-              current_period_end: new Date(Date.now() + 86_400_000).toISOString(),
+              current_period_end: new Date(
+                Date.now() + 86_400_000,
+              ).toISOString(),
               stripe_customer_id: "cus_123",
               stripe_price_id: "price_123",
               stripe_subscription_id: "sub_stripe_123",
@@ -216,6 +223,7 @@ describe("Live Menu Route (/menu/:id)", () => {
                     {
                       id: "item1",
                       name: "Item 1",
+                      tagline: "Fast favorite",
                       description: "Delicious item",
                       price: 12.65,
                       sort_index: 0,
@@ -223,6 +231,7 @@ describe("Live Menu Route (/menu/:id)", () => {
                     {
                       id: "item2",
                       name: "Item 2",
+                      tagline: "Scrumptious teaser",
                       description: "Scrumptious item",
                       price: 15.99,
                       sort_index: 1,
@@ -252,5 +261,86 @@ describe("Live Menu Route (/menu/:id)", () => {
     });
 
     expect(screen.getByText(/Are you the account owner?/i)).toBeInTheDocument();
+  });
+
+  it("shows tagline in the menu list and longer description in the dialog", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "subscription.getForMenu": () => ({
+          result: {
+            data: {
+              id: "sub_123",
+              menu_id: "123",
+              status: "active",
+              current_period_start: new Date().toISOString(),
+              current_period_end: new Date(
+                Date.now() + 86_400_000,
+              ).toISOString(),
+              stripe_customer_id: "cus_123",
+              stripe_price_id: "price_123",
+              stripe_subscription_id: "sub_stripe_123",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          },
+        }),
+        "menu.getPublic": () => ({
+          result: {
+            data: {
+              id: "123",
+              name: "Test Menu",
+              menu_categories: [
+                {
+                  id: "cat2",
+                  name: "Category 2",
+                  items: [
+                    {
+                      id: "item1",
+                      name: "Item 1",
+                      tagline: "Fast favorite",
+                      description: "A fuller item description for the dialog.",
+                      price: 12.65,
+                      sort_index: 0,
+                    },
+                  ],
+                  menu_id: "menu_123",
+                },
+              ],
+              business: {
+                id: "business_123",
+                image_url: null,
+                name: "Test Business",
+              },
+            },
+          },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({
+      initialEntries: ["/menu/123"],
+      authMock: authedUserState,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Fast favorite")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText("A fuller item description for the dialog."),
+    ).not.toBeInTheDocument();
+
+    const div = screen.getByText("Fast favorite").closest("div");
+    expect(within(div!).getByText(/View details/i)).toBeInTheDocument();
+
+    await user.click(div!);
+
+    await waitFor(() => {
+      const dialog = screen.getByRole("dialog");
+      expect(
+        within(dialog).getByText("A fuller item description for the dialog."),
+      ).toBeInTheDocument();
+    });
   });
 });

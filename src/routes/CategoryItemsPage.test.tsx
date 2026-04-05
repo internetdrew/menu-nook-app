@@ -81,6 +81,7 @@ describe("Category Items Page", () => {
             ],
           },
         }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
         "menuCategory.getById": () => ({
           result: {
             data: { id: 10, menu_id: "menu-123", name: "Test Category" },
@@ -130,6 +131,7 @@ describe("Category Items Page", () => {
             ],
           },
         }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
         "menuCategory.getById": () => ({
           result: {
             data: null,
@@ -183,6 +185,7 @@ describe("Category Items Page", () => {
             ],
           },
         }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
         "menuCategory.getById": () => ({
           result: {
             data: { id: 10, menu_id: "menu-123", name: "Test Category" },
@@ -192,7 +195,12 @@ describe("Category Items Page", () => {
           result: { data: items },
         }),
       }),
-      http.post("/trpc/menuCategoryItem.create", async () => {
+      http.post("/trpc/menuCategoryItem.create", async ({ request }) => {
+        const rawBody = await request.text();
+
+        expect(rawBody).toContain('"tagline":"a quick teaser"');
+        expect(rawBody).toContain('"description":"a new description"');
+
         return HttpResponse.json({
           result: { data: { id: 44 } },
         });
@@ -220,10 +228,17 @@ describe("Category Items Page", () => {
 
     const dialog = await screen.findByRole("dialog");
     const nameInput = within(dialog).getByLabelText(/item name/i);
-    await user.type(nameInput, "a new item");
+    const itemName = "a new item";
+    await user.type(nameInput, itemName);
+    expect(nameInput).toHaveValue(itemName);
+
+    const taglineInput = within(dialog).getByLabelText(/item tagline/i);
+    await user.type(taglineInput, "a quick teaser");
+    expect(taglineInput).toHaveValue("a quick teaser");
 
     const descriptionInput = within(dialog).getByLabelText(/item description/i);
     await user.type(descriptionInput, "a new description");
+    expect(descriptionInput).toHaveValue("a new description");
 
     const priceInput = within(dialog).getByLabelText(/price/i);
     await user.type(priceInput, "9.99");
@@ -265,6 +280,7 @@ describe("Category Items Page", () => {
             ],
           },
         }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
         "menuCategory.getById": () => ({
           result: {
             data: { id: 10, menu_id: "menu-123", name: "Test Category" },
@@ -348,6 +364,7 @@ describe("Category Items Page", () => {
             ],
           },
         }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
         "menuCategory.getById": () => ({
           result: {
             data: { id: 10, menu_id: "menu-123", name: "Test Category" },
@@ -362,6 +379,7 @@ describe("Category Items Page", () => {
                   item: {
                     id: 44,
                     name: "Existing Item",
+                    tagline: "Existing tagline",
                     description: "An existing description",
                     image_path: null,
                     image_url: null,
@@ -410,6 +428,9 @@ describe("Category Items Page", () => {
     });
     expect(updateButton).toBeDisabled();
     expect(nameInput).toHaveValue("Existing Item");
+    expect(within(dialog).getByLabelText(/item tagline/i)).toHaveValue(
+      "Existing tagline",
+    );
     await user.clear(nameInput);
     await user.type(nameInput, "Updated Item");
 
@@ -450,6 +471,7 @@ describe("Category Items Page", () => {
             ],
           },
         }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
         "menuCategory.getById": () => ({
           result: {
             data: { id: 10, menu_id: "menu-123", name: "Test Category" },
@@ -463,6 +485,7 @@ describe("Category Items Page", () => {
                 item: {
                   id: 44,
                   name: "Existing Item",
+                  tagline: "Existing tagline",
                   description: "An existing description",
                   image_path: "menu/menu-123/item/44/image_123.png",
                   image_url: "https://cdn.example.com/existing-item.png",
@@ -533,6 +556,7 @@ describe("Category Items Page", () => {
             ],
           },
         }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
         "menuCategory.getById": () => ({
           result: {
             data: { id: 10, menu_id: "menu-123", name: "Test Category" },
@@ -547,6 +571,7 @@ describe("Category Items Page", () => {
                   item: {
                     id: 44,
                     name: "Item To Delete",
+                    tagline: "Delete me",
                     description: "An item to be deleted",
                     image_path: null,
                     image_url: null,
