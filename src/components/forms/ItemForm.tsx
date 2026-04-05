@@ -36,9 +36,9 @@ interface ItemFormProps {
   chosenCategory: MenuCategory;
 }
 
-const ITEM_NAME_LIMIT = 40;
-const ITEM_TAGLINE_LIMIT = 60;
-const ITEM_DESCRIPTION_LIMIT = 250;
+export const ITEM_NAME_LIMIT = 40;
+export const ITEM_TAGLINE_LIMIT = 60;
+export const ITEM_DESCRIPTION_LIMIT = 250;
 
 const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
   `${Math.max(limit - (value?.length ?? 0), 0)} characters left`;
