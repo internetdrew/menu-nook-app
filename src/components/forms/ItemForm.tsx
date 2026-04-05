@@ -23,6 +23,12 @@ import { supabaseBrowserClient } from "@/lib/supabase";
 import type { ChangeEvent } from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Field, FieldDescription, FieldLabel } from "../ui/field";
+import {
+  ITEM_DESCRIPTION_LIMIT,
+  ITEM_NAME_LIMIT,
+  ITEM_TAGLINE_LIMIT,
+  menuItemFieldsSchema,
+} from "../../../shared/menuItem";
 
 type MenuCategory = NonNullable<
   inferRouterOutputs<AppRouter>["menuCategory"]["getById"]
@@ -36,40 +42,10 @@ interface ItemFormProps {
   chosenCategory: MenuCategory;
 }
 
-export const ITEM_NAME_LIMIT = 40;
-export const ITEM_TAGLINE_LIMIT = 60;
-export const ITEM_DESCRIPTION_LIMIT = 250;
-
 const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
   `${Math.max(limit - (value?.length ?? 0), 0)} characters left`;
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "Please add an item name.",
-    })
-    .max(ITEM_NAME_LIMIT, {
-      message: `Item name must be ${ITEM_NAME_LIMIT} characters or fewer.`,
-    }),
-  tagline: z
-    .string()
-    .max(ITEM_TAGLINE_LIMIT, {
-      message: `Tagline must be ${ITEM_TAGLINE_LIMIT} characters or fewer.`,
-    })
-    .optional(),
-  description: z
-    .string()
-    .max(ITEM_DESCRIPTION_LIMIT, {
-      message: `Description must be ${ITEM_DESCRIPTION_LIMIT} characters or fewer.`,
-    })
-    .optional(),
-  price: z
-    .number()
-    .min(0, { message: "Price must be a positive number." })
-    .refine((val) => /^\d+(\.\d{1,2})?$/.test(val.toString()), {
-      message: "Price can have up to 2 decimal places.",
-    }),
+const formSchema = menuItemFieldsSchema.extend({
   categoryId: z.number(),
 });
 
