@@ -4,7 +4,7 @@ import { linkClasses } from "@/constants";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUp } from "lucide-react";
+import { ArrowRight, ArrowUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { NotFound } from "./NotFound";
@@ -18,6 +18,11 @@ import MenuPreviewBanner from "@/components/MenuPreviewBanner";
 import BusinessLogo from "@/components/BusinessLogo";
 
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
+const priceFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
 export type MenuItem = NonNullable<
   inferRouterOutputs<AppRouter>["menu"]["getPreview"]
 >["menu_categories"][number]["items"][number];
@@ -232,7 +237,7 @@ export const Menu = () => {
                     onClick={() => {
                       setSelectedItem(item);
                     }}
-                    className="cursor-pointer"
+                    className="group cursor-pointer"
                   >
                     <div className="flex gap-4">
                       {item.image_url && (
@@ -246,25 +251,17 @@ export const Menu = () => {
                       )}
                       <div className="flex-1">
                         <div className="flex justify-between gap-4">
-                          <motion.h4
-                            layoutId={`item-name-${item.id}`}
-                            className="font-medium"
-                          >
-                            {item.name}
-                          </motion.h4>
-                          <motion.span layoutId={`item-price-${item.id}`}>
-                            {new Intl.NumberFormat("en-US", {
-                              style: "currency",
-                              currency: "USD",
-                            }).format(item.price)}
-                          </motion.span>
+                          <h4 className="font-medium">{item.name}</h4>
+                          <span className="text-sm text-neutral-700 tabular-nums">
+                            {priceFormatter.format(item.price)}
+                          </span>
                         </div>
-                        <motion.p
-                          layoutId={`item-description-${item.id}`}
-                          className="text-muted-foreground mt-1 line-clamp-2 max-w-sm text-sm"
-                        >
-                          {item?.description}
-                        </motion.p>
+                        <p className="text-muted-foreground mt-1 line-clamp-2 max-w-md text-sm wrap-break-word">
+                          {item.tagline}
+                        </p>
+                        <motion.span className="mt-1 flex items-center gap-0.5 text-xs text-blue-600">
+                          View details <ArrowRight className="size-3" />
+                        </motion.span>
                       </div>
                     </div>
                   </motion.li>
@@ -300,9 +297,10 @@ export const Menu = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0, transition: { delay: 0.15 } }}
-                      className="w-full max-w-lg outline-none"
+                      style={{ borderRadius: "12px" }}
+                      className="w-full max-w-lg bg-white p-6 outline-none"
                     >
-                      <motion.div className="mx-2 flex gap-4 rounded-[12px] bg-white p-2.5 md:mx-0">
+                      <motion.div className="flex gap-4 md:mx-0">
                         {selectedItem.image_url && (
                           <motion.img
                             layoutId={`item-image-${selectedItem.id}`}
@@ -314,29 +312,32 @@ export const Menu = () => {
                         )}
                         <div className="flex-1 self-center">
                           <div className="flex justify-between gap-4">
-                            <motion.h4
-                              layoutId={`item-name-${selectedItem.id}`}
-                              className="font-medium"
-                            >
-                              {selectedItem.name}
-                            </motion.h4>
-                            <motion.span
-                              layoutId={`item-price-${selectedItem.id}`}
-                            >
-                              {new Intl.NumberFormat("en-US", {
-                                style: "currency",
-                                currency: "USD",
-                              }).format(selectedItem.price)}
-                            </motion.span>
+                            <Dialog.Title asChild>
+                              <h4 className="font-medium">
+                                {selectedItem.name}
+                              </h4>
+                            </Dialog.Title>
+                            <span className="text-sm text-neutral-700 tabular-nums">
+                              {priceFormatter.format(selectedItem.price)}
+                            </span>
                           </div>
-                          <motion.p
-                            layoutId={`item-description-${selectedItem.id}`}
-                            className="text-muted-foreground mt-1"
-                          >
-                            {selectedItem?.description}
-                          </motion.p>
+                          <p className="text-muted-foreground mt-1 text-sm wrap-break-word">
+                            {selectedItem.tagline}
+                          </p>
                         </div>
                       </motion.div>
+
+                      <Dialog.Description asChild>
+                        <motion.p
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.1 }}
+                          className="mt-6 text-neutral-600"
+                        >
+                          {selectedItem?.description}
+                        </motion.p>
+                      </Dialog.Description>
                     </motion.div>
                   </Dialog.Content>
                 </div>
@@ -345,7 +346,7 @@ export const Menu = () => {
           </AnimatePresence>
         </Dialog.Root>
       </div>
-      <footer className="mt-auto">
+      <footer className="mt-12">
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-sm">
           <span>
             Powered by{" "}
