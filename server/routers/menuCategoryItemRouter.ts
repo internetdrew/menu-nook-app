@@ -10,7 +10,8 @@ export const menuCategoryItemRouter = router({
           menuId: z.uuid(),
           menuCategoryId: z.number(),
           name: z.string().min(1).max(100),
-          description: z.string().max(255).optional(),
+          tagline: z.string().optional(),
+          description: z.string().max(1000).optional(),
           price: z.number().min(0),
           imagePath: z.string().nullable().optional(),
           imageUrl: z.url().nullable().optional(),
@@ -49,6 +50,7 @@ export const menuCategoryItemRouter = router({
     .mutation(async ({ input, ctx }) => {
       const {
         name,
+        tagline,
         description,
         price,
         imagePath,
@@ -63,6 +65,7 @@ export const menuCategoryItemRouter = router({
           menu_id: menuId,
           menu_category_id: menuCategoryId,
           name,
+          tagline,
           description,
           price,
           image_path: imagePath,
@@ -122,7 +125,8 @@ export const menuCategoryItemRouter = router({
         .object({
           id: z.number(),
           name: z.string().min(1).max(100),
-          description: z.string().max(255).optional(),
+          tagline: z.string().max(120).optional(),
+          description: z.string().max(1000).optional(),
           price: z.number().min(0),
           imagePath: z.string().nullable().optional(),
           imageUrl: z.url().nullable().optional(),
@@ -163,6 +167,7 @@ export const menuCategoryItemRouter = router({
       const {
         id,
         name,
+        tagline,
         menuCategoryId,
         description,
         price,
@@ -188,6 +193,7 @@ export const menuCategoryItemRouter = router({
         .from("menu_category_items")
         .update({
           name,
+          tagline,
           description,
           menu_category_id: menuCategoryId,
           price,
