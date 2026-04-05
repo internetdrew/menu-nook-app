@@ -36,19 +36,32 @@ interface ItemFormProps {
   chosenCategory: MenuCategory;
 }
 
+const ITEM_NAME_LIMIT = 40;
+const ITEM_TAGLINE_LIMIT = 60;
+const ITEM_DESCRIPTION_LIMIT = 250;
+
+const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
+  `${Math.max(limit - (value?.length ?? 0), 0)} characters left`;
+
 const formSchema = z.object({
   name: z
     .string()
     .min(1, {
       message: "Please add an item name.",
     })
-    .max(100, {
-      message: "Item name must be less than 100 characters long.",
+    .max(ITEM_NAME_LIMIT, {
+      message: `Item name must be ${ITEM_NAME_LIMIT} characters or fewer.`,
     }),
+  tagline: z
+    .string()
+    .max(ITEM_TAGLINE_LIMIT, {
+      message: `Tagline must be ${ITEM_TAGLINE_LIMIT} characters or fewer.`,
+    })
+    .optional(),
   description: z
     .string()
-    .max(255, {
-      message: "Description must less than 255 characters long.",
+    .max(ITEM_DESCRIPTION_LIMIT, {
+      message: `Description must be ${ITEM_DESCRIPTION_LIMIT} characters or fewer.`,
     })
     .optional(),
   price: z
@@ -88,11 +101,15 @@ const ItemForm = (props: ItemFormProps) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: item?.name ?? "",
+      tagline: item?.tagline ?? "",
       description: item?.description ?? "",
       price: item?.price ?? 0,
       categoryId: item?.category?.id ?? chosenCategory?.id,
     },
   });
+  const nameValue = form.watch("name");
+  const taglineValue = form.watch("tagline");
+  const descriptionValue = form.watch("description");
 
   const updateItem = useMutation(
     trpc.menuCategoryItem.update.mutationOptions(),
@@ -196,6 +213,7 @@ const ItemForm = (props: ItemFormProps) => {
           {
             id: item.id,
             name: values.name,
+            tagline: values.tagline,
             description: values.description,
             price: values.price,
             menuCategoryId: chosenCategory?.id,
@@ -225,6 +243,7 @@ const ItemForm = (props: ItemFormProps) => {
     try {
       const createdItem = await createItem.mutateAsync({
         name: values.name,
+        tagline: values.tagline,
         description: values.description,
         price: values.price,
         menuCategoryId: chosenCategory.id,
@@ -240,6 +259,7 @@ const ItemForm = (props: ItemFormProps) => {
         await updateItem.mutateAsync({
           id: createdItem.id,
           name: values.name,
+          tagline: values.tagline,
           description: values.description,
           price: values.price,
           menuCategoryId: chosenCategory.id,
@@ -328,10 +348,37 @@ const ItemForm = (props: ItemFormProps) => {
             <FormItem>
               <FormLabel>Item Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Drunk Man Noodles" {...field} />
+                <Input
+                  maxLength={ITEM_NAME_LIMIT}
+                  placeholder="e.g. Drunk Man Noodles"
+                  {...field}
+                />
               </FormControl>
               <FormDescription>
-                The item name as it will appear to customers.
+                The item name as it will appear to customers.{" "}
+                {getRemainingCharacterLabel(nameValue, ITEM_NAME_LIMIT)}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="tagline"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Item Tagline</FormLabel>
+              <FormControl>
+                <Textarea
+                  maxLength={ITEM_TAGLINE_LIMIT}
+                  className="field-sizing-content resize-none"
+                  placeholder="A short line customers see in the menu before opening the item."
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                A short optional teaser shown in the menu list.{" "}
+                {getRemainingCharacterLabel(taglineValue, ITEM_TAGLINE_LIMIT)}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -345,14 +392,18 @@ const ItemForm = (props: ItemFormProps) => {
               <FormLabel>Item Description</FormLabel>
               <FormControl>
                 <Textarea
-                  className="field-sizing-content resize-none"
-                  placeholder="A brief description of this category."
+                  maxLength={ITEM_DESCRIPTION_LIMIT}
+                  className="min-h-28 resize-y"
+                  placeholder="A longer description customers see after they open the item."
                   {...field}
                 />
               </FormControl>
               <FormDescription>
-                A brief (optional) description of the item. This will be
-                displayed to customers.
+                A longer optional description revealed inside the item dialog.{" "}
+                {getRemainingCharacterLabel(
+                  descriptionValue,
+                  ITEM_DESCRIPTION_LIMIT,
+                )}
               </FormDescription>
               <FormMessage />
             </FormItem>
