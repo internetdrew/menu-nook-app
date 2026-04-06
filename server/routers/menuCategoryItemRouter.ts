@@ -24,6 +24,7 @@ export const menuCategoryItemRouter = router({
     .mutation(async ({ input, ctx }) => {
       const {
         name,
+        primaryTag,
         tagline,
         description,
         price,
@@ -39,6 +40,7 @@ export const menuCategoryItemRouter = router({
           menu_id: menuId,
           menu_category_id: menuCategoryId,
           name,
+          primary_tag: primaryTag,
           tagline,
           description,
           price,
@@ -110,6 +112,7 @@ export const menuCategoryItemRouter = router({
       const {
         id,
         name,
+        primaryTag,
         tagline,
         menuCategoryId,
         description,
@@ -136,6 +139,7 @@ export const menuCategoryItemRouter = router({
         .from("menu_category_items")
         .update({
           name,
+          primary_tag: primaryTag,
           tagline,
           description,
           menu_category_id: menuCategoryId,
