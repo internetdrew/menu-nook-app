@@ -26,6 +26,7 @@ import { Field, FieldDescription, FieldLabel } from "../ui/field";
 import {
   ITEM_DESCRIPTION_LIMIT,
   ITEM_NAME_LIMIT,
+  ITEM_PRIMARY_TAG_LIMIT,
   ITEM_TAGLINE_LIMIT,
   menuItemFieldsSchema,
 } from "../../../shared/menuItem";
@@ -77,6 +78,7 @@ const ItemForm = (props: ItemFormProps) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: item?.name ?? "",
+      primaryTag: item?.primary_tag ?? "",
       tagline: item?.tagline ?? "",
       description: item?.description ?? "",
       price: item?.price ?? 0,
@@ -84,6 +86,7 @@ const ItemForm = (props: ItemFormProps) => {
     },
   });
   const nameValue = form.watch("name");
+  const primaryTagValue = form.watch("primaryTag");
   const taglineValue = form.watch("tagline");
   const descriptionValue = form.watch("description");
 
@@ -189,6 +192,7 @@ const ItemForm = (props: ItemFormProps) => {
           {
             id: item.id,
             name: values.name,
+            primaryTag: values.primaryTag,
             tagline: values.tagline,
             description: values.description,
             price: values.price,
@@ -219,6 +223,7 @@ const ItemForm = (props: ItemFormProps) => {
     try {
       const createdItem = await createItem.mutateAsync({
         name: values.name,
+        primaryTag: values.primaryTag,
         tagline: values.tagline,
         description: values.description,
         price: values.price,
@@ -235,6 +240,7 @@ const ItemForm = (props: ItemFormProps) => {
         await updateItem.mutateAsync({
           id: createdItem.id,
           name: values.name,
+          primaryTag: values.primaryTag,
           tagline: values.tagline,
           description: values.description,
           price: values.price,
@@ -333,6 +339,31 @@ const ItemForm = (props: ItemFormProps) => {
               <FormDescription>
                 The item name as it will appear to customers.{" "}
                 {getRemainingCharacterLabel(nameValue, ITEM_NAME_LIMIT)}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="primaryTag"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Primary Tag</FormLabel>
+              <FormControl>
+                <Input
+                  maxLength={ITEM_PRIMARY_TAG_LIMIT}
+                  placeholder="e.g. Special"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                An optional short label shown next to the item name in the menu
+                list.{" "}
+                {getRemainingCharacterLabel(
+                  primaryTagValue,
+                  ITEM_PRIMARY_TAG_LIMIT,
+                )}
               </FormDescription>
               <FormMessage />
             </FormItem>
