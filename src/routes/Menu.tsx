@@ -16,6 +16,7 @@ import { Dialog } from "radix-ui";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import MenuPreviewBanner from "@/components/MenuPreviewBanner";
 import BusinessLogo from "@/components/BusinessLogo";
+import { Badge } from "@/components/ui/badge";
 
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
 const priceFormatter = new Intl.NumberFormat("en-US", {
@@ -230,7 +231,7 @@ export const Menu = () => {
                   {category.description}
                 </p>
 
-                <ul className="space-y-6">
+                <motion.ul layout className="space-y-6">
                   {category.items?.map((item) => (
                     <motion.li
                       key={item.id}
@@ -252,12 +253,27 @@ export const Menu = () => {
                         )}
                         <div className="flex-1">
                           <div className="flex justify-between gap-4">
-                            <motion.h4
-                              layoutId={`item-name-${item.id}`}
-                              className="font-medium"
-                            >
-                              {item.name}
-                            </motion.h4>
+                            <div className="flex items-center gap-1.5">
+                              <motion.h4
+                                layoutId={`item-name-${item.id}`}
+                                className="font-medium"
+                              >
+                                {item.name}
+                              </motion.h4>
+                              {item.primary_tag && (
+                                <motion.span
+                                  layoutId={`item-tag-${item.id}`}
+                                  className="flex items-center"
+                                >
+                                  <Badge
+                                    variant="default"
+                                    className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
+                                  >
+                                    {item.primary_tag}
+                                  </Badge>
+                                </motion.span>
+                              )}
+                            </div>
                             <motion.span
                               layoutId={`item-price-${item.id}`}
                               className="text-sm text-neutral-700 tabular-nums"
@@ -268,14 +284,21 @@ export const Menu = () => {
                           <p className="text-muted-foreground mt-1 line-clamp-2 max-w-md text-sm wrap-break-word">
                             {item.tagline}
                           </p>
-                          <motion.span className="mt-1 flex items-center gap-0.5 text-xs text-blue-600">
+                          <motion.span
+                            initial={{ opacity: 0 }}
+                            animate={{
+                              opacity: 1,
+                            }}
+                            exit={{ opacity: 0 }}
+                            className="mt-1 flex items-center gap-0.5 text-xs"
+                          >
                             View details <ArrowRight className="size-3" />
                           </motion.span>
                         </div>
                       </div>
                     </motion.li>
                   ))}
-                </ul>
+                </motion.ul>
               </section>
             ))
           )}
@@ -290,7 +313,6 @@ export const Menu = () => {
                 <Dialog.Portal forceMount>
                   <Dialog.Overlay asChild>
                     <motion.div
-                      key={`overlay-${selectedItem.id}`}
                       className="absolute inset-0 h-dvh bg-black/20"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -302,18 +324,12 @@ export const Menu = () => {
                     <Dialog.Content forceMount asChild>
                       <motion.div
                         key={selectedItem.id}
+                        layout
                         layoutId={`item-wrapper-${selectedItem.id}`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0, transition: { delay: 0.15 } }}
-                        transition={{
-                          layout: {
-                            type: "spring",
-                            stiffness: 420,
-                            damping: 36,
-                          },
-                        }}
-                        style={{ borderRadius: "12px" }}
+                        style={{ borderRadius: 12 }}
                         className="w-full max-w-lg bg-white p-6 outline-none"
                       >
                         <div className="flex gap-4">
@@ -328,14 +344,27 @@ export const Menu = () => {
                           )}
                           <div className="flex-1">
                             <div className="flex justify-between gap-4">
-                              <Dialog.Title asChild>
-                                <motion.h4
-                                  layoutId={`item-name-${selectedItem.id}`}
-                                  className="font-medium"
+                              <div className="flex items-center gap-1.5">
+                                <Dialog.Title asChild>
+                                  <motion.h4
+                                    layoutId={`item-name-${selectedItem.id}`}
+                                    className="font-medium"
+                                  >
+                                    {selectedItem.name}
+                                  </motion.h4>
+                                </Dialog.Title>
+                                <motion.span
+                                  layoutId={`item-tag-${selectedItem.id}`}
+                                  className="flex items-center"
                                 >
-                                  {selectedItem.name}
-                                </motion.h4>
-                              </Dialog.Title>
+                                  <Badge
+                                    variant="default"
+                                    className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
+                                  >
+                                    {selectedItem.primary_tag}
+                                  </Badge>
+                                </motion.span>
+                              </div>
                               <motion.span
                                 layoutId={`item-price-${selectedItem.id}`}
                                 className="text-sm text-neutral-700 tabular-nums"
@@ -360,7 +389,7 @@ export const Menu = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.12, delay: 0.05 }}
+                            transition={{ duration: 0.1 }}
                             className="mt-6 text-neutral-600"
                           >
                             {selectedItem.description}
