@@ -143,6 +143,7 @@ export type Database = {
           menu_id: string
           name: string
           price: number
+          primary_tag: string | null
           tagline: string | null
           updated_at: string
         }
@@ -156,6 +157,7 @@ export type Database = {
           menu_id: string
           name: string
           price: number
+          primary_tag?: string | null
           tagline?: string | null
           updated_at?: string
         }
@@ -169,6 +171,7 @@ export type Database = {
           menu_id?: string
           name?: string
           price?: number
+          primary_tag?: string | null
           tagline?: string | null
           updated_at?: string
         }
