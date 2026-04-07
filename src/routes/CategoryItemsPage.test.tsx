@@ -798,11 +798,13 @@ describe("Category Items Page", () => {
       name: /add detail/i,
     });
 
-    await user.click(addDetailButton);
+    for (let index = 1; index <= 6; index += 1) {
+      await user.click(addDetailButton);
+    }
 
     expect(
       within(dialog).getAllByRole("button", { name: /remove detail /i }),
-    ).toHaveLength(1);
+    ).toHaveLength(6);
     expect(addDetailButton).toBeDisabled();
   });
   it("allows users to remove an existing item image", async () => {
