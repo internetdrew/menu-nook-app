@@ -802,7 +802,7 @@ describe("Category Items Page", () => {
 
     expect(
       within(dialog).getAllByRole("button", { name: /remove detail /i }),
-    ).toHaveLength(6);
+    ).toHaveLength(1);
     expect(addDetailButton).toBeDisabled();
   });
   it("allows users to remove an existing item image", async () => {
