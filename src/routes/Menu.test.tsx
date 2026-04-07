@@ -80,6 +80,7 @@ describe("Preview Route (/preview/:id)", () => {
                       tags: ["Gluten-Free", "Seasonal"],
                       tagline: "Fast favorite",
                       description: "Delicious item",
+                      details: [{ key: "Calories", value: "450 kcal" }],
                       image_url: "https://cdn.example.com/item-1.png",
                       price: 12.65,
                       sort_index: 0,
@@ -91,6 +92,7 @@ describe("Preview Route (/preview/:id)", () => {
                       tags: [],
                       tagline: "Scrumptious teaser",
                       description: "Scrumptious item",
+                      details: [],
                       image_url: null,
                       price: 15.99,
                       sort_index: 1,
@@ -230,6 +232,7 @@ describe("Live Menu Route (/menu/:id)", () => {
                       name: "Item 1",
                       tagline: "Fast favorite",
                       description: "Delicious item",
+                      details: [],
                       price: 12.65,
                       sort_index: 0,
                     },
@@ -238,6 +241,7 @@ describe("Live Menu Route (/menu/:id)", () => {
                       name: "Item 2",
                       tagline: "Scrumptious teaser",
                       description: "Scrumptious item",
+                      details: [],
                       price: 15.99,
                       sort_index: 1,
                     },
@@ -305,6 +309,10 @@ describe("Live Menu Route (/menu/:id)", () => {
                       primary_tag: "Most Popular",
                       tags: ["Gluten-Free", "Seasonal"],
                       tagline: "Fast favorite",
+                      details: [
+                        { key: "Calories", value: "450 kcal" },
+                        { key: "Prep Time", value: "15 min" },
+                      ],
                       description: "A fuller item description for the dialog.",
                       price: 12.65,
                       sort_index: 0,
@@ -350,9 +358,97 @@ describe("Live Menu Route (/menu/:id)", () => {
       const dialog = screen.getByRole("dialog");
       expect(within(dialog).getByText("Gluten-Free")).toBeInTheDocument();
       expect(within(dialog).getByText("Seasonal")).toBeInTheDocument();
+      expect(within(dialog).getByText("Calories")).toBeInTheDocument();
+      expect(within(dialog).getByText("450 kcal")).toBeInTheDocument();
+      expect(within(dialog).getByText("Prep Time")).toBeInTheDocument();
+      expect(within(dialog).getByText("15 min")).toBeInTheDocument();
       expect(
         within(dialog).getByText("A fuller item description for the dialog."),
       ).toBeInTheDocument();
+    });
+  });
+  it("opens item details when metadata pairs exist without image or description", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "subscription.getForMenu": () => ({
+          result: {
+            data: {
+              id: "sub_123",
+              menu_id: "123",
+              status: "active",
+              current_period_start: new Date().toISOString(),
+              current_period_end: new Date(
+                Date.now() + 86_400_000,
+              ).toISOString(),
+              stripe_customer_id: "cus_123",
+              stripe_price_id: "price_123",
+              stripe_subscription_id: "sub_stripe_123",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          },
+        }),
+        "menu.getPublic": () => ({
+          result: {
+            data: {
+              id: "123",
+              name: "Test Menu",
+              menu_categories: [
+                {
+                  id: "cat2",
+                  name: "Category 2",
+                  items: [
+                    {
+                      id: "item1",
+                      name: "Item 1",
+                      primary_tag: null,
+                      tags: [],
+                      tagline: "Fast favorite",
+                      details: [
+                        { key: "Serves", value: "1 person" },
+                        { key: "Allergens", value: "Nuts, Soy" },
+                      ],
+                      description: null,
+                      image_url: null,
+                      price: 12.65,
+                      sort_index: 0,
+                    },
+                  ],
+                  menu_id: "menu_123",
+                },
+              ],
+              business: {
+                id: "business_123",
+                image_url: null,
+                name: "Test Business",
+              },
+            },
+          },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({
+      initialEntries: ["/menu/123"],
+      authMock: authedUserState,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Fast favorite")).toBeInTheDocument();
+    });
+
+    const div = screen.getByText("Fast favorite").closest("div");
+    expect(within(div!).getByText(/View details/i)).toBeInTheDocument();
+
+    await user.click(div!);
+
+    await waitFor(() => {
+      const dialog = screen.getByRole("dialog");
+      expect(within(dialog).getByText("Serves")).toBeInTheDocument();
+      expect(within(dialog).getByText("1 person")).toBeInTheDocument();
+      expect(within(dialog).getByText("Allergens")).toBeInTheDocument();
+      expect(within(dialog).getByText("Nuts, Soy")).toBeInTheDocument();
     });
   });
 });

@@ -295,6 +295,26 @@ describe("Category Items Page", () => {
     await user.type(descriptionInput, "a new description");
     expect(descriptionInput).toHaveValue("a new description");
 
+    await user.click(
+      within(dialog).getByRole("button", { name: /add detail/i }),
+    );
+    await user.type(
+      within(dialog).getByLabelText(/detail label 1/i),
+      "Calories",
+    );
+    await user.type(
+      within(dialog).getByLabelText(/detail value 1/i),
+      "450 kcal",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /add detail/i }),
+    );
+    await user.type(
+      within(dialog).getByLabelText(/detail label 2/i),
+      "Prep Time",
+    );
+    await user.type(within(dialog).getByLabelText(/detail value 2/i), "15 min");
+
     const priceInput = within(dialog).getByLabelText(/price/i);
     await user.type(priceInput, "9.99");
 
@@ -311,6 +331,10 @@ describe("Category Items Page", () => {
         tags: ["Gluten-Free", "Seasonal"],
         tagline: "a quick teaser",
         description: "a new description",
+        details: [
+          { key: "Calories", value: "450 kcal" },
+          { key: "Prep Time", value: "15 min" },
+        ],
         price: 9.99,
       });
       expect(toast.success).toHaveBeenCalledWith("Item created successfully!");
@@ -461,6 +485,10 @@ describe("Category Items Page", () => {
                     tags: ["Gluten-Free", "Seasonal"],
                     tagline: "Existing tagline",
                     description: "An existing description",
+                    details: [
+                      { key: "Calories", value: "450 kcal" },
+                      { key: "Allergens", value: "Nuts, Soy" },
+                    ],
                     image_path: null,
                     image_url: null,
                     price: 12.5,
@@ -518,6 +546,12 @@ describe("Category Items Page", () => {
     expect(within(dialog).getByLabelText(/item tagline/i)).toHaveValue(
       "Existing tagline",
     );
+    expect(within(dialog).getByLabelText(/detail label 1/i)).toHaveValue(
+      "Calories",
+    );
+    expect(within(dialog).getByLabelText(/detail value 1/i)).toHaveValue(
+      "450 kcal",
+    );
     await user.clear(nameInput);
     await user.type(nameInput, "Updated Item");
     await user.click(
@@ -529,6 +563,22 @@ describe("Category Items Page", () => {
     await user.type(tagInput, "Vegan{enter}");
     await user.type(tagInput, "Local");
     await user.click(within(dialog).getByRole("button", { name: /add tag/i }));
+    await user.clear(within(dialog).getByLabelText(/detail value 1/i));
+    await user.type(
+      within(dialog).getByLabelText(/detail value 1/i),
+      "475 kcal",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /remove detail 2/i }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /add detail/i }),
+    );
+    await user.type(within(dialog).getByLabelText(/detail label 2/i), "Serves");
+    await user.type(
+      within(dialog).getByLabelText(/detail value 2/i),
+      "1 person",
+    );
 
     await user.click(
       screen.getByRole("button", {
@@ -540,6 +590,10 @@ describe("Category Items Page", () => {
       expect(submittedUpdateInput).toMatchObject({
         name: "Updated Item",
         tags: ["Gluten-Free", "Vegan", "Local"],
+        details: [
+          { key: "Calories", value: "475 kcal" },
+          { key: "Serves", value: "1 person" },
+        ],
       });
       expect(toast.success).toHaveBeenCalledWith("Item updated successfully!");
     });
@@ -608,6 +662,148 @@ describe("Category Items Page", () => {
     expect(
       within(dialog).getByRole("button", { name: /add tag/i }),
     ).toBeDisabled();
+  });
+  it("rejects duplicate detail labels", async () => {
+    let submittedCreateInput: unknown;
+
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                businessId: "business-123",
+                name: "Test Menu",
+              },
+            ],
+          },
+        }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
+        "menuCategory.getById": () => ({
+          result: {
+            data: { id: 10, menu_id: "menu-123", name: "Test Category" },
+          },
+        }),
+        "menuCategoryItem.getSortedForCategory": () => ({
+          result: { data: [] },
+        }),
+      }),
+      http.post("/trpc/menuCategoryItem.create", async ({ request }) => {
+        submittedCreateInput = await getTrpcMutationInput(request);
+
+        return HttpResponse.json({
+          result: { data: { id: 44 } },
+        });
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({
+      initialEntries: ["/categories/10"],
+      authMock: authedUserState,
+    });
+
+    await user.click(await screen.findByRole("button", { name: /add item/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText(/item name/i), "Noodle Bowl");
+    await user.type(within(dialog).getByLabelText(/price/i), "15");
+    await user.click(
+      within(dialog).getByRole("button", { name: /add detail/i }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: /add detail/i }),
+    );
+    await user.type(
+      within(dialog).getByLabelText(/detail label 1/i),
+      "Calories",
+    );
+    await user.type(
+      within(dialog).getByLabelText(/detail value 1/i),
+      "450 kcal",
+    );
+    await user.type(
+      within(dialog).getByLabelText(/detail label 2/i),
+      "calories",
+    );
+    await user.type(
+      within(dialog).getByLabelText(/detail value 2/i),
+      "500 kcal",
+    );
+
+    await user.click(within(dialog).getByRole("button", { name: /create/i }));
+
+    expect(
+      await within(dialog).findByText(/each detail label must be unique\./i),
+    ).toBeInTheDocument();
+    expect(submittedCreateInput).toBeUndefined();
+  });
+  it("caps detail rows at six", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                businessId: "business-123",
+                name: "Test Menu",
+              },
+            ],
+          },
+        }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
+        "menuCategory.getById": () => ({
+          result: {
+            data: { id: 10, menu_id: "menu-123", name: "Test Category" },
+          },
+        }),
+        "menuCategoryItem.getSortedForCategory": () => ({
+          result: { data: [] },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({
+      initialEntries: ["/categories/10"],
+      authMock: authedUserState,
+    });
+
+    await user.click(await screen.findByRole("button", { name: /add item/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    const addDetailButton = within(dialog).getByRole("button", {
+      name: /add detail/i,
+    });
+
+    await user.click(addDetailButton);
+
+    expect(
+      within(dialog).getAllByRole("button", { name: /remove detail /i }),
+    ).toHaveLength(6);
+    expect(addDetailButton).toBeDisabled();
   });
   it("allows users to remove an existing item image", async () => {
     server.use(
@@ -740,6 +936,7 @@ describe("Category Items Page", () => {
                   tags: ["Gluten-Free", "Seasonal"],
                   tagline: "Existing tagline",
                   description: "An existing description",
+                  details: [{ key: "Calories", value: "450 kcal" }],
                   image_path: "menu/menu-123/item/44/image_123.png",
                   image_url: "https://cdn.example.com/existing-item.png",
                   price: 12.5,
@@ -771,6 +968,9 @@ describe("Category Items Page", () => {
       "Existing Item",
     );
     expect(within(editDialog).getByText("Seasonal")).toBeInTheDocument();
+    expect(within(editDialog).getByLabelText(/detail label 1/i)).toHaveValue(
+      "Calories",
+    );
     expect(
       within(editDialog).getByRole("button", {
         name: /remove tag seasonal/i,
@@ -781,7 +981,9 @@ describe("Category Items Page", () => {
       "Draft",
     );
 
-    await user.click(within(editDialog).getByRole("button", { name: /close/i }));
+    await user.click(
+      within(editDialog).getByRole("button", { name: /close/i }),
+    );
 
     await user.click(screen.getByRole("button", { name: /add item/i }));
 
@@ -790,6 +992,9 @@ describe("Category Items Page", () => {
     expect(
       within(addDialog).getByRole("textbox", { name: /^item tags$/i }),
     ).toHaveValue("");
+    expect(
+      within(addDialog).queryByLabelText(/detail label 1/i),
+    ).not.toBeInTheDocument();
     expect(within(addDialog).queryByText("Seasonal")).not.toBeInTheDocument();
     expect(within(addDialog).queryByText("Draft")).not.toBeInTheDocument();
     expect(
