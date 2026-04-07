@@ -4,36 +4,55 @@ import { linkClasses } from "@/constants";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUp } from "lucide-react";
+import { ArrowRight, ArrowUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { NotFound } from "./NotFound";
 import MenuUnavailable from "../components/MenuUnavailable";
 import { toast } from "sonner";
-import type { AppRouter } from "server";
-import type { inferRouterOutputs } from "@trpc/server";
 import { Dialog } from "radix-ui";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import MenuPreviewBanner from "@/components/MenuPreviewBanner";
 import BusinessLogo from "@/components/BusinessLogo";
+import { Badge } from "@/components/ui/badge";
+import { normalizeMenuItemDetails } from "../../shared/menuItem";
+import type { Database } from "../../shared/database.types";
 
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
-export type MenuItem = NonNullable<
-  inferRouterOutputs<AppRouter>["menu"]["getPreview"]
->["menu_categories"][number]["items"][number];
+const priceFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
+type Business = Database["public"]["Tables"]["businesses"]["Row"];
+type MenuRecord = Database["public"]["Tables"]["menus"]["Row"];
+export type MenuItem =
+  Database["public"]["Tables"]["menu_category_items"]["Row"] & {
+    order_index: number;
+  };
+type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"] & {
+  items: MenuItem[];
+};
+type MenuData = MenuRecord & {
+  business: Business;
+  menu_categories: MenuCategory[];
+};
 
 export const Menu = () => {
   const { menuId } = useParams<{ menuId: string }>();
   const { hash, pathname, search } = useLocation();
   const navigate = useNavigate();
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const selectedItemDetails = selectedItem
+    ? normalizeMenuItemDetails(selectedItem.details)
+    : [];
 
   const isPreview = pathname.startsWith("/preview/");
   const successfulSubscription =
     new URLSearchParams(search).get("success") === "true";
 
   const {
-    data: menu,
+    data: menuQueryData,
     isLoading: menuIsLoading,
     error,
   } = useQuery(
@@ -47,6 +66,7 @@ export const Menu = () => {
           { enabled: !!menuId },
         ),
   );
+  const menu = menuQueryData as MenuData | null | undefined;
 
   const { data: subscription, isLoading: subscriptionIsLoading } = useQuery(
     trpc.subscription.getForMenu.queryOptions(
@@ -174,178 +194,300 @@ export const Menu = () => {
         menu={menu}
       />
 
-      <div className="mx-auto w-full max-w-xl px-4 py-8">
-        {menu.business.image_url && (
-          <BusinessLogo
-            imageUrl={menu.business.image_url}
-            businessName={menu.business.name}
-          />
-        )}
-        <h1 className="text-center text-2xl font-semibold">
-          {menu.business.name}
-        </h1>
-        <h2 className="text-muted-foreground mt-2 text-center text-lg">
-          {menu.name}
-        </h2>
-        <nav
-          ref={navRef}
-          className="my-8 flex flex-wrap items-center justify-center gap-4"
-        >
-          <ul className="flex flex-wrap items-center justify-center gap-4">
-            {categoriesWithItems?.map((category) => {
-              return (
-                <li key={category.id}>
-                  <Link
-                    replace
-                    to={{ hash: `#${createSlug(category.name)}` }}
-                    className="underline decoration-neutral-400 underline-offset-4 transition duration-300 hover:decoration-neutral-600"
-                  >
-                    {category.name}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+      <LayoutGroup id="menu-items">
+        <div className="mx-auto w-full max-w-xl px-4">
+          {menu.business.image_url && (
+            <BusinessLogo
+              imageUrl={menu.business.image_url}
+              businessName={menu.business.name}
+            />
+          )}
+          <h1 className="text-center text-xl font-semibold">
+            {menu.business.name}
+          </h1>
+          <h2 className="text-muted-foreground mt-1 text-center text-lg">
+            {menu.name}
+          </h2>
+          <nav
+            ref={navRef}
+            className="my-6 flex flex-wrap items-center justify-center gap-4"
+          >
+            <ul className="flex flex-wrap items-center justify-center gap-4">
+              {categoriesWithItems?.map((category) => {
+                return (
+                  <li key={category.id}>
+                    <Link
+                      replace
+                      to={{ hash: `#${createSlug(category.name)}` }}
+                      className="underline decoration-neutral-300 underline-offset-4 transition duration-200 hover:decoration-neutral-600"
+                    >
+                      {category.name}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
 
-        {/* Categories and Items */}
-        {categoriesWithItems?.length === 0 ? (
-          <p className="mt-16 text-center">No categories available.</p>
-        ) : (
-          categoriesWithItems?.map((category) => (
-            <section key={category.id} className="mt-16">
-              <h3
-                id={createSlug(category.name)}
-                className="scroll-mt-20 text-lg font-medium"
-              >
-                {category.name}
-              </h3>
-              <p className="text-muted-foreground mb-4 border-b pb-3 text-sm">
-                {category.description}
-              </p>
+          {/* Categories and Items */}
+          {categoriesWithItems?.length === 0 ? (
+            <p className="mt-16 text-center">No categories available.</p>
+          ) : (
+            categoriesWithItems?.map((category) => (
+              <section key={category.id} className="mt-16">
+                <h3
+                  id={createSlug(category.name)}
+                  className="scroll-mt-20 text-lg font-medium"
+                >
+                  {category.name}
+                </h3>
+                <p className="text-muted-foreground mb-4 border-b pb-3 text-sm">
+                  {category.description}
+                </p>
 
-              <ul className="space-y-6">
-                {category.items?.map((item) => (
-                  <motion.li
-                    key={item.id}
-                    layoutId={`item-wrapper-${item.id}`}
-                    onClick={() => {
-                      setSelectedItem(item);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <div className="flex gap-4">
-                      {item.image_url && (
-                        <motion.img
-                          layoutId={`item-image-${item.id}`}
-                          src={item.image_url}
-                          alt={item.name}
-                          className="size-16 shrink-0 object-cover"
-                          style={{ borderRadius: "12px" }}
-                        />
-                      )}
-                      <div className="flex-1">
-                        <div className="flex justify-between gap-4">
-                          <motion.h4
-                            layoutId={`item-name-${item.id}`}
-                            className="font-medium"
-                          >
-                            {item.name}
-                          </motion.h4>
-                          <motion.span layoutId={`item-price-${item.id}`}>
-                            {new Intl.NumberFormat("en-US", {
-                              style: "currency",
-                              currency: "USD",
-                            }).format(item.price)}
-                          </motion.span>
+                <motion.ul layout className="space-y-6">
+                  {category.items?.map((item) => {
+                    const itemDetails = normalizeMenuItemDetails(item.details);
+                    const shouldShowDetails =
+                      item.description ||
+                      item.image_url ||
+                      itemDetails.length > 0;
+                    const isItemSelected = selectedItem?.id === item.id;
+
+                    return (
+                      <motion.li
+                        layoutId={`item-wrapper-${item.id}`}
+                        key={item.id}
+                        onClick={() => {
+                          if (shouldShowDetails) setSelectedItem(item);
+                        }}
+                        className={
+                          shouldShowDetails ? "group cursor-pointer" : ""
+                        }
+                      >
+                        <div className="flex gap-4">
+                          {item.image_url && (
+                            <motion.img
+                              layoutId={`item-image-${item.id}`}
+                              src={item.image_url}
+                              alt={item.name}
+                              className="size-16 shrink-0 object-cover"
+                              style={{ borderRadius: "12px" }}
+                            />
+                          )}
+                          <div className="flex-1">
+                            <div className="flex justify-between gap-4">
+                              <div className="flex items-center gap-1.5">
+                                <motion.h4
+                                  layoutId={`item-name-${item.id}`}
+                                  className="font-medium"
+                                >
+                                  {item.name}
+                                </motion.h4>
+                                {item.primary_tag && (
+                                  <motion.span
+                                    layoutId={`item-tag-${item.id}`}
+                                    className="flex items-center"
+                                  >
+                                    <Badge
+                                      variant="default"
+                                      className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
+                                    >
+                                      {item.primary_tag}
+                                    </Badge>
+                                  </motion.span>
+                                )}
+                              </div>
+                              <motion.span
+                                layoutId={`item-price-${item.id}`}
+                                className="text-sm text-neutral-700 tabular-nums"
+                              >
+                                {priceFormatter.format(item.price)}
+                              </motion.span>
+                            </div>
+                            <motion.p
+                              layoutId={`item-tagline-${item.id}`}
+                              className="text-muted-foreground mt-1 line-clamp-2 max-w-md text-sm wrap-break-word"
+                            >
+                              {item.tagline}
+                            </motion.p>
+                            <AnimatePresence initial={false}>
+                              {shouldShowDetails && (
+                                <motion.span
+                                  animate={{
+                                    opacity: isItemSelected ? 0 : 1,
+                                  }}
+                                  transition={{ duration: 0.225 }}
+                                  className="mt-1 flex items-center gap-0.5 text-xs"
+                                  style={{
+                                    pointerEvents: isItemSelected
+                                      ? "none"
+                                      : "auto",
+                                  }}
+                                  aria-hidden={isItemSelected}
+                                >
+                                  View details
+                                  <ArrowRight
+                                    style={{ width: 12, height: 12 }}
+                                  />
+                                </motion.span>
+                              )}
+                            </AnimatePresence>
+                          </div>
                         </div>
-                        <motion.p
-                          layoutId={`item-description-${item.id}`}
-                          className="text-muted-foreground mt-1 line-clamp-2 max-w-sm text-sm"
-                        >
-                          {item?.description}
-                        </motion.p>
-                      </div>
-                    </div>
-                  </motion.li>
-                ))}
-              </ul>
-            </section>
-          ))
-        )}
+                      </motion.li>
+                    );
+                  })}
+                </motion.ul>
+              </section>
+            ))
+          )}
 
-        {/* Item Dialog */}
-        <Dialog.Root
-          open={!!selectedItem}
-          onOpenChange={() => setSelectedItem(null)}
-        >
-          <AnimatePresence>
-            {selectedItem && (
-              <Dialog.Portal forceMount>
-                <Dialog.Overlay asChild>
-                  <motion.div
-                    key={`overlay-${selectedItem.id}`}
-                    className="absolute inset-0 h-dvh bg-black/20"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                  />
-                </Dialog.Overlay>
-                <div className="absolute inset-0 z-50 grid h-dvh place-items-center">
-                  <Dialog.Content forceMount asChild>
+          {/* Item Dialog */}
+          <Dialog.Root
+            open={!!selectedItem}
+            onOpenChange={() => setSelectedItem(null)}
+          >
+            <AnimatePresence>
+              {selectedItem && (
+                <Dialog.Portal forceMount>
+                  <Dialog.Overlay asChild>
                     <motion.div
-                      key={selectedItem.id}
-                      layoutId={`item-wrapper-${selectedItem.id}`}
+                      className="absolute inset-0 h-dvh bg-black/20"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="w-full max-w-lg outline-none"
-                    >
-                      <div className="flex gap-4 rounded-[12px] bg-white p-2.5">
+                      transition={{ duration: 0.15 }}
+                    />
+                  </Dialog.Overlay>
+                  <div className="absolute inset-0 z-50 grid h-dvh place-items-center p-4">
+                    <Dialog.Content forceMount asChild>
+                      <motion.div
+                        layoutId={`item-wrapper-${selectedItem.id}`}
+                        key={selectedItem.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{
+                          opacity: 0,
+                        }}
+                        style={{ borderRadius: 12 }}
+                        className="h-auto w-full max-w-lg overflow-hidden bg-white outline-none"
+                      >
                         {selectedItem.image_url && (
                           <motion.img
                             layoutId={`item-image-${selectedItem.id}`}
                             src={selectedItem.image_url}
                             alt={selectedItem.name}
-                            className="size-16 shrink-0 object-cover"
-                            style={{ borderRadius: "6px" }}
+                            className="h-48 w-full shrink-0 bg-red-50 object-cover"
+                            style={{ borderRadius: "12px 12px 0 0" }}
                           />
                         )}
-                        <div className="flex-1 self-center">
-                          <div className="flex justify-between gap-4">
-                            <motion.h4
-                              layoutId={`item-name-${selectedItem.id}`}
-                              className="font-medium"
+                        <div className="flex gap-4 px-6 pt-6">
+                          <div className="flex-1">
+                            <div className="flex justify-between gap-4">
+                              <div className="flex items-center gap-1.5">
+                                <Dialog.Title asChild>
+                                  <motion.h4
+                                    layoutId={`item-name-${selectedItem.id}`}
+                                    className="font-medium"
+                                  >
+                                    {selectedItem.name}
+                                  </motion.h4>
+                                </Dialog.Title>
+                                {selectedItem.primary_tag && (
+                                  <motion.span
+                                    layoutId={`item-tag-${selectedItem.id}`}
+                                    className="flex items-center"
+                                  >
+                                    <Badge
+                                      variant="default"
+                                      className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
+                                    >
+                                      {selectedItem.primary_tag}
+                                    </Badge>
+                                  </motion.span>
+                                )}
+                              </div>
+                              <motion.span
+                                layoutId={`item-price-${selectedItem.id}`}
+                                className="text-sm text-neutral-700 tabular-nums"
+                              >
+                                {priceFormatter.format(selectedItem.price)}
+                              </motion.span>
+                            </div>
+                            <motion.p
+                              layoutId={`item-tagline-${selectedItem.id}`}
+                              className="text-muted-foreground mt-1 text-sm wrap-break-word"
                             >
-                              {selectedItem.name}
-                            </motion.h4>
-                            <motion.span
-                              layoutId={`item-price-${selectedItem.id}`}
-                            >
-                              {new Intl.NumberFormat("en-US", {
-                                style: "currency",
-                                currency: "USD",
-                              }).format(selectedItem.price)}
-                            </motion.span>
+                              {selectedItem.tagline}
+                            </motion.p>
+                            {selectedItem.tags &&
+                              selectedItem.tags.length > 0 && (
+                                <ul
+                                  className="mt-4 flex flex-wrap gap-2"
+                                  aria-label="Item tags"
+                                >
+                                  {selectedItem.tags.map((tag, index) => (
+                                    <li
+                                      key={`${selectedItem.id}-${tag}-${index}`}
+                                    >
+                                      <Badge
+                                        variant="outline"
+                                        className="bg-neutral-200/30 px-3 py-1 text-[10px] text-neutral-500 uppercase"
+                                      >
+                                        {tag}
+                                      </Badge>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
                           </div>
-                          <motion.p
-                            layoutId={`item-description-${selectedItem.id}`}
-                            className="text-muted-foreground mt-1"
-                          >
-                            {selectedItem?.description}
-                          </motion.p>
                         </div>
-                      </div>
-                    </motion.div>
-                  </Dialog.Content>
-                </div>
-              </Dialog.Portal>
-            )}
-          </AnimatePresence>
-        </Dialog.Root>
-      </div>
-      <footer className="mt-auto">
+
+                        {selectedItem.description && (
+                          <>
+                            <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
+                            <Dialog.Description asChild>
+                              <motion.p
+                                layoutId={`item-description-${selectedItem.id}`}
+                                className="my-6 px-6 wrap-break-word"
+                              >
+                                {selectedItem.description}
+                              </motion.p>
+                            </Dialog.Description>
+                          </>
+                        )}
+
+                        {selectedItemDetails.length > 0 && (
+                          <>
+                            <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
+                            <div className="mb-6 grid grid-cols-2 gap-4 px-6">
+                              {selectedItemDetails.map((detail, index) => (
+                                <div
+                                  key={`${selectedItem.id}-${detail.key}-${index}`}
+                                  className="flex flex-col rounded-md border border-neutral-200 bg-neutral-200/30 p-2"
+                                >
+                                  <span className="text-[10px] font-semibold text-neutral-500 uppercase">
+                                    {detail.key}
+                                  </span>
+                                  <span className="mt-3 text-sm font-medium tracking-[-0.03em] text-neutral-900">
+                                    {detail.value}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </motion.div>
+                    </Dialog.Content>
+                  </div>
+                </Dialog.Portal>
+              )}
+            </AnimatePresence>
+          </Dialog.Root>
+        </div>
+      </LayoutGroup>
+      <footer className="mt-12">
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-sm">
           <span>
             Powered by{" "}

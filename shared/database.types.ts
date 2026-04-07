@@ -136,6 +136,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          details: Json | null
           id: number
           image_path: string | null
           image_url: string | null
@@ -143,11 +144,15 @@ export type Database = {
           menu_id: string
           name: string
           price: number
+          primary_tag: string | null
+          tagline: string | null
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           description?: string | null
+          details?: Json | null
           id?: number
           image_path?: string | null
           image_url?: string | null
@@ -155,11 +160,15 @@ export type Database = {
           menu_id: string
           name: string
           price: number
+          primary_tag?: string | null
+          tagline?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           description?: string | null
+          details?: Json | null
           id?: number
           image_path?: string | null
           image_url?: string | null
@@ -167,6 +176,9 @@ export type Database = {
           menu_id?: string
           name?: string
           price?: number
+          primary_tag?: string | null
+          tagline?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: [

@@ -38,7 +38,7 @@ const MenuPreviewBanner: FC<MenuPreviewBannerProps> = ({
   };
 
   return (
-    <div className="sticky top-0 z-10 rounded-lg bg-pink-600/5 py-4 text-center text-sm backdrop-blur-sm">
+    <div className="sticky top-0 z-10 rounded-lg bg-neutral-500/5 py-4 text-center text-sm backdrop-blur-sm">
       <div className="space-x-2 text-center">
         {subscriptionIsActive ? (
           <p>
@@ -61,7 +61,7 @@ const MenuPreviewBanner: FC<MenuPreviewBannerProps> = ({
                   {"Your menu won't be visible to customers until you "}
                   <button
                     onClick={handleSubscribe}
-                    className="cursor-pointer font-medium"
+                    className="cursor-pointer font-medium underline decoration-neutral-300 underline-offset-4 transition duration-200 hover:decoration-neutral-600"
                   >
                     subscribe
                   </button>

@@ -324,7 +324,7 @@ const SortableMenuItem = ({
             </span>
           </span>
           <span className="text-muted-foreground line-clamp-1">
-            {itemIndex?.item?.description}
+            {itemIndex?.item?.tagline || itemIndex?.item?.description}
           </span>
         </ItemContent>
         <ItemActions className="ml-2">

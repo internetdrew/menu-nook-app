@@ -1,55 +1,36 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
+import {
+  menuItemFieldsSchema,
+  menuItemImageFieldsSchema,
+  normalizeMenuItemDetails,
+  normalizeMenuItemTags,
+  refineMenuItemImageFields,
+} from "../../shared/menuItem";
 
 export const menuCategoryItemRouter = router({
   create: protectedProcedure
     .input(
-      z
-        .object({
+      menuItemFieldsSchema
+        .extend({
           menuId: z.uuid(),
           menuCategoryId: z.number(),
-          name: z.string().min(1).max(100),
-          description: z.string().max(255).optional(),
-          price: z.number().min(0),
-          imagePath: z.string().nullable().optional(),
-          imageUrl: z.url().nullable().optional(),
+          imagePath: menuItemImageFieldsSchema.shape.imagePath,
+          imageUrl: menuItemImageFieldsSchema.shape.imageUrl,
         })
         .superRefine((input, ctx) => {
-          const imageUrlProvided = input.imageUrl !== undefined;
-          const imagePathProvided = input.imagePath !== undefined;
-
-          if (imageUrlProvided !== imagePathProvided) {
-            ctx.addIssue({
-              code: "custom",
-              message: "Image updates must include both imageUrl and imagePath",
-              path: ["imageUrl"],
-            });
-          }
-
-          if (input.imageUrl === null && input.imagePath !== null) {
-            ctx.addIssue({
-              code: "custom",
-              message:
-                "Removing an image must clear both imageUrl and imagePath",
-              path: ["imagePath"],
-            });
-          }
-
-          if (input.imagePath === null && input.imageUrl !== null) {
-            ctx.addIssue({
-              code: "custom",
-              message:
-                "Removing an image must clear both imageUrl and imagePath",
-              path: ["imageUrl"],
-            });
-          }
+          refineMenuItemImageFields(input, ctx);
         }),
     )
     .mutation(async ({ input, ctx }) => {
       const {
         name,
+        primaryTag,
+        tags,
+        tagline,
         description,
+        details,
         price,
         imagePath,
         imageUrl,
@@ -63,7 +44,11 @@ export const menuCategoryItemRouter = router({
           menu_id: menuId,
           menu_category_id: menuCategoryId,
           name,
+          primary_tag: primaryTag,
+          tags: normalizeMenuItemTags(tags),
+          tagline,
           description,
+          details: normalizeMenuItemDetails(details),
           price,
           image_path: imagePath,
           image_url: imageUrl,
@@ -118,53 +103,27 @@ export const menuCategoryItemRouter = router({
     }),
   update: protectedProcedure
     .input(
-      z
-        .object({
+      menuItemFieldsSchema
+        .extend({
           id: z.number(),
-          name: z.string().min(1).max(100),
-          description: z.string().max(255).optional(),
-          price: z.number().min(0),
-          imagePath: z.string().nullable().optional(),
-          imageUrl: z.url().nullable().optional(),
           menuCategoryId: z.number(),
+          imagePath: menuItemImageFieldsSchema.shape.imagePath,
+          imageUrl: menuItemImageFieldsSchema.shape.imageUrl,
         })
         .superRefine((input, ctx) => {
-          const imageUrlProvided = input.imageUrl !== undefined;
-          const imagePathProvided = input.imagePath !== undefined;
-
-          if (imageUrlProvided !== imagePathProvided) {
-            ctx.addIssue({
-              code: "custom",
-              message: "Image updates must include both imageUrl and imagePath",
-              path: ["imageUrl"],
-            });
-          }
-
-          if (input.imageUrl === null && input.imagePath !== null) {
-            ctx.addIssue({
-              code: "custom",
-              message:
-                "Removing an image must clear both imageUrl and imagePath",
-              path: ["imagePath"],
-            });
-          }
-
-          if (input.imagePath === null && input.imageUrl !== null) {
-            ctx.addIssue({
-              code: "custom",
-              message:
-                "Removing an image must clear both imageUrl and imagePath",
-              path: ["imageUrl"],
-            });
-          }
+          refineMenuItemImageFields(input, ctx);
         }),
     )
     .mutation(async ({ input, ctx }) => {
       const {
         id,
         name,
+        primaryTag,
+        tags,
+        tagline,
         menuCategoryId,
         description,
+        details,
         price,
         imagePath,
         imageUrl,
@@ -188,7 +147,11 @@ export const menuCategoryItemRouter = router({
         .from("menu_category_items")
         .update({
           name,
+          primary_tag: primaryTag,
+          tags: normalizeMenuItemTags(tags),
+          tagline,
           description,
+          details: normalizeMenuItemDetails(details),
           menu_category_id: menuCategoryId,
           price,
           image_path: imagePath,
