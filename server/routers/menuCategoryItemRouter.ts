@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../trpc";
+import { protectedProcedure, router } from "../trpc.js";
 import {
   menuItemFieldsSchema,
   menuItemImageFieldsSchema,
   normalizeMenuItemDetails,
   normalizeMenuItemTags,
   refineMenuItemImageFields,
-} from "../../shared/menuItem";
+} from "../../shared/menuItem.js";
 
 export const menuCategoryItemRouter = router({
   create: protectedProcedure

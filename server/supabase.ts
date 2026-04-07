@@ -1,7 +1,7 @@
 import { createServerClient, serializeCookieHeader } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { Request, Response } from "express";
-import type { Database } from "../shared/database.types";
+import type { Database } from "../shared/database.types.js";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";

@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../../shared/database.types";
+import type { Database } from "../../shared/database.types.js";
 import { TRPCError } from "@trpc/server";
 
 export async function fetchMenuWithCategories(

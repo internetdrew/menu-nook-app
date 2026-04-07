@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { stripe } from "../utils/stripe";
-import { protectedProcedure, router } from "../trpc";
+import { stripe } from "../utils/stripe.js";
+import { protectedProcedure, router } from "../trpc.js";
 import { TRPCError } from "@trpc/server";
 
 const APP_DOMAIN = process.env.VITE_APP_DOMAIN;

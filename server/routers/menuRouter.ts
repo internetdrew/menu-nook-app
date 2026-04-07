@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, publicProcedure, router } from "../trpc";
+import { protectedProcedure, publicProcedure, router } from "../trpc.js";
 import QRCode from "qrcode";
-import { generateQRFilePath } from "../utils/qrCode";
-import { supabaseAdminClient } from "../supabase";
-import { fetchMenuWithCategories } from "../utils/fetchMenuWithCategories";
+import { generateQRFilePath } from "../utils/qrCode.js";
+import { supabaseAdminClient } from "../supabase.js";
+import { fetchMenuWithCategories } from "../utils/fetchMenuWithCategories.js";
 
 export const menuRouter = router({
   create: protectedProcedure
