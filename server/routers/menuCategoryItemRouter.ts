@@ -4,6 +4,7 @@ import { protectedProcedure, router } from "../trpc";
 import {
   menuItemFieldsSchema,
   menuItemImageFieldsSchema,
+  normalizeMenuItemTags,
   refineMenuItemImageFields,
 } from "../../shared/menuItem";
 
@@ -25,6 +26,7 @@ export const menuCategoryItemRouter = router({
       const {
         name,
         primaryTag,
+        tags,
         tagline,
         description,
         price,
@@ -41,6 +43,7 @@ export const menuCategoryItemRouter = router({
           menu_category_id: menuCategoryId,
           name,
           primary_tag: primaryTag,
+          tags: normalizeMenuItemTags(tags),
           tagline,
           description,
           price,
@@ -113,6 +116,7 @@ export const menuCategoryItemRouter = router({
         id,
         name,
         primaryTag,
+        tags,
         tagline,
         menuCategoryId,
         description,
@@ -140,6 +144,7 @@ export const menuCategoryItemRouter = router({
         .update({
           name,
           primary_tag: primaryTag,
+          tags: normalizeMenuItemTags(tags),
           tagline,
           description,
           menu_category_id: menuCategoryId,
