@@ -16,19 +16,24 @@ import { queryClient, trpc } from "@/utils/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "server";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { supabaseBrowserClient } from "@/lib/supabase";
-import type { ChangeEvent } from "react";
-import { useEffect, useId, useRef, useState } from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Field, FieldDescription, FieldLabel } from "../ui/field";
+import { XIcon } from "lucide-react";
 import {
   ITEM_DESCRIPTION_LIMIT,
   ITEM_NAME_LIMIT,
   ITEM_PRIMARY_TAG_LIMIT,
+  ITEM_TAG_LIMIT,
+  ITEM_TAGS_LIMIT,
   ITEM_TAGLINE_LIMIT,
   menuItemFieldsSchema,
+  normalizeMenuItemTags,
 } from "../../../shared/menuItem";
 
 type MenuCategory = NonNullable<
@@ -48,6 +53,22 @@ const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
 
 const formSchema = menuItemFieldsSchema.extend({
   categoryId: z.number(),
+});
+
+const getInitialTags = (item?: Item | null) =>
+  item?.tags?.length ? item.tags : [];
+
+const getDefaultValues = (
+  item: Item | null | undefined,
+  chosenCategory: MenuCategory,
+): z.infer<typeof formSchema> => ({
+  name: item?.name ?? "",
+  primaryTag: item?.primary_tag ?? "",
+  tags: getInitialTags(item),
+  tagline: item?.tagline ?? "",
+  description: item?.description ?? "",
+  price: item?.price ?? 0,
+  categoryId: item?.category?.id ?? chosenCategory.id,
 });
 
 const MENU_ITEM_IMAGE_BUCKET = "menu_item_images";
@@ -73,20 +94,15 @@ const ItemForm = (props: ItemFormProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [removedImage, setRemovedImage] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [pendingTagValue, setPendingTagValue] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: item?.name ?? "",
-      primaryTag: item?.primary_tag ?? "",
-      tagline: item?.tagline ?? "",
-      description: item?.description ?? "",
-      price: item?.price ?? 0,
-      categoryId: item?.category?.id ?? chosenCategory?.id,
-    },
+    defaultValues: getDefaultValues(item, chosenCategory),
   });
   const nameValue = form.watch("name");
   const primaryTagValue = form.watch("primaryTag");
+  const tagsValue = form.watch("tags");
   const taglineValue = form.watch("tagline");
   const descriptionValue = form.watch("description");
 
@@ -102,12 +118,20 @@ const ItemForm = (props: ItemFormProps) => {
     };
   }, [previewUrl]);
 
-  const clearPreview = () => {
+  const clearPreview = useCallback(() => {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
     }
-  };
+  }, [previewUrl]);
+
+  useEffect(() => {
+    clearPreview();
+    setSelectedImageFile(null);
+    setRemovedImage(false);
+    setPendingTagValue("");
+    form.reset(getDefaultValues(item, chosenCategory));
+  }, [chosenCategory, form, item, clearPreview]);
 
   const displayedImageUrl =
     previewUrl || (removedImage ? null : item?.image_url);
@@ -177,8 +201,43 @@ const ItemForm = (props: ItemFormProps) => {
     setRemovedImage(true);
   };
 
+  const handleAddTag = () => {
+    const normalizedTag = pendingTagValue.trim();
+
+    if (!normalizedTag || (tagsValue?.length ?? 0) >= ITEM_TAGS_LIMIT) {
+      return;
+    }
+
+    form.setValue("tags", [...(tagsValue ?? []), normalizedTag], {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    setPendingTagValue("");
+  };
+
+  const handleRemoveTag = (index: number) => {
+    const nextTags = [...(tagsValue ?? [])];
+    nextTags.splice(index, 1);
+    form.setValue("tags", nextTags, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+  };
+
+  const handlePendingTagKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+
+    event.preventDefault();
+    handleAddTag();
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsProcessingImage(true);
+    const normalizedTags = normalizeMenuItemTags(values.tags);
 
     if (item) {
       try {
@@ -193,6 +252,7 @@ const ItemForm = (props: ItemFormProps) => {
             id: item.id,
             name: values.name,
             primaryTag: values.primaryTag,
+            tags: normalizedTags,
             tagline: values.tagline,
             description: values.description,
             price: values.price,
@@ -224,6 +284,7 @@ const ItemForm = (props: ItemFormProps) => {
       const createdItem = await createItem.mutateAsync({
         name: values.name,
         primaryTag: values.primaryTag,
+        tags: normalizedTags,
         tagline: values.tagline,
         description: values.description,
         price: values.price,
@@ -241,6 +302,7 @@ const ItemForm = (props: ItemFormProps) => {
           id: createdItem.id,
           name: values.name,
           primaryTag: values.primaryTag,
+          tags: normalizedTags,
           tagline: values.tagline,
           description: values.description,
           price: values.price,
@@ -304,7 +366,7 @@ const ItemForm = (props: ItemFormProps) => {
               >
                 {displayedImageUrl ? "Replace image" : "Upload image"}
               </Button>
-              {(displayedImageUrl || item?.image_url) && (
+              {displayedImageUrl && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -359,12 +421,88 @@ const ItemForm = (props: ItemFormProps) => {
               </FormControl>
               <FormDescription>
                 An optional short label shown next to the item name in the menu
-                list.{" "}
+                list. Add your tags then hit the update button below.{" "}
                 {getRemainingCharacterLabel(
                   primaryTagValue,
                   ITEM_PRIMARY_TAG_LIMIT,
                 )}
               </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="tags"
+          render={() => (
+            <FormItem>
+              <FormLabel>Item Tags</FormLabel>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <FormControl>
+                      <Input
+                        maxLength={ITEM_TAG_LIMIT}
+                        value={pendingTagValue}
+                        placeholder="e.g. Gluten-Free"
+                        onChange={(event) =>
+                          setPendingTagValue(event.target.value)
+                        }
+                        onKeyDown={handlePendingTagKeyDown}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-0.5"
+                      onClick={handleAddTag}
+                      disabled={(tagsValue?.length ?? 0) >= ITEM_TAGS_LIMIT}
+                    >
+                      Add tag
+                    </Button>
+                  </div>
+                  <FormDescription>
+                    Optional short labels shown in the item dialog.{" "}
+                    {getRemainingCharacterLabel(
+                      pendingTagValue,
+                      ITEM_TAG_LIMIT,
+                    )}
+                    .
+                  </FormDescription>
+                </div>
+                {tagsValue && tagsValue.length > 0 && (
+                  <div
+                    className="flex flex-wrap gap-2"
+                    aria-label="Added item tags"
+                  >
+                    {tagsValue.map((tag, index) => (
+                      <Badge
+                        key={`${tag}-${index}`}
+                        variant="outline"
+                        className="gap-1 py-1 pr-1 pl-3"
+                      >
+                        <span>{tag}</span>
+                        <button
+                          type="button"
+                          className="hover:bg-accent rounded-full p-0.5 transition-colors"
+                          aria-label={`Remove tag ${tag}`}
+                          onClick={() => handleRemoveTag(index)}
+                        >
+                          <XIcon className="size-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <p className="text-muted-foreground text-sm">
+                  {Math.max(ITEM_TAGS_LIMIT - (tagsValue?.length ?? 0), 0)}{" "}
+                  {Math.max(ITEM_TAGS_LIMIT - (tagsValue?.length ?? 0), 0) === 1
+                    ? "tag"
+                    : "tags"}{" "}
+                  left to add
+                </p>
+              </div>
               <FormMessage />
             </FormItem>
           )}
