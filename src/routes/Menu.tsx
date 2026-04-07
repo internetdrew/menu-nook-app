@@ -10,13 +10,13 @@ import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { NotFound } from "./NotFound";
 import MenuUnavailable from "../components/MenuUnavailable";
 import { toast } from "sonner";
-import type { AppRouter } from "server";
-import type { inferRouterOutputs } from "@trpc/server";
 import { Dialog } from "radix-ui";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import MenuPreviewBanner from "@/components/MenuPreviewBanner";
 import BusinessLogo from "@/components/BusinessLogo";
 import { Badge } from "@/components/ui/badge";
+import { normalizeMenuItemDetails } from "../../shared/menuItem";
+import type { Database } from "../../shared/database.types";
 
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
 const priceFormatter = new Intl.NumberFormat("en-US", {
@@ -24,22 +24,35 @@ const priceFormatter = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
-export type MenuItem = NonNullable<
-  inferRouterOutputs<AppRouter>["menu"]["getPreview"]
->["menu_categories"][number]["items"][number];
+type Business = Database["public"]["Tables"]["businesses"]["Row"];
+type MenuRecord = Database["public"]["Tables"]["menus"]["Row"];
+export type MenuItem =
+  Database["public"]["Tables"]["menu_category_items"]["Row"] & {
+    order_index: number;
+  };
+type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"] & {
+  items: MenuItem[];
+};
+type MenuData = MenuRecord & {
+  business: Business;
+  menu_categories: MenuCategory[];
+};
 
 export const Menu = () => {
   const { menuId } = useParams<{ menuId: string }>();
   const { hash, pathname, search } = useLocation();
   const navigate = useNavigate();
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const selectedItemDetails = selectedItem
+    ? normalizeMenuItemDetails(selectedItem.details)
+    : [];
 
   const isPreview = pathname.startsWith("/preview/");
   const successfulSubscription =
     new URLSearchParams(search).get("success") === "true";
 
   const {
-    data: menu,
+    data: menuQueryData,
     isLoading: menuIsLoading,
     error,
   } = useQuery(
@@ -53,6 +66,7 @@ export const Menu = () => {
           { enabled: !!menuId },
         ),
   );
+  const menu = menuQueryData as MenuData | null | undefined;
 
   const { data: subscription, isLoading: subscriptionIsLoading } = useQuery(
     trpc.subscription.getForMenu.queryOptions(
@@ -233,8 +247,11 @@ export const Menu = () => {
 
                 <motion.ul layout className="space-y-6">
                   {category.items?.map((item) => {
+                    const itemDetails = normalizeMenuItemDetails(item.details);
                     const shouldShowDetails =
-                      item.description || item.image_url;
+                      item.description ||
+                      item.image_url ||
+                      itemDetails.length > 0;
                     const isItemSelected = selectedItem?.id === item.id;
 
                     return (
@@ -295,7 +312,7 @@ export const Menu = () => {
                               {item.tagline}
                             </motion.p>
                             <AnimatePresence initial={false}>
-                              {(item.description || item.image_url) && (
+                              {shouldShowDetails && (
                                 <motion.span
                                   animate={{
                                     opacity: isItemSelected ? 0 : 1,
@@ -416,7 +433,7 @@ export const Menu = () => {
                                     >
                                       <Badge
                                         variant="outline"
-                                        className="px-3 py-1 text-[10px] uppercase"
+                                        className="bg-neutral-200/30 px-3 py-1 text-[10px] text-neutral-500 uppercase"
                                       >
                                         {tag}
                                       </Badge>
@@ -427,17 +444,40 @@ export const Menu = () => {
                           </div>
                         </div>
 
-                        <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
+                        {selectedItem.description && (
+                          <>
+                            <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
+                            <Dialog.Description asChild>
+                              <motion.p
+                                layoutId={`item-description-${selectedItem.id}`}
+                                className="my-6 px-6 wrap-break-word"
+                              >
+                                {selectedItem.description}
+                              </motion.p>
+                            </Dialog.Description>
+                          </>
+                        )}
 
-                        <Dialog.Description asChild>
-                          <motion.p
-                            layoutId={`item-description-${selectedItem.id}`}
-                            className="px-6 wrap-break-word text-neutral-600"
-                          >
-                            {selectedItem.description}
-                          </motion.p>
-                        </Dialog.Description>
-                        <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
+                        {selectedItemDetails.length > 0 && (
+                          <>
+                            <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
+                            <div className="mb-6 grid grid-cols-2 gap-4 px-6">
+                              {selectedItemDetails.map((detail, index) => (
+                                <div
+                                  key={`${selectedItem.id}-${detail.key}-${index}`}
+                                  className="flex flex-col rounded-md border border-neutral-200 bg-neutral-200/30 p-2"
+                                >
+                                  <span className="text-[10px] font-semibold text-neutral-500 uppercase">
+                                    {detail.key}
+                                  </span>
+                                  <span className="mt-3 text-sm font-medium tracking-[-0.03em] text-neutral-900">
+                                    {detail.value}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
                       </motion.div>
                     </Dialog.Content>
                   </div>
