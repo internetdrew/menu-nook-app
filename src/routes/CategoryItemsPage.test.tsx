@@ -29,6 +29,38 @@ vi.mock("@/lib/supabase", () => {
   };
 });
 
+const getTrpcMutationInput = async <T,>(request: Request) => {
+  const rawBody = await request.text();
+  const body = JSON.parse(rawBody) as
+    | { 0?: { json?: T }; json?: T }
+    | T
+    | undefined;
+
+  if (!body || typeof body !== "object") {
+    return body as T | undefined;
+  }
+
+  if ("0" in body && body[0]) {
+    const batchedBody = body[0] as T | { json?: T };
+    if (
+      batchedBody &&
+      typeof batchedBody === "object" &&
+      "json" in batchedBody &&
+      batchedBody.json !== undefined
+    ) {
+      return batchedBody.json;
+    }
+
+    return batchedBody as T;
+  }
+
+  if ("json" in body && body.json !== undefined) {
+    return body.json;
+  }
+
+  return body as T;
+};
+
 describe("Category Items Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -161,6 +193,16 @@ describe("Category Items Page", () => {
   });
   it("allows users to add new items to the category", async () => {
     const items: unknown[] = [];
+    let submittedCreateInput:
+      | {
+          name: string;
+          primaryTag?: string;
+          tags: string[];
+          tagline?: string;
+          description?: string;
+          price: number;
+        }
+      | undefined;
 
     server.use(
       createTrpcQueryHandler({
@@ -196,10 +238,7 @@ describe("Category Items Page", () => {
         }),
       }),
       http.post("/trpc/menuCategoryItem.create", async ({ request }) => {
-        const rawBody = await request.text();
-
-        expect(rawBody).toContain('"tagline":"a quick teaser"');
-        expect(rawBody).toContain('"description":"a new description"');
+        submittedCreateInput = await getTrpcMutationInput(request);
 
         return HttpResponse.json({
           result: { data: { id: 44 } },
@@ -232,6 +271,22 @@ describe("Category Items Page", () => {
     await user.type(nameInput, itemName);
     expect(nameInput).toHaveValue(itemName);
 
+    const primaryTagInput = within(dialog).getByLabelText(/primary tag/i);
+    await user.type(primaryTagInput, "Most Popular");
+    expect(primaryTagInput).toHaveValue("Most Popular");
+
+    const tagInput = within(dialog).getByRole("textbox", {
+      name: /^item tags$/i,
+    });
+    await user.type(tagInput, "Gluten-Free{enter}");
+    expect(tagInput).toHaveValue("");
+    expect(within(dialog).getByText("Gluten-Free")).toBeInTheDocument();
+    await user.type(tagInput, "Seasonal");
+    expect(tagInput).toHaveValue("Seasonal");
+    await user.click(within(dialog).getByRole("button", { name: /add tag/i }));
+    expect(tagInput).toHaveValue("");
+    expect(within(dialog).getByText("Seasonal")).toBeInTheDocument();
+
     const taglineInput = within(dialog).getByLabelText(/item tagline/i);
     await user.type(taglineInput, "a quick teaser");
     expect(taglineInput).toHaveValue("a quick teaser");
@@ -250,6 +305,14 @@ describe("Category Items Page", () => {
     );
 
     await waitFor(() => {
+      expect(submittedCreateInput).toMatchObject({
+        name: "a new item",
+        primaryTag: "Most Popular",
+        tags: ["Gluten-Free", "Seasonal"],
+        tagline: "a quick teaser",
+        description: "a new description",
+        price: 9.99,
+      });
       expect(toast.success).toHaveBeenCalledWith("Item created successfully!");
     });
     await waitFor(() => {
@@ -317,7 +380,15 @@ describe("Category Items Page", () => {
       authMock: authedUserState,
     });
 
-    await user.click(await screen.findByRole("button", { name: /add item/i }));
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", {
+          name: /add item/i,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: /add item/i }));
 
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText(/item name/i), "Orange Wine");
@@ -341,6 +412,13 @@ describe("Category Items Page", () => {
     });
   });
   it("allows users to edit an existing item", async () => {
+    let submittedUpdateInput:
+      | {
+          name: string;
+          tags: string[];
+        }
+      | undefined;
+
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({
@@ -379,6 +457,8 @@ describe("Category Items Page", () => {
                   item: {
                     id: 44,
                     name: "Existing Item",
+                    primary_tag: "Chef Pick",
+                    tags: ["Gluten-Free", "Seasonal"],
                     tagline: "Existing tagline",
                     description: "An existing description",
                     image_path: null,
@@ -391,7 +471,9 @@ describe("Category Items Page", () => {
           };
         },
       }),
-      http.post("/trpc/menuCategoryItem.update", async () => {
+      http.post("/trpc/menuCategoryItem.update", async ({ request }) => {
+        submittedUpdateInput = await getTrpcMutationInput(request);
+
         return HttpResponse.json({
           result: { data: {} },
         });
@@ -428,11 +510,25 @@ describe("Category Items Page", () => {
     });
     expect(updateButton).toBeDisabled();
     expect(nameInput).toHaveValue("Existing Item");
+    expect(within(dialog).getByLabelText(/primary tag/i)).toHaveValue(
+      "Chef Pick",
+    );
+    expect(within(dialog).getByText("Gluten-Free")).toBeInTheDocument();
+    expect(within(dialog).getByText("Seasonal")).toBeInTheDocument();
     expect(within(dialog).getByLabelText(/item tagline/i)).toHaveValue(
       "Existing tagline",
     );
     await user.clear(nameInput);
     await user.type(nameInput, "Updated Item");
+    await user.click(
+      within(dialog).getByRole("button", { name: /remove tag seasonal/i }),
+    );
+    const tagInput = within(dialog).getByRole("textbox", {
+      name: /^item tags$/i,
+    });
+    await user.type(tagInput, "Vegan{enter}");
+    await user.type(tagInput, "Local");
+    await user.click(within(dialog).getByRole("button", { name: /add tag/i }));
 
     await user.click(
       screen.getByRole("button", {
@@ -441,11 +537,77 @@ describe("Category Items Page", () => {
     );
 
     await waitFor(() => {
+      expect(submittedUpdateInput).toMatchObject({
+        name: "Updated Item",
+        tags: ["Gluten-Free", "Vegan", "Local"],
+      });
       expect(toast.success).toHaveBeenCalledWith("Item updated successfully!");
     });
     await waitFor(() => {
       expect(dialog).not.toBeInTheDocument();
     });
+  });
+  it("caps item tags at five chips", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                businessId: "business-123",
+                name: "Test Menu",
+              },
+            ],
+          },
+        }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
+        "menuCategory.getById": () => ({
+          result: {
+            data: { id: 10, menu_id: "menu-123", name: "Test Category" },
+          },
+        }),
+        "menuCategoryItem.getSortedForCategory": () => ({
+          result: { data: [] },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({
+      initialEntries: ["/categories/10"],
+      authMock: authedUserState,
+    });
+
+    await user.click(await screen.findByRole("button", { name: /add item/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    const tagInput = within(dialog).getByRole("textbox", {
+      name: /^item tags$/i,
+    });
+    for (let index = 1; index <= 5; index += 1) {
+      await user.type(tagInput, `Tag ${index}{enter}`);
+    }
+
+    expect(
+      within(dialog).getByRole("textbox", { name: /^item tags$/i }),
+    ).toHaveValue("");
+    expect(
+      within(dialog).getAllByRole("button", { name: /remove tag /i }),
+    ).toHaveLength(5);
+    expect(
+      within(dialog).getByRole("button", { name: /add tag/i }),
+    ).toBeDisabled();
   });
   it("allows users to remove an existing item image", async () => {
     server.use(
@@ -485,6 +647,7 @@ describe("Category Items Page", () => {
                 item: {
                   id: 44,
                   name: "Existing Item",
+                  primary_tag: "Chef Pick",
                   tagline: "Existing tagline",
                   description: "An existing description",
                   image_path: "menu/menu-123/item/44/image_123.png",
@@ -525,12 +688,113 @@ describe("Category Items Page", () => {
     );
 
     const dialog = await screen.findByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: /remove/i }));
+    await user.click(within(dialog).getByRole("button", { name: /^remove$/i }));
+    expect(
+      within(dialog).queryByRole("button", { name: /^remove$/i }),
+    ).not.toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: /update/i }));
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith("Item updated successfully!");
     });
+  });
+  it("resets item form state when reopening the dialog in add mode", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForMenu": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                businessId: "business-123",
+                name: "Test Menu",
+              },
+            ],
+          },
+        }),
+        "menuCategory.getAllSortedByIndex": () => ({ result: { data: [] } }),
+        "menuCategory.getById": () => ({
+          result: {
+            data: { id: 10, menu_id: "menu-123", name: "Test Category" },
+          },
+        }),
+        "menuCategoryItem.getSortedForCategory": () => ({
+          result: {
+            data: [
+              {
+                id: 20,
+                item: {
+                  id: 44,
+                  name: "Existing Item",
+                  primary_tag: "Chef Pick",
+                  tags: ["Gluten-Free", "Seasonal"],
+                  tagline: "Existing tagline",
+                  description: "An existing description",
+                  image_path: "menu/menu-123/item/44/image_123.png",
+                  image_url: "https://cdn.example.com/existing-item.png",
+                  price: 12.5,
+                },
+              },
+            ],
+          },
+        }),
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({
+      initialEntries: ["/categories/10"],
+      authMock: authedUserState,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: /item actions/i }),
+    );
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: /edit item/i,
+      }),
+    );
+
+    const editDialog = await screen.findByRole("dialog");
+    expect(within(editDialog).getByLabelText(/item name/i)).toHaveValue(
+      "Existing Item",
+    );
+    expect(within(editDialog).getByText("Seasonal")).toBeInTheDocument();
+    expect(
+      within(editDialog).getByRole("button", {
+        name: /remove tag seasonal/i,
+      }),
+    ).toBeInTheDocument();
+    await user.type(
+      within(editDialog).getByRole("textbox", { name: /^item tags$/i }),
+      "Draft",
+    );
+
+    await user.click(within(editDialog).getByRole("button", { name: /close/i }));
+
+    await user.click(screen.getByRole("button", { name: /add item/i }));
+
+    const addDialog = await screen.findByRole("dialog");
+    expect(within(addDialog).getByLabelText(/item name/i)).toHaveValue("");
+    expect(
+      within(addDialog).getByRole("textbox", { name: /^item tags$/i }),
+    ).toHaveValue("");
+    expect(within(addDialog).queryByText("Seasonal")).not.toBeInTheDocument();
+    expect(within(addDialog).queryByText("Draft")).not.toBeInTheDocument();
+    expect(
+      within(addDialog).queryByRole("button", { name: /remove tag /i }),
+    ).not.toBeInTheDocument();
   });
   it("allows users to delete an item", async () => {
     server.use(
@@ -571,6 +835,7 @@ describe("Category Items Page", () => {
                   item: {
                     id: 44,
                     name: "Item To Delete",
+                    primary_tag: null,
                     tagline: "Delete me",
                     description: "An item to be deleted",
                     image_path: null,

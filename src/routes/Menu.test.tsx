@@ -76,6 +76,8 @@ describe("Preview Route (/preview/:id)", () => {
                     {
                       id: "item1",
                       name: "Item 1",
+                      primary_tag: "Special",
+                      tags: ["Gluten-Free", "Seasonal"],
                       tagline: "Fast favorite",
                       description: "Delicious item",
                       image_url: "https://cdn.example.com/item-1.png",
@@ -85,6 +87,8 @@ describe("Preview Route (/preview/:id)", () => {
                     {
                       id: "item2",
                       name: "Item 2",
+                      primary_tag: null,
+                      tags: [],
                       tagline: "Scrumptious teaser",
                       description: "Scrumptious item",
                       image_url: null,
@@ -133,6 +137,7 @@ describe("Preview Route (/preview/:id)", () => {
       screen.getByRole("link", { name: "Category 2" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Item 1" })).toBeInTheDocument();
+    expect(screen.getByText("Special")).toBeInTheDocument();
     expect(screen.getByText("Fast favorite")).toBeInTheDocument();
     expect(screen.getAllByText(/view details/i)).toHaveLength(2);
   });
@@ -297,6 +302,8 @@ describe("Live Menu Route (/menu/:id)", () => {
                     {
                       id: "item1",
                       name: "Item 1",
+                      primary_tag: "Most Popular",
+                      tags: ["Gluten-Free", "Seasonal"],
                       tagline: "Fast favorite",
                       description: "A fuller item description for the dialog.",
                       price: 12.65,
@@ -327,9 +334,12 @@ describe("Live Menu Route (/menu/:id)", () => {
       expect(screen.getByText("Fast favorite")).toBeInTheDocument();
     });
 
+    expect(screen.getByText("Most Popular")).toBeInTheDocument();
+
     expect(
       screen.queryByText("A fuller item description for the dialog."),
     ).not.toBeInTheDocument();
+    expect(screen.queryByText("Gluten-Free")).not.toBeInTheDocument();
 
     const div = screen.getByText("Fast favorite").closest("div");
     expect(within(div!).getByText(/View details/i)).toBeInTheDocument();
@@ -338,6 +348,8 @@ describe("Live Menu Route (/menu/:id)", () => {
 
     await waitFor(() => {
       const dialog = screen.getByRole("dialog");
+      expect(within(dialog).getByText("Gluten-Free")).toBeInTheDocument();
+      expect(within(dialog).getByText("Seasonal")).toBeInTheDocument();
       expect(
         within(dialog).getByText("A fuller item description for the dialog."),
       ).toBeInTheDocument();
