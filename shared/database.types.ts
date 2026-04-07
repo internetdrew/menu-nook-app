@@ -145,6 +145,7 @@ export type Database = {
           price: number
           primary_tag: string | null
           tagline: string | null
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
@@ -159,6 +160,7 @@ export type Database = {
           price: number
           primary_tag?: string | null
           tagline?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -173,6 +175,7 @@ export type Database = {
           price?: number
           primary_tag?: string | null
           tagline?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: [
