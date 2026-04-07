@@ -232,72 +232,95 @@ export const Menu = () => {
                 </p>
 
                 <motion.ul layout className="space-y-6">
-                  {category.items?.map((item) => (
-                    <motion.li
-                      key={item.id}
-                      layoutId={`item-wrapper-${item.id}`}
-                      onClick={() => {
-                        setSelectedItem(item);
-                      }}
-                      className="group cursor-pointer"
-                    >
-                      <div className="flex gap-4">
-                        {item.image_url && (
-                          <motion.img
-                            layoutId={`item-image-${item.id}`}
-                            src={item.image_url}
-                            alt={item.name}
-                            className="size-16 shrink-0 object-cover"
-                            style={{ borderRadius: "12px" }}
-                          />
-                        )}
-                        <div className="flex-1">
-                          <div className="flex justify-between gap-4">
-                            <div className="flex items-center gap-1.5">
-                              <motion.h4
-                                layoutId={`item-name-${item.id}`}
-                                className="font-medium"
-                              >
-                                {item.name}
-                              </motion.h4>
-                              {item.primary_tag && (
-                                <motion.span
-                                  layoutId={`item-tag-${item.id}`}
-                                  className="flex items-center"
+                  {category.items?.map((item) => {
+                    const shouldShowDetails =
+                      item.description || item.image_url;
+                    const isItemSelected = selectedItem?.id === item.id;
+
+                    return (
+                      <motion.li
+                        layoutId={`item-wrapper-${item.id}`}
+                        key={item.id}
+                        onClick={() => {
+                          if (shouldShowDetails) setSelectedItem(item);
+                        }}
+                        className={
+                          shouldShowDetails ? "group cursor-pointer" : ""
+                        }
+                      >
+                        <div className="flex gap-4">
+                          {item.image_url && (
+                            <motion.img
+                              layoutId={`item-image-${item.id}`}
+                              src={item.image_url}
+                              alt={item.name}
+                              className="size-16 shrink-0 object-cover"
+                              style={{ borderRadius: "12px" }}
+                            />
+                          )}
+                          <div className="flex-1">
+                            <div className="flex justify-between gap-4">
+                              <div className="flex items-center gap-1.5">
+                                <motion.h4
+                                  layoutId={`item-name-${item.id}`}
+                                  className="font-medium"
                                 >
-                                  <Badge
-                                    variant="default"
-                                    className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
+                                  {item.name}
+                                </motion.h4>
+                                {item.primary_tag && (
+                                  <motion.span
+                                    layoutId={`item-tag-${item.id}`}
+                                    className="flex items-center"
                                   >
-                                    {item.primary_tag}
-                                  </Badge>
+                                    <Badge
+                                      variant="default"
+                                      className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
+                                    >
+                                      {item.primary_tag}
+                                    </Badge>
+                                  </motion.span>
+                                )}
+                              </div>
+                              <motion.span
+                                layoutId={`item-price-${item.id}`}
+                                className="text-sm text-neutral-700 tabular-nums"
+                              >
+                                {priceFormatter.format(item.price)}
+                              </motion.span>
+                            </div>
+                            <motion.p
+                              layoutId={`item-tagline-${item.id}`}
+                              className="text-muted-foreground mt-1 line-clamp-2 max-w-md text-sm wrap-break-word"
+                            >
+                              {item.tagline}
+                            </motion.p>
+                            <AnimatePresence initial={false}>
+                              {(item.description || item.image_url) && (
+                                <motion.span
+                                  animate={{
+                                    opacity: isItemSelected ? 0 : 1,
+                                  }}
+                                  transition={{ duration: 0.225 }}
+                                  className="mt-1 flex items-center gap-0.5 text-xs"
+                                  style={{
+                                    pointerEvents: isItemSelected
+                                      ? "none"
+                                      : "auto",
+                                  }}
+                                  aria-hidden={isItemSelected}
+                                >
+                                  View details
+                                  <ArrowRight
+                                    style={{ width: 12, height: 12 }}
+                                  />
                                 </motion.span>
                               )}
-                            </div>
-                            <motion.span
-                              layoutId={`item-price-${item.id}`}
-                              className="text-sm text-neutral-700 tabular-nums"
-                            >
-                              {priceFormatter.format(item.price)}
-                            </motion.span>
+                            </AnimatePresence>
                           </div>
-                          <p className="text-muted-foreground mt-1 line-clamp-2 max-w-md text-sm wrap-break-word">
-                            {item.tagline}
-                          </p>
-                          <motion.span
-                            initial={{ opacity: 0 }}
-                            animate={{
-                              opacity: 1,
-                            }}
-                            exit={{ opacity: 0 }}
-                            className="mt-1 flex items-center gap-0.5 text-xs"
-                          >
-                            View details <ArrowRight className="size-3" />
-                          </motion.span>
                         </div>
-                      </div>
-                    </motion.li>
-                  ))}
+                      </motion.li>
+                    );
+                  })}
                 </motion.ul>
               </section>
             ))
@@ -323,17 +346,15 @@ export const Menu = () => {
                   <div className="absolute inset-0 z-50 grid h-dvh place-items-center p-4">
                     <Dialog.Content forceMount asChild>
                       <motion.div
-                        key={selectedItem.id}
-                        layout
                         layoutId={`item-wrapper-${selectedItem.id}`}
+                        key={selectedItem.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{
                           opacity: 0,
-                          transition: { delay: 0.15 },
                         }}
                         style={{ borderRadius: 12 }}
-                        className="w-full max-w-lg overflow-hidden bg-white outline-none"
+                        className="h-auto w-full max-w-lg overflow-hidden bg-white outline-none"
                       >
                         {selectedItem.image_url && (
                           <motion.img
@@ -378,21 +399,14 @@ export const Menu = () => {
                               </motion.span>
                             </div>
                             <motion.p
-                              initial={{ opacity: 0, y: 4 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 2 }}
-                              transition={{ duration: 0.14, delay: 0.03 }}
+                              layoutId={`item-tagline-${selectedItem.id}`}
                               className="text-muted-foreground mt-1 text-sm wrap-break-word"
                             >
                               {selectedItem.tagline}
                             </motion.p>
                             {selectedItem.tags &&
                               selectedItem.tags.length > 0 && (
-                                <motion.ul
-                                  initial={{ opacity: 0, y: 4 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: 2 }}
-                                  transition={{ duration: 0.14, delay: 0.05 }}
+                                <ul
                                   className="mt-4 flex flex-wrap gap-2"
                                   aria-label="Item tags"
                                 >
@@ -408,7 +422,7 @@ export const Menu = () => {
                                       </Badge>
                                     </li>
                                   ))}
-                                </motion.ul>
+                                </ul>
                               )}
                           </div>
                         </div>
@@ -417,10 +431,7 @@ export const Menu = () => {
 
                         <Dialog.Description asChild>
                           <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.1 }}
+                            layoutId={`item-description-${selectedItem.id}`}
                             className="px-6 wrap-break-word text-neutral-600"
                           >
                             {selectedItem.description}
