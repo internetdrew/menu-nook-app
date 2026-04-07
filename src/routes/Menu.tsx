@@ -353,14 +353,14 @@ export const Menu = () => {
                 <Dialog.Portal forceMount>
                   <Dialog.Overlay asChild>
                     <motion.div
-                      className="absolute inset-0 h-dvh bg-black/20"
+                      className="fixed inset-0 z-50 bg-black/20"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.15 }}
                     />
                   </Dialog.Overlay>
-                  <div className="absolute inset-0 z-50 grid h-dvh place-items-center p-4">
+                  <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto p-4">
                     <Dialog.Content forceMount asChild>
                       <motion.div
                         layoutId={`item-wrapper-${selectedItem.id}`}
@@ -371,7 +371,7 @@ export const Menu = () => {
                           opacity: 0,
                         }}
                         style={{ borderRadius: 12 }}
-                        className="h-auto w-full max-w-lg overflow-hidden bg-white outline-none"
+                        className="my-auto h-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto bg-white outline-none"
                       >
                         {selectedItem.image_url && (
                           <motion.img
