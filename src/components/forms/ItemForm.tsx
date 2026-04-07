@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -26,6 +26,9 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Field, FieldDescription, FieldLabel } from "../ui/field";
 import { XIcon } from "lucide-react";
 import {
+  ITEM_DETAILS_LIMIT,
+  ITEM_DETAIL_KEY_LIMIT,
+  ITEM_DETAIL_VALUE_LIMIT,
   ITEM_DESCRIPTION_LIMIT,
   ITEM_NAME_LIMIT,
   ITEM_PRIMARY_TAG_LIMIT,
@@ -33,6 +36,7 @@ import {
   ITEM_TAGS_LIMIT,
   ITEM_TAGLINE_LIMIT,
   menuItemFieldsSchema,
+  normalizeMenuItemDetails,
   normalizeMenuItemTags,
 } from "../../../shared/menuItem";
 
@@ -58,6 +62,9 @@ const formSchema = menuItemFieldsSchema.extend({
 const getInitialTags = (item?: Item | null) =>
   item?.tags?.length ? item.tags : [];
 
+const getInitialDetails = (item?: Item | null) =>
+  normalizeMenuItemDetails(item?.details);
+
 const getDefaultValues = (
   item: Item | null | undefined,
   chosenCategory: MenuCategory,
@@ -67,6 +74,7 @@ const getDefaultValues = (
   tags: getInitialTags(item),
   tagline: item?.tagline ?? "",
   description: item?.description ?? "",
+  details: getInitialDetails(item),
   price: item?.price ?? 0,
   categoryId: item?.category?.id ?? chosenCategory.id,
 });
@@ -100,11 +108,16 @@ const ItemForm = (props: ItemFormProps) => {
     resolver: zodResolver(formSchema),
     defaultValues: getDefaultValues(item, chosenCategory),
   });
+  const detailFields = useFieldArray({
+    control: form.control,
+    name: "details",
+  });
   const nameValue = form.watch("name");
   const primaryTagValue = form.watch("primaryTag");
   const tagsValue = form.watch("tags");
   const taglineValue = form.watch("tagline");
   const descriptionValue = form.watch("description");
+  const detailsValue = form.watch("details");
 
   const updateItem = useMutation(
     trpc.menuCategoryItem.update.mutationOptions(),
@@ -119,11 +132,14 @@ const ItemForm = (props: ItemFormProps) => {
   }, [previewUrl]);
 
   const clearPreview = useCallback(() => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
-  }, [previewUrl]);
+    setPreviewUrl((currentPreviewUrl) => {
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl);
+      }
+
+      return null;
+    });
+  }, []);
 
   useEffect(() => {
     clearPreview();
@@ -238,6 +254,7 @@ const ItemForm = (props: ItemFormProps) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsProcessingImage(true);
     const normalizedTags = normalizeMenuItemTags(values.tags);
+    const normalizedDetails = normalizeMenuItemDetails(values.details);
 
     if (item) {
       try {
@@ -255,6 +272,7 @@ const ItemForm = (props: ItemFormProps) => {
             tags: normalizedTags,
             tagline: values.tagline,
             description: values.description,
+            details: normalizedDetails,
             price: values.price,
             menuCategoryId: chosenCategory?.id,
             ...imagePayload,
@@ -287,6 +305,7 @@ const ItemForm = (props: ItemFormProps) => {
         tags: normalizedTags,
         tagline: values.tagline,
         description: values.description,
+        details: normalizedDetails,
         price: values.price,
         menuCategoryId: chosenCategory.id,
         menuId: activeMenu?.id || "",
@@ -305,6 +324,7 @@ const ItemForm = (props: ItemFormProps) => {
           tags: normalizedTags,
           tagline: values.tagline,
           description: values.description,
+          details: normalizedDetails,
           price: values.price,
           menuCategoryId: chosenCategory.id,
           ...imagePayload,
@@ -507,6 +527,107 @@ const ItemForm = (props: ItemFormProps) => {
             </FormItem>
           )}
         />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <FieldLabel>Item Details</FieldLabel>
+              <FieldDescription>
+                Optional key/value cards shown in the item dialog.
+              </FieldDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => detailFields.append({ key: "", value: "" })}
+              disabled={(detailsValue?.length ?? 0) >= ITEM_DETAILS_LIMIT}
+            >
+              Add detail
+            </Button>
+          </div>
+          {detailFields.fields.length > 0 ? (
+            <div className="space-y-4">
+              {detailFields.fields.map((detailField, index) => (
+                <div
+                  key={detailField.id}
+                  className="bg-muted/35 space-y-3 rounded-xl border p-4"
+                >
+                  <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] sm:items-start">
+                    <FormField
+                      control={form.control}
+                      name={`details.${index}.key`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{`Detail Label ${index + 1}`}</FormLabel>
+                          <FormControl>
+                            <Input
+                              maxLength={ITEM_DETAIL_KEY_LIMIT}
+                              placeholder="e.g. Calories"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            {getRemainingCharacterLabel(
+                              field.value,
+                              ITEM_DETAIL_KEY_LIMIT,
+                            )}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`details.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{`Detail Value ${index + 1}`}</FormLabel>
+                          <FormControl>
+                            <Input
+                              maxLength={ITEM_DETAIL_VALUE_LIMIT}
+                              placeholder="e.g. 450 kcal"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            {getRemainingCharacterLabel(
+                              field.value,
+                              ITEM_DETAIL_VALUE_LIMIT,
+                            )}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex sm:justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-destructive mt-7"
+                        onClick={() => detailFields.remove(index)}
+                        aria-label={`Remove detail ${index + 1}`}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <p className="text-muted-foreground text-sm">
+                {Math.max(ITEM_DETAILS_LIMIT - detailFields.fields.length, 0)}{" "}
+                {Math.max(ITEM_DETAILS_LIMIT - detailFields.fields.length, 0) ===
+                1
+                  ? "detail row"
+                  : "detail rows"}{" "}
+                left to add
+              </p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              No detail rows added yet.
+            </p>
+          )}
+        </div>
         <FormField
           control={form.control}
           name="tagline"
