@@ -4,11 +4,11 @@ import { Request, Response } from "express";
 import type { Database } from "../shared/database.types";
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const baseDir: string =
-  typeof __dirname !== "undefined" ? __dirname : process.cwd();
+const serverDir = path.dirname(fileURLToPath(import.meta.url));
 
-dotenv.config({ path: path.resolve(baseDir, "../.env") });
+dotenv.config({ path: path.resolve(serverDir, "../.env"), quiet: true });
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_KEY;

@@ -3,8 +3,14 @@ import dotenv from "dotenv";
 import path from "path";
 import { Request, Response } from "express";
 import { supabaseAdminClient } from "../supabase";
+import { fileURLToPath } from "url";
 
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+const stripeUtilsDir = path.dirname(fileURLToPath(import.meta.url));
+
+dotenv.config({
+  path: path.resolve(stripeUtilsDir, "../../.env"),
+  quiet: true,
+});
 
 if (!process.env.STRIPE_SECRET_KEY)
   throw new Error("STRIPE_SECRET_KEY must be defined");
