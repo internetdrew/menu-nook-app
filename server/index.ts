@@ -17,8 +17,11 @@ import { subscriptionRouter } from "./routers/subscriptionRouter";
 import { stripeWebhookHandler } from "./utils/stripe";
 import { userFeedbackRouter } from "./routers/userFeedbackRouter";
 import { businessRouter } from "./routers/businessRouter";
+import { fileURLToPath } from "url";
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+const serverDir = path.dirname(fileURLToPath(import.meta.url));
+
+dotenv.config({ path: path.resolve(serverDir, "../.env"), quiet: true });
 
 export const appRouter = router({
   business: businessRouter,
