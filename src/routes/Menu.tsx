@@ -328,20 +328,23 @@ export const Menu = () => {
                         layoutId={`item-wrapper-${selectedItem.id}`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, transition: { delay: 0.15 } }}
+                        exit={{
+                          opacity: 0,
+                          transition: { delay: 0.15 },
+                        }}
                         style={{ borderRadius: 12 }}
-                        className="w-full max-w-lg bg-white p-6 outline-none"
+                        className="w-full max-w-lg overflow-hidden bg-white outline-none"
                       >
-                        <div className="flex gap-4">
-                          {selectedItem.image_url && (
-                            <motion.img
-                              layoutId={`item-image-${selectedItem.id}`}
-                              src={selectedItem.image_url}
-                              alt={selectedItem.name}
-                              className="size-16 shrink-0 object-cover"
-                              style={{ borderRadius: "12px" }}
-                            />
-                          )}
+                        {selectedItem.image_url && (
+                          <motion.img
+                            layoutId={`item-image-${selectedItem.id}`}
+                            src={selectedItem.image_url}
+                            alt={selectedItem.name}
+                            className="h-48 w-full shrink-0 bg-red-50 object-cover"
+                            style={{ borderRadius: "12px 12px 0 0" }}
+                          />
+                        )}
+                        <div className="flex gap-4 px-6 pt-6">
                           <div className="flex-1">
                             <div className="flex justify-between gap-4">
                               <div className="flex items-center gap-1.5">
@@ -353,17 +356,19 @@ export const Menu = () => {
                                     {selectedItem.name}
                                   </motion.h4>
                                 </Dialog.Title>
-                                <motion.span
-                                  layoutId={`item-tag-${selectedItem.id}`}
-                                  className="flex items-center"
-                                >
-                                  <Badge
-                                    variant="default"
-                                    className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
+                                {selectedItem.primary_tag && (
+                                  <motion.span
+                                    layoutId={`item-tag-${selectedItem.id}`}
+                                    className="flex items-center"
                                   >
-                                    {selectedItem.primary_tag}
-                                  </Badge>
-                                </motion.span>
+                                    <Badge
+                                      variant="default"
+                                      className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
+                                    >
+                                      {selectedItem.primary_tag}
+                                    </Badge>
+                                  </motion.span>
+                                )}
                               </div>
                               <motion.span
                                 layoutId={`item-price-${selectedItem.id}`}
@@ -381,8 +386,34 @@ export const Menu = () => {
                             >
                               {selectedItem.tagline}
                             </motion.p>
+                            {selectedItem.tags &&
+                              selectedItem.tags.length > 0 && (
+                                <motion.ul
+                                  initial={{ opacity: 0, y: 4 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: 2 }}
+                                  transition={{ duration: 0.14, delay: 0.05 }}
+                                  className="mt-4 flex flex-wrap gap-2"
+                                  aria-label="Item tags"
+                                >
+                                  {selectedItem.tags.map((tag, index) => (
+                                    <li
+                                      key={`${selectedItem.id}-${tag}-${index}`}
+                                    >
+                                      <Badge
+                                        variant="outline"
+                                        className="px-3 py-1 text-[10px] uppercase"
+                                      >
+                                        {tag}
+                                      </Badge>
+                                    </li>
+                                  ))}
+                                </motion.ul>
+                              )}
                           </div>
                         </div>
+
+                        <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
 
                         <Dialog.Description asChild>
                           <motion.p
@@ -390,11 +421,12 @@ export const Menu = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.1 }}
-                            className="mt-6 text-neutral-600"
+                            className="px-6 wrap-break-word text-neutral-600"
                           >
                             {selectedItem.description}
                           </motion.p>
                         </Dialog.Description>
+                        <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
                       </motion.div>
                     </Dialog.Content>
                   </div>
