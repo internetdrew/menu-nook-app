@@ -1,6 +1,6 @@
 import z from "zod";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../trpc";
+import { protectedProcedure, router } from "../trpc.js";
 
 export const userFeedbackRouter = router({
   submit: protectedProcedure

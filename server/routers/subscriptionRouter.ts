@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { publicProcedure, router } from "../trpc";
-import { supabaseAdminClient } from "../supabase";
+import { publicProcedure, router } from "../trpc.js";
+import { supabaseAdminClient } from "../supabase.js";
 
 export const subscriptionRouter = router({
   getForMenu: publicProcedure

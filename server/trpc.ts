@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import { createServerSupabaseClient } from "./supabase";
+import { createServerSupabaseClient } from "./supabase.js";
 
 export const createContext = async ({
   req,

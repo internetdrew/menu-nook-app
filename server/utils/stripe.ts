@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import dotenv from "dotenv";
 import path from "path";
 import { Request, Response } from "express";
-import { supabaseAdminClient } from "../supabase";
+import { supabaseAdminClient } from "../supabase.js";
 import { fileURLToPath } from "url";
 
 const stripeUtilsDir = path.dirname(fileURLToPath(import.meta.url));
