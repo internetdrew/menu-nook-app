@@ -9,6 +9,8 @@ import { SettingsPage } from "./routes/SettingsPage.tsx";
 import { DashboardPage } from "./components/Dashboard.tsx";
 import { NotFound } from "./routes/NotFound.tsx";
 import { Navigate } from "react-router";
+import Login from "./routes/Login.tsx";
+import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated.tsx";
 
 export const routes = [
   {
@@ -16,7 +18,17 @@ export const routes = [
     element: <Menu />,
   },
   {
-    element: <ProtectedRoute redirectTo="/" />,
+    path: "/login",
+    element: <RedirectIfAuthenticated />,
+    children: [
+      {
+        index: true,
+        element: <Login />,
+      },
+    ],
+  },
+  {
+    element: <ProtectedRoute redirectTo="/login" />,
     children: [
       {
         path: "/preview",
@@ -31,9 +43,11 @@ export const routes = [
   {
     path: "/",
     element: (
-      <MenuProvider>
-        <App />
-      </MenuProvider>
+      <ProtectedRoute redirectTo="/login">
+        <MenuProvider>
+          <App />
+        </MenuProvider>
+      </ProtectedRoute>
     ),
     children: [
       {
@@ -46,38 +60,35 @@ export const routes = [
         ],
       },
       {
-        element: <ProtectedRoute redirectTo="/" />,
+        path: "categories",
         children: [
           {
-            path: "categories",
-            children: [
-              {
-                index: true,
-                element: <CategoriesPage />,
-              },
-              {
-                path: ":categoryId",
-                element: <CategoryItemsPage />,
-              },
-            ],
+            index: true,
+            element: <CategoriesPage />,
           },
           {
-            path: "settings",
-            element: <SettingsPage />,
+            path: ":categoryId",
+            element: <CategoryItemsPage />,
           },
         ],
+      },
+      {
+        path: "settings",
+        element: <SettingsPage />,
       },
     ],
   },
   {
     path: "*",
     element: (
-      <NotFound
-        title="Page Not Found"
-        message="The page you're looking for does not exist."
-        href="/"
-        hrefText="Go back to Home"
-      />
+      <ProtectedRoute redirectTo="/login">
+        <NotFound
+          title="Page Not Found"
+          message="The page you're looking for does not exist."
+          href="/"
+          hrefText="Go back to Home"
+        />
+      </ProtectedRoute>
     ),
   },
 ];
