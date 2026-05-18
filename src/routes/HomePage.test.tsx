@@ -52,10 +52,9 @@ describe("Dashboard Home Page", () => {
     expect(await screen.findByText(/test@example.com/i)).toBeInTheDocument();
   });
 
-  it("renders the dashboard shell with a login prompt for guests", async () => {
+  it("redirects guests to the login screen", async () => {
     renderApp({ initialEntries: ["/"], authMock: noUserState });
 
-    expect(screen.getAllByText(/MenuNook/i)).toHaveLength(2);
     expect(
       screen.getByText(
         /Sign in to give your menu a clean, simple home of its own./i,
@@ -64,13 +63,29 @@ describe("Dashboard Home Page", () => {
     expect(
       screen.getByRole("button", { name: /Continue with Google/i }),
     ).toBeInTheDocument();
+    expect(screen.getAllByText(/MenuNook/i)).toHaveLength(1);
     expect(
       screen.queryByRole("button", { name: /Feedback/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/Mock User/i)).not.toBeInTheDocument();
   });
 
-  it("shows the dashboard skeleton while auth is resolving", async () => {
+  it("redirects guests from unknown app routes to the login screen", async () => {
+    renderApp({ initialEntries: ["/unknown-route"], authMock: noUserState });
+
+    expect(
+      screen.getByRole("button", { name: /Continue with Google/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
+  });
+
+  it("shows the not found route to authenticated users", async () => {
+    renderApp({ initialEntries: ["/unknown-route"], authMock: authedUserState });
+
+    expect(screen.getByText(/Page Not Found/i)).toBeInTheDocument();
+  });
+
+  it("shows a route loading spinner while auth is resolving", async () => {
     renderApp({
       initialEntries: ["/"],
       authMock: {
@@ -81,7 +96,9 @@ describe("Dashboard Home Page", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("dashboard-skeleton")).toBeInTheDocument();
+      expect(
+        screen.getByRole("status", { name: /loading/i }),
+      ).toBeInTheDocument();
     });
     expect(
       screen.queryByRole("button", { name: /Continue with Google/i }),
