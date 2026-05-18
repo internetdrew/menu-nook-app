@@ -12,7 +12,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import FormDialog from "./dialogs/FormDialog";
@@ -23,9 +22,10 @@ import { MAX_MENUS_PER_BUSINESS } from "@/constants";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { useAuth } from "@/contexts/auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function MenuSwitcher() {
-  const { isMobile, setOpenMobile } = useSidebar();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [renderDropdown, setRenderDropdown] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -92,7 +92,6 @@ export function MenuSwitcher() {
                 onClick={() => {
                   setActiveMenu(menu);
                   navigate("/");
-                  setOpenMobile(false);
                 }}
                 className="gap-2 p-2"
               >
