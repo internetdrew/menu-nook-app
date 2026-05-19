@@ -21,9 +21,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Copy, Download, QrCode } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Skeleton } from "../ui/skeleton";
 
 interface ShareQRButtonDialogProps {
   activeMenuId: string;
@@ -31,6 +31,11 @@ interface ShareQRButtonDialogProps {
 }
 
 const TEXT_SWAP_DURATION_MS = 120;
+const QR_REVEAL_TRANSITION = {
+  type: "spring",
+  visualDuration: 0.32,
+  bounce: 0.18,
+} as const;
 
 const ShareQRButtonDialog = ({
   activeMenuId,
@@ -42,6 +47,7 @@ const ShareQRButtonDialog = ({
   const [copied, setCopied] = useState(false);
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [copyLabelClass, setCopyLabelClass] = useState("");
+  const [isQrImageReady, setIsQrImageReady] = useState(false);
   const copyLabelRef = useRef<HTMLSpanElement>(null);
   const copyTimeoutRef = useRef<number | undefined>(undefined);
   const textSwapTimeoutRef = useRef<number | undefined>(undefined);
@@ -63,13 +69,38 @@ const ShareQRButtonDialog = ({
       { enabled: !!activeMenuId },
     ),
   );
+  const publicUrl = data?.public_url;
+
+  useEffect(() => {
+    setIsQrImageReady(false);
+
+    if (!publicUrl) return;
+
+    let cancelled = false;
+    const image = new Image();
+    image.onload = () => {
+      if (!cancelled) {
+        setIsQrImageReady(true);
+      }
+    };
+    image.onerror = () => {
+      if (!cancelled) {
+        setIsQrImageReady(false);
+      }
+    };
+    image.src = publicUrl;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [publicUrl]);
 
   const handleDownload = async () => {
-    if (!data?.public_url) return;
+    if (!publicUrl) return;
 
     setIsDownloading(true);
     try {
-      const response = await fetch(data.public_url);
+      const response = await fetch(publicUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -118,7 +149,7 @@ const ShareQRButtonDialog = ({
   };
 
   const handleCopyLink = async () => {
-    if (!data?.public_url) return;
+    if (!publicUrl) return;
 
     try {
       await navigator.clipboard.writeText(
@@ -143,10 +174,6 @@ const ShareQRButtonDialog = ({
     }
   };
 
-  if (isLoading) {
-    return <Skeleton className="ml-auto h-10 w-28" />;
-  }
-
   const trigger = (
     <Button variant="ghost">
       <QrCode />
@@ -155,16 +182,43 @@ const ShareQRButtonDialog = ({
   );
 
   const qrCode = (
-    <div className="my-4 flex justify-center">
-      {data?.public_url ? (
-        <img src={data.public_url} alt="Menu QR Code" className="h-52 w-52" />
-      ) : (
-        <p className="text-muted-foreground text-center text-sm">
-          Unable to generate QR code.
-        </p>
-      )}
+    <div className="overflow-hidden">
+      <AnimatePresence initial={false}>
+        {isQrImageReady && publicUrl ? (
+          <motion.div
+            key="qr-code"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={QR_REVEAL_TRANSITION}
+            className="my-4 flex justify-center"
+          >
+            <motion.img
+              src={publicUrl}
+              alt="Menu QR Code"
+              initial={{ scale: 0.96 }}
+              animate={{ scale: 1 }}
+              transition={QR_REVEAL_TRANSITION}
+              className="h-52 w-52"
+            />
+          </motion.div>
+        ) : !isLoading && !publicUrl ? (
+          <motion.p
+            key="qr-error"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={QR_REVEAL_TRANSITION}
+            className="text-muted-foreground my-4 text-center text-sm"
+          >
+            Unable to generate QR code.
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
+
+  const actionsDisabled = !publicUrl;
 
   const QRActions = (
     <div className="flex w-full flex-col gap-2">
@@ -172,7 +226,7 @@ const ShareQRButtonDialog = ({
         variant="outline"
         className="flex-1"
         onClick={handleCopyLink}
-        disabled={copied}
+        disabled={actionsDisabled || copied}
       >
         <Copy />
         <span className="inline-flex min-w-20 justify-center overflow-hidden">
@@ -187,7 +241,7 @@ const ShareQRButtonDialog = ({
       <Button
         className="flex-1"
         onClick={handleDownload}
-        disabled={isDownloading}
+        disabled={actionsDisabled || isDownloading}
       >
         <Download /> Download QR Code
       </Button>
