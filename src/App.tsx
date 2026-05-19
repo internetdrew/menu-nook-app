@@ -1,6 +1,8 @@
-import { ChevronDown, QrCode } from "lucide-react";
-import { Outlet, useNavigate } from "react-router";
+import { ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
+import { DashboardPage } from "@/components/Dashboard";
+import ShareQRButtonDialog from "@/components/home/ShareQRButtonDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Toaster } from "@/components/ui/sonner";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
 function AppMenuSwitcher() {
@@ -50,21 +53,28 @@ function AppMenuSwitcher() {
 }
 
 function App() {
+  const { activeMenu } = useMenuContext();
+
   return (
     <>
-      <nav className="sticky top-0 z-40 mx-auto max-w-xl p-4">
-        <p className="text-center text-sm font-black">MenuNook</p>
+      <nav className="sticky top-0 z-40 m-4 mx-auto max-w-xl border-b border-neutral-100 pb-3">
+        <p className="text-center font-black">MenuNook</p>
         <div className="mt-4 flex items-center justify-between">
           <AppMenuSwitcher />
-          <Button variant={"ghost"}>
-            <QrCode />
-            Share
-          </Button>
+          <div className="flex items-center gap-1">
+            {activeMenu && (
+              <ShareQRButtonDialog
+                activeMenuId={activeMenu.id}
+                activeMenuName={activeMenu.name}
+              />
+            )}
+          </div>
         </div>
       </nav>
-      <main className="px-4">
-        <Outlet />
+      <main className="mx-auto mt-6 max-w-xl px-4">
+        <DashboardPage />
       </main>
+      <Toaster />
     </>
   );
 }

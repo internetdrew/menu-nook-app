@@ -1,4 +1,3 @@
-import { Outlet } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/auth";
 import { trpc } from "../utils/trpc";
@@ -8,6 +7,7 @@ import { CreateMenuForm } from "./forms/CreateMenuForm";
 import { useState } from "react";
 import { SignInPrompt } from "./SignInPrompt";
 import { DashboardSkeleton } from "./DashboardSkeleton";
+import { HomePage } from "@/routes/HomePage";
 
 export function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -74,5 +74,5 @@ export function DashboardPage() {
     );
   }
 
-  return <Outlet />;
+  return <HomePage />;
 }
