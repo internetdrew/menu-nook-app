@@ -450,26 +450,34 @@ export const HomePage = () => {
   );
 };
 
-function MenuManagerSkeleton() {
+export function MenuManagerSkeleton() {
   return (
-    <main className="pb-10">
-      <div className="my-4 flex items-center justify-between gap-3">
+    <main data-testid="menu-manager-skeleton" className="pb-10">
+      {/* <div className="my-4 flex items-center justify-between gap-3">
         <div className="space-y-2">
           <Skeleton className="h-6 w-40 rounded-sm" />
           <Skeleton className="h-4 w-64 rounded-sm" />
         </div>
         <Skeleton className="h-9 w-32 rounded-md" />
-      </div>
+      </div> */}
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
             className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(40,21,19,0.08)]"
           >
-            <div className="flex items-center gap-2 p-3">
-              <Skeleton className="size-4 rounded-sm" />
-              <Skeleton className="h-4 w-28 rounded-sm" />
-              <Skeleton className="ml-auto h-4 w-12 rounded-sm" />
+            <div className="flex items-center pr-2 pl-3">
+              <div className="flex min-w-0 flex-1 items-center gap-2 bg-red-100 py-3.5">
+                <Skeleton className="size-4 shrink-0 rounded-sm" />
+                <Skeleton className="h-4 w-28 rounded-sm" />
+                <Skeleton className="h-3 w-10 rounded-sm" />
+              </div>
+              <div className="grid size-9 shrink-0 place-items-center">
+                <Skeleton className="size-5 rounded-sm" />
+              </div>
+              <div className="grid size-9 shrink-0 place-items-center">
+                <Skeleton className="size-5 rounded-sm" />
+              </div>
             </div>
             <div className="border-t border-neutral-200/60 p-2">
               <Skeleton className="h-12 w-full rounded-md" />

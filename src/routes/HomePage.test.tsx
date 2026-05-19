@@ -105,7 +105,7 @@ describe("Dashboard Home Page", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows the dashboard skeleton while menus are loading", async () => {
+  it("shows the menu manager skeleton while menus are loading", async () => {
     server.use(
       http.get("/trpc/*", async ({ request }) => {
         const url = new URL(request.url);
@@ -152,7 +152,7 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
     expect(screen.queryByText(/No menu selected/i)).not.toBeInTheDocument();
-    expect(screen.getByTestId("dashboard-skeleton")).toBeInTheDocument();
+    expect(screen.getByTestId("menu-manager-skeleton")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText(/No menus found/i)).toBeInTheDocument();

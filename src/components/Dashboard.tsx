@@ -6,8 +6,7 @@ import { CreateBusinessForm } from "./forms/CreateBusinessForm";
 import { CreateMenuForm } from "./forms/CreateMenuForm";
 import { useState } from "react";
 import { SignInPrompt } from "./SignInPrompt";
-import { DashboardSkeleton } from "./DashboardSkeleton";
-import { HomePage } from "@/routes/HomePage";
+import { HomePage, MenuManagerSkeleton } from "@/routes/HomePage";
 
 export function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -29,7 +28,7 @@ export function DashboardPage() {
   );
 
   if (authLoading) {
-    return <DashboardSkeleton />;
+    return <MenuManagerSkeleton />;
   }
 
   if (!user) {
@@ -37,7 +36,7 @@ export function DashboardPage() {
   }
 
   if (businessLoading) {
-    return <DashboardSkeleton />;
+    return <MenuManagerSkeleton />;
   }
 
   if (!business) {
@@ -56,7 +55,7 @@ export function DashboardPage() {
   }
 
   if (menusLoading) {
-    return <DashboardSkeleton />;
+    return <MenuManagerSkeleton />;
   }
 
   if (menus?.length === 0) {
