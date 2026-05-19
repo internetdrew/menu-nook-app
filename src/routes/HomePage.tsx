@@ -105,11 +105,11 @@ export const HomePage = () => {
     null,
   );
   const displayedMenuCategories = menuCategories ?? fetchedMenuCategories;
-  const defaultOpenCategories = useMemo(
-    () => fetchedMenuCategories.map((category) => String(category.id)),
+  const defaultOpenCategory = useMemo(
+    () => fetchedMenuCategories[0]?.id?.toString(),
     [fetchedMenuCategories],
   );
-  const [openCategories, setOpenCategories] = useState<string[]>([]);
+  const [openCategory, setOpenCategory] = useState<string | undefined>();
   const updateCategoryOrderMutation = useMutation(
     trpc.menuCategory.updateOrder.mutationOptions(),
   );
@@ -125,8 +125,8 @@ export const HomePage = () => {
   );
 
   useEffect(() => {
-    setOpenCategories(defaultOpenCategories);
-  }, [defaultOpenCategories]);
+    setOpenCategory(defaultOpenCategory);
+  }, [defaultOpenCategory]);
 
   useEffect(() => {
     setMenuCategories(fetchedMenuCategories);
@@ -367,16 +367,17 @@ export const HomePage = () => {
               strategy={verticalListSortingStrategy}
             >
               <Accordion.Root
-                type="multiple"
-                value={openCategories}
-                onValueChange={setOpenCategories}
+                type="single"
+                collapsible
+                value={openCategory}
+                onValueChange={setOpenCategory}
                 className="space-y-4"
               >
                 {displayedMenuCategories.map((category) => (
                   <SortableMenuCategorySection
                     key={category.id}
                     category={category}
-                    isOpen={openCategories.includes(String(category.id))}
+                    isOpen={openCategory === String(category.id)}
                     onAddItem={handleAddItem}
                     onDeleteCategory={handleDeleteCategory}
                     onEditItem={handleEditItem}
