@@ -37,7 +37,7 @@ export async function fetchMenuWithCategories(
       category:menu_categories(*, 
         items:menu_category_items(
           *,
-          sort_index:menu_category_item_sort_indexes(order_index)
+          sort_index:menu_category_item_sort_indexes(id, order_index)
         )
       )
     `,
@@ -60,12 +60,15 @@ export async function fetchMenuWithCategories(
           return {
             ...rest,
             order_index: sort_index?.[0]?.order_index ?? 0,
+            sort_index_id: sort_index?.[0]?.id ?? null,
           };
         })
         .sort((a, b) => a.order_index - b.order_index) ?? [];
 
     return {
       ...row.category,
+      order_index: row.order_index,
+      sort_index_id: row.id,
       items,
     };
   });
