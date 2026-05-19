@@ -242,7 +242,7 @@ const ShareQRButtonDialog = ({
         disabled={actionsDisabled || copied}
       >
         <Copy />
-        <span className="inline-flex min-w-20 justify-center overflow-hidden">
+        <span className="inline-flex min-w-20 overflow-hidden">
           <span
             ref={copyLabelRef}
             className={`t-text-swap ${copyLabelClass}`.trim()}
