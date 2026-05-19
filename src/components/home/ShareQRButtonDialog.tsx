@@ -180,7 +180,10 @@ const ShareQRButtonDialog = ({
   };
 
   const trigger = (
-    <Button variant="ghost">
+    <Button
+      variant="ghost"
+      className="hover:bg-[#eee7dc]/80 focus-visible:bg-[#eee7dc]/80"
+    >
       <QrCode />
       Share
     </Button>
