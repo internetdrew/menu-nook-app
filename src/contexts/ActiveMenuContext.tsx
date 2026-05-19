@@ -44,14 +44,17 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
     ),
   );
   const [activeMenu, setActiveMenuState] = useState<Menu | null>(null);
+  const [activeMenuResolved, setActiveMenuResolved] = useState(false);
 
   useEffect(() => {
     if (authLoading || businessLoading || isLoading) {
+      setActiveMenuResolved(false);
       return;
     }
 
     if (!user) {
       setActiveMenuState(null);
+      setActiveMenuResolved(true);
       if (typeof window !== "undefined") {
         localStorage.removeItem(ACTIVE_MENU_STORAGE_KEY);
       }
@@ -60,6 +63,7 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
 
     if (!business || !data || data.length === 0) {
       setActiveMenuState(null);
+      setActiveMenuResolved(true);
       return;
     }
 
@@ -72,6 +76,7 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
       data.find((m) => savedId !== null && String(m.id) === savedId) ?? data[0];
 
     setActiveMenuState(found);
+    setActiveMenuResolved(true);
     if (typeof window !== "undefined") {
       localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, String(found.id));
     }
@@ -79,14 +84,21 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
 
   const setActiveMenu = useCallback((m: Menu) => {
     setActiveMenuState(m);
+    setActiveMenuResolved(true);
     localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, String(m.id));
   }, []);
+
+  const loading =
+    authLoading ||
+    (!!user && businessLoading) ||
+    (!!user && !!business && isLoading) ||
+    !activeMenuResolved;
 
   const value: MenuContextValue = {
     menus: data ?? [],
     activeMenu,
     setActiveMenu,
-    loading: isLoading,
+    loading,
   };
 
   return <MenuContext.Provider value={value}>{children}</MenuContext.Provider>;

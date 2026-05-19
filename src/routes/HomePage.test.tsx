@@ -151,6 +151,7 @@ describe("Dashboard Home Page", () => {
 
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
+    expect(screen.queryByText(/No menu selected/i)).not.toBeInTheDocument();
     expect(screen.getByTestId("dashboard-skeleton")).toBeInTheDocument();
 
     await waitFor(() => {
