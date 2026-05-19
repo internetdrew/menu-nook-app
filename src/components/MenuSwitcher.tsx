@@ -10,10 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AnimatePresence, motion } from "motion/react";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
-import {
-  MENU_SWITCHER_ENTER_TRANSITION,
-  MENU_SWITCHER_EXIT_TRANSITION,
-} from "@/constants";
+import { MENU_SWITCHER_ENTER_TRANSITION } from "@/constants";
 import { Skeleton } from "./ui/skeleton";
 
 export function MenuSwitcher() {
@@ -22,28 +19,23 @@ export function MenuSwitcher() {
 
   return (
     <div className="w-40 max-w-64">
-      <AnimatePresence mode="wait" initial={false}>
-        {loading ? (
+      {loading ? (
+        <Skeleton className="h-9 w-full rounded-md" />
+      ) : (
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key="menu-switcher-skeleton"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={MENU_SWITCHER_EXIT_TRANSITION}
-          >
-            <Skeleton className="h-9 w-full rounded-md" />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="menu-switcher-content"
+            key="menu-switcher"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={MENU_SWITCHER_ENTER_TRANSITION}
           >
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start px-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start px-2 hover:bg-[#eee7dc]/80 focus-visible:bg-[#eee7dc]/80"
+                >
                   <span className="truncate">
                     {activeMenu?.name ?? "No menu selected"}
                   </span>
@@ -68,8 +60,8 @@ export function MenuSwitcher() {
               </DropdownMenuContent>
             </DropdownMenu>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>
+      )}
     </div>
   );
 }
