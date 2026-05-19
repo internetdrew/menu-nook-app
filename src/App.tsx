@@ -1,96 +1,34 @@
-import { ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router";
-import { Button } from "@/components/ui/button";
 import { DashboardPage } from "@/components/Dashboard";
 import ShareQRButtonDialog from "@/components/home/ShareQRButtonDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/sonner";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { AnimatePresence, motion } from "motion/react";
-
-const MENU_SWITCHER_EXIT_TRANSITION = {
-  duration: 0.18,
-  ease: [0.26, 0.08, 0.25, 1],
-} as const;
-const MENU_SWITCHER_ENTER_TRANSITION = {
-  duration: 0.22,
-  ease: [0.25, 1, 0.5, 1],
-} as const;
-
-function AppMenuSwitcher() {
-  const navigate = useNavigate();
-  const { menus, activeMenu, setActiveMenu, loading } = useMenuContext();
-
-  return (
-    <div className="w-40 max-w-64">
-      <AnimatePresence mode="wait" initial={false}>
-        {loading ? (
-          <motion.div
-            key="menu-switcher-skeleton"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={MENU_SWITCHER_EXIT_TRANSITION}
-          >
-            <Skeleton className="h-9 w-full rounded-md" />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="menu-switcher-content"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={MENU_SWITCHER_ENTER_TRANSITION}
-          >
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start px-2">
-                  <span className="truncate">
-                    {activeMenu?.name ?? "No menu selected"}
-                  </span>
-                  <ChevronDown className="text-muted-foreground ml-auto size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuLabel className="text-muted-foreground text-xs">
-                  Menus
-                </DropdownMenuLabel>
-                {menus.map((menu) => (
-                  <DropdownMenuItem
-                    key={menu.id}
-                    onClick={() => {
-                      setActiveMenu(menu);
-                      navigate("/");
-                    }}
-                  >
-                    {menu.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+import loginBackground from "@/assets/login-bg.png";
+import { MenuSwitcher } from "./components/MenuSwitcher";
+import {
+  MENU_SWITCHER_ENTER_TRANSITION,
+  MENU_SWITCHER_EXIT_TRANSITION,
+} from "./constants";
 
 function App() {
   const { activeMenu, loading } = useMenuContext();
 
   return (
-    <>
-      <nav className="sticky top-0 z-40 m-4 mx-auto max-w-xl border-b border-neutral-100 pb-3">
-        <p className="text-center font-black">MenuNook</p>
+    <div
+      className="min-h-dvh bg-cover bg-center"
+      style={{
+        backgroundImage: [
+          "radial-gradient(circle at 48% 40%, rgba(255, 250, 241, 0.96) 0, rgba(255, 250, 241, 0.62) 22rem, rgba(255, 250, 241, 0.12) 43rem)",
+          "linear-gradient(180deg, rgba(255, 249, 238, 0.16), rgba(255, 243, 222, 0.32))",
+          `url(${loginBackground})`,
+        ].join(", "),
+      }}
+    >
+      <nav className="sticky top-0 z-40 m-4 mx-auto mt-0 max-w-xl border-b border-neutral-200 pt-4 pb-3">
+        <p className="title text-center font-bold">MenuNook</p>
         <div className="mt-4 flex items-center justify-between">
-          <AppMenuSwitcher />
+          <MenuSwitcher />
           <div className="flex w-24 items-center justify-end">
             <AnimatePresence mode="wait" initial={false}>
               {loading ? (
@@ -126,7 +64,7 @@ function App() {
         <DashboardPage />
       </main>
       <Toaster />
-    </>
+    </div>
   );
 }
 
