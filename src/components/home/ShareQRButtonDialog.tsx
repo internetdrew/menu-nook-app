@@ -30,11 +30,16 @@ interface ShareQRButtonDialogProps {
   activeMenuName: string;
 }
 
+const SHARE_TITLE = "Share menu";
+const SHARE_DESCRIPTION = "Scan the QR code or copy the menu link.";
 const TEXT_SWAP_DURATION_MS = 120;
-const QR_REVEAL_TRANSITION = {
-  type: "spring",
-  visualDuration: 0.32,
-  bounce: 0.18,
+const QR_HEIGHT_TRANSITION = {
+  duration: 0.27,
+  ease: [0.25, 1, 0.5, 1],
+} as const;
+const QR_CONTENT_TRANSITION = {
+  duration: 0.27,
+  ease: [0.26, 0.08, 0.25, 1],
 } as const;
 
 const ShareQRButtonDialog = ({
@@ -190,17 +195,23 @@ const ShareQRButtonDialog = ({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={QR_REVEAL_TRANSITION}
-            className="my-4 flex justify-center"
+            transition={{
+              height: QR_HEIGHT_TRANSITION,
+              opacity: QR_CONTENT_TRANSITION,
+            }}
+            className="my-3 flex justify-center"
           >
-            <motion.img
-              src={publicUrl}
-              alt="Menu QR Code"
-              initial={{ scale: 0.96 }}
-              animate={{ scale: 1 }}
-              transition={QR_REVEAL_TRANSITION}
-              className="h-52 w-52"
-            />
+            <div className="bg-muted/40 rounded-md p-3">
+              <motion.img
+                src={publicUrl}
+                alt="Menu QR Code"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={QR_CONTENT_TRANSITION}
+                className="h-52 w-52"
+              />
+            </div>
           </motion.div>
         ) : !isLoading && !publicUrl ? (
           <motion.p
@@ -208,8 +219,11 @@ const ShareQRButtonDialog = ({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={QR_REVEAL_TRANSITION}
-            className="text-muted-foreground my-4 text-center text-sm"
+            transition={{
+              height: QR_HEIGHT_TRANSITION,
+              opacity: QR_CONTENT_TRANSITION,
+            }}
+            className="text-muted-foreground my-3 text-center text-sm"
           >
             Unable to generate QR code.
           </motion.p>
@@ -223,7 +237,6 @@ const ShareQRButtonDialog = ({
   const QRActions = (
     <div className="flex w-full flex-col gap-2">
       <Button
-        variant="outline"
         className="flex-1"
         onClick={handleCopyLink}
         disabled={actionsDisabled || copied}
@@ -239,6 +252,7 @@ const ShareQRButtonDialog = ({
         </span>
       </Button>
       <Button
+        variant="outline"
         className="flex-1"
         onClick={handleDownload}
         disabled={actionsDisabled || isDownloading}
@@ -253,15 +267,14 @@ const ShareQRButtonDialog = ({
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>{trigger}</DrawerTrigger>
         <DrawerContent>
-          <DrawerHeader className="text-left">
-            <DrawerTitle>Share Your Menu</DrawerTitle>
-            <DrawerDescription>
-              Put your camera over the QR code to open your menu or copy the
-              link and paste into your browser.
+          <DrawerHeader className="px-6 pt-6 pb-2 text-left">
+            <DrawerTitle>{SHARE_TITLE}</DrawerTitle>
+            <DrawerDescription className="sr-only">
+              {SHARE_DESCRIPTION}
             </DrawerDescription>
           </DrawerHeader>
-          <div className="px-4">{qrCode}</div>
-          <DrawerFooter>{QRActions}</DrawerFooter>
+          <div className="px-6">{qrCode}</div>
+          <DrawerFooter className="px-6 pt-2 pb-6">{QRActions}</DrawerFooter>
         </DrawerContent>
       </Drawer>
     );
@@ -272,10 +285,9 @@ const ShareQRButtonDialog = ({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Share Your Menu</DialogTitle>
-          <DialogDescription>
-            Put your camera over the QR code to open your menu or copy the link
-            and paste into your browser.
+          <DialogTitle>{SHARE_TITLE}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {SHARE_DESCRIPTION}
           </DialogDescription>
         </DialogHeader>
         {qrCode}
