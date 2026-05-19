@@ -46,30 +46,6 @@ export const routes = [
     ),
   },
   {
-    path: "/categories",
-    element: (
-      <ProtectedRoute redirectTo="/login">
-        <Navigate to="/" replace />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/categories/:categoryId",
-    element: (
-      <ProtectedRoute redirectTo="/login">
-        <Navigate to="/" replace />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/settings",
-    element: (
-      <ProtectedRoute redirectTo="/login">
-        <Navigate to="/" replace />
-      </ProtectedRoute>
-    ),
-  },
-  {
     path: "*",
     element: (
       <ProtectedRoute redirectTo="/login">

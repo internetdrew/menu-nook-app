@@ -70,7 +70,7 @@ export function SortableMenuItemRow({
         <GripVertical className="size-4 shrink-0 text-neutral-400/70 transition-colors duration-150 hover:text-neutral-500" />
       </button>
 
-      <div className="flex flex-1 items-center gap-1.5">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5">
         {item.image_url && (
           <img
             src={item.image_url}
@@ -94,7 +94,7 @@ export function SortableMenuItemRow({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="grid size-7 place-items-center"
+            className="grid size-7 shrink-0 place-items-center"
             aria-label={`Open actions for ${item.name}`}
           >
             <Ellipsis className="size-4 text-neutral-400/70" />

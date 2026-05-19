@@ -453,13 +453,6 @@ export const HomePage = () => {
 export function MenuManagerSkeleton() {
   return (
     <main data-testid="menu-manager-skeleton" className="pb-10">
-      {/* <div className="my-4 flex items-center justify-between gap-3">
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-40 rounded-sm" />
-          <Skeleton className="h-4 w-64 rounded-sm" />
-        </div>
-        <Skeleton className="h-9 w-32 rounded-md" />
-      </div> */}
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, index) => (
           <div

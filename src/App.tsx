@@ -32,18 +32,18 @@ function App() {
             ) : (
               <AnimatePresence mode="wait" initial={false}>
                 {activeMenu ? (
-                <motion.div
-                  key="share-button"
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={MENU_SWITCHER_ENTER_TRANSITION}
-                >
-                  <ShareQRButtonDialog
-                    activeMenuId={activeMenu.id}
-                    activeMenuName={activeMenu.name}
-                  />
-                </motion.div>
+                  <motion.div
+                    key="share-button"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={MENU_SWITCHER_ENTER_TRANSITION}
+                  >
+                    <ShareQRButtonDialog
+                      activeMenuId={activeMenu.id}
+                      activeMenuName={activeMenu.name}
+                    />
+                  </motion.div>
                 ) : null}
               </AnimatePresence>
             )}

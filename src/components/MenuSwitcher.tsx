@@ -30,8 +30,8 @@ export function MenuSwitcher() {
             exit={{ opacity: 0 }}
             transition={MENU_SWITCHER_ENTER_TRANSITION}
           >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   className="w-full justify-start px-2 hover:bg-[#eee7dc]/80 focus-visible:bg-[#eee7dc]/80"

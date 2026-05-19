@@ -13,6 +13,17 @@ import {
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
 import { Button } from "../ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "../ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Trash } from "lucide-react";
 import type { MenuRecord } from "@/types/menu";
 
@@ -27,6 +38,7 @@ const DeleteMenuAlertDialog = ({
   onOpenChange: (open: boolean) => void;
   onDeleted?: () => void;
 }) => {
+  const isMobile = useIsMobile();
   const deleteMenuMutation = useMutation(trpc.menu.delete.mutationOptions());
 
   const deleteMenu = async () => {
@@ -53,25 +65,53 @@ const DeleteMenuAlertDialog = ({
     }
   };
 
+  const trigger = (
+    <Button size={"sm"} variant="destructive" aria-label="Delete menu">
+      <Trash />
+      Delete Menu
+    </Button>
+  );
+  const title = (
+    <>
+      Are you sure you want to delete the{" "}
+      <span className="text-pink-600">{menu?.name}</span> menu?
+    </>
+  );
+  const description = (
+    <>
+      This will permanently delete{" "}
+      <span className="font-semibold">{menu?.name}</span> and all of its
+      categories and items. This action cannot be undone.
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader className="px-6 pt-6 pb-2 text-left">
+            <DrawerTitle>{title}</DrawerTitle>
+            <DrawerDescription>{description}</DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter className="px-6 pt-2 pb-6">
+            <Button onClick={deleteMenu}>Delete</Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogTrigger asChild>
-        <Button size={"sm"} variant="destructive" aria-label="Delete menu">
-          <Trash />
-          Delete Menu
-        </Button>
-      </AlertDialogTrigger>
+      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            Are you sure you want to delete the{" "}
-            <span className="text-pink-600">{menu?.name}</span> menu?
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete{" "}
-            <span className="font-semibold">{menu?.name}</span> and all of its
-            categories and items. This action cannot be undone.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>

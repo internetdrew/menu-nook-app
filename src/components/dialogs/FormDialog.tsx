@@ -5,6 +5,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "../ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DialogProps {
   title: string;
@@ -21,16 +29,37 @@ const FormDialog = ({
   setIsDialogOpen,
   formComponent,
 }: DialogProps) => {
+  const isMobile = useIsMobile();
+  const formContent = (
+    <div className="no-scrollbar -mx-4 max-h-[60vh] overflow-y-auto px-4">
+      {formComponent}
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DrawerContent>
+          <DrawerHeader className="px-6 pt-6 pb-2 text-left">
+            <DrawerTitle>{title}</DrawerTitle>
+            {description && (
+              <DrawerDescription>{description}</DrawerDescription>
+            )}
+          </DrawerHeader>
+          <div className="px-6 pb-6">{formContent}</div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div className="no-scrollbar -mx-4 max-h-[60vh] overflow-y-auto px-4">
-          {formComponent}
-        </div>
+        {formContent}
       </DialogContent>
     </Dialog>
   );
