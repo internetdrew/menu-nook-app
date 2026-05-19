@@ -83,12 +83,12 @@ export function SortableMenuCategorySection({
       }`}
     >
       <Accordion.Header
-        className={`m-0 flex items-center ${
+        className={`m-0 flex items-center px-3 ${
           isOpen ? "border-b border-neutral-200/60" : ""
         }`}
       >
         <div
-          className="group flex min-w-0 flex-1 cursor-grab touch-none items-center gap-2 p-3 pr-1 text-left active:cursor-grabbing"
+          className="group py-0-3 flex min-w-0 flex-1 cursor-grab touch-none items-center gap-2 pr-1 text-left active:cursor-grabbing"
           {...attributes}
           {...listeners}
           aria-label={`Reorder ${category.name}`}

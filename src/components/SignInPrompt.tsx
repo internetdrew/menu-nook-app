@@ -30,7 +30,7 @@ export function SignInPrompt() {
         "mx-auto flex w-full max-w-lg flex-col items-center text-center",
       )}
     >
-      <h1 className="title mt-52 text-4xl leading-none font-black text-stone-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.65)] md:mt-64 md:text-5xl">
+      <h1 className="title mt-52 text-4xl leading-none font-bold text-stone-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.65)] md:mt-64 md:text-5xl">
         MenuNook
       </h1>
       <p className="mt-5 text-base leading-7 font-medium text-stone-700 drop-shadow-[0_1px_0_rgba(255,255,255,0.7)]">

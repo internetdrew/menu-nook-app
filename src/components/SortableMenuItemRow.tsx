@@ -101,7 +101,7 @@ export function SortableMenuItemRow({
             className="grid size-7 place-items-center"
             aria-label={`Open actions for ${item.name}`}
           >
-            <Ellipsis className="size-3.5 text-neutral-400/70" />
+            <Ellipsis className="size-4 text-neutral-400/70" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
