@@ -1,7 +1,6 @@
 import * as React from "react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import { MenuSwitcher } from "@/components/MenuSwitcher";
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +33,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <span className="title text-lg font-bold">{title}</span>
           </Link>
         </SidebarMenuButton>
-        <MenuSwitcher />
       </SidebarHeader>
       <SidebarContent>
         <NavMain />

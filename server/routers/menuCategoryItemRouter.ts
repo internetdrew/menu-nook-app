@@ -4,8 +4,6 @@ import { protectedProcedure, router } from "../trpc.js";
 import {
   menuItemFieldsSchema,
   menuItemImageFieldsSchema,
-  normalizeMenuItemDetails,
-  normalizeMenuItemTags,
   refineMenuItemImageFields,
 } from "../../shared/menuItem.js";
 
@@ -26,11 +24,8 @@ export const menuCategoryItemRouter = router({
     .mutation(async ({ input, ctx }) => {
       const {
         name,
-        primaryTag,
-        tags,
         tagline,
         description,
-        details,
         price,
         imagePath,
         imageUrl,
@@ -44,11 +39,8 @@ export const menuCategoryItemRouter = router({
           menu_id: menuId,
           menu_category_id: menuCategoryId,
           name,
-          primary_tag: primaryTag,
-          tags: normalizeMenuItemTags(tags),
           tagline,
           description,
-          details: normalizeMenuItemDetails(details),
           price,
           image_path: imagePath,
           image_url: imageUrl,
@@ -118,12 +110,9 @@ export const menuCategoryItemRouter = router({
       const {
         id,
         name,
-        primaryTag,
-        tags,
         tagline,
         menuCategoryId,
         description,
-        details,
         price,
         imagePath,
         imageUrl,
@@ -147,11 +136,8 @@ export const menuCategoryItemRouter = router({
         .from("menu_category_items")
         .update({
           name,
-          primary_tag: primaryTag,
-          tags: normalizeMenuItemTags(tags),
           tagline,
           description,
-          details: normalizeMenuItemDetails(details),
           menu_category_id: menuCategoryId,
           price,
           image_path: imagePath,

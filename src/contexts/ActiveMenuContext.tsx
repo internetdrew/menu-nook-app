@@ -6,17 +6,14 @@ import {
   useState,
 } from "react";
 import { trpc } from "@/utils/trpc";
-import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "../../server";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./auth";
-
-type Menu = inferRouterOutputs<AppRouter>["menu"]["getAllForBusiness"][number];
+import type { MenuRecord } from "@/types/menu";
 
 interface MenuContextValue {
-  menus: Menu[];
-  activeMenu: Menu | null;
-  setActiveMenu: (r: Menu) => void;
+  menus: MenuRecord[];
+  activeMenu: MenuRecord | null;
+  setActiveMenu: (r: MenuRecord) => void;
   loading: boolean;
 }
 
@@ -43,15 +40,18 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
       },
     ),
   );
-  const [activeMenu, setActiveMenuState] = useState<Menu | null>(null);
+  const [activeMenu, setActiveMenuState] = useState<MenuRecord | null>(null);
+  const [activeMenuResolved, setActiveMenuResolved] = useState(false);
 
   useEffect(() => {
     if (authLoading || businessLoading || isLoading) {
+      setActiveMenuResolved(false);
       return;
     }
 
     if (!user) {
       setActiveMenuState(null);
+      setActiveMenuResolved(true);
       if (typeof window !== "undefined") {
         localStorage.removeItem(ACTIVE_MENU_STORAGE_KEY);
       }
@@ -60,6 +60,7 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
 
     if (!business || !data || data.length === 0) {
       setActiveMenuState(null);
+      setActiveMenuResolved(true);
       return;
     }
 
@@ -72,21 +73,29 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
       data.find((m) => savedId !== null && String(m.id) === savedId) ?? data[0];
 
     setActiveMenuState(found);
+    setActiveMenuResolved(true);
     if (typeof window !== "undefined") {
       localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, String(found.id));
     }
   }, [authLoading, business, businessLoading, data, isLoading, user]);
 
-  const setActiveMenu = useCallback((m: Menu) => {
+  const setActiveMenu = useCallback((m: MenuRecord) => {
     setActiveMenuState(m);
+    setActiveMenuResolved(true);
     localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, String(m.id));
   }, []);
+
+  const loading =
+    authLoading ||
+    (!!user && businessLoading) ||
+    (!!user && !!business && isLoading) ||
+    !activeMenuResolved;
 
   const value: MenuContextValue = {
     menus: data ?? [],
     activeMenu,
     setActiveMenu,
-    loading: isLoading,
+    loading,
   };
 
   return <MenuContext.Provider value={value}>{children}</MenuContext.Provider>;

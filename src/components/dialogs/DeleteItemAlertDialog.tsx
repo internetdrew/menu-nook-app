@@ -10,15 +10,24 @@ import {
   AlertDialogAction,
 } from "../ui/alert-dialog";
 import { useMutation } from "@tanstack/react-query";
+import { Button } from "../ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "../ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "server";
-
-type ItemIndex =
-  inferRouterOutputs<AppRouter>["menuCategoryItem"]["getSortedForCategory"][number];
 
 interface DeleteItemAlertDialogProps {
-  item: ItemIndex["item"];
+  item: {
+    id: number;
+    name: string;
+  };
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -28,6 +37,7 @@ const DeleteItemAlertDialog = ({
   open,
   onOpenChange,
 }: DeleteItemAlertDialogProps) => {
+  const isMobile = useIsMobile();
   const deleteItem = useMutation(
     trpc.menuCategoryItem.delete.mutationOptions(),
   );
@@ -51,15 +61,40 @@ const DeleteItemAlertDialog = ({
       },
     );
   };
+
+  const title = `Delete ${item.name}?`;
+  const description = (
+    <>
+      This action cannot be undone. This will permanently delete{" "}
+      <span className="font-semibold">{item.name}</span> from your menu.
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent>
+          <DrawerHeader className="px-6 pt-6 pb-2 text-left">
+            <DrawerTitle>{title}</DrawerTitle>
+            <DrawerDescription>{description}</DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter className="px-6 pt-2 pb-6">
+            <Button onClick={onDelete}>Continue</Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {item.name}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete{" "}
-            <span className="font-semibold">{item.name}</span> from your menu.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>

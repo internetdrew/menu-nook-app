@@ -10,13 +10,11 @@ import {
 import { Button } from "../ui/button.tsx";
 import { MoreHorizontal, NotepadText } from "lucide-react";
 import { formatDistance } from "date-fns";
-import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "../../../server";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.tsx";
 import capitalize from "@/utils/capitalize.ts";
+import type { ItemTableRow } from "@/types/menu";
 
-export type Item =
-  inferRouterOutputs<AppRouter>["item"]["getAllByPlace"][number];
+export type Item = ItemTableRow;
 
 export function getItemColumns(
   handleEditButtonClick: (item: Item) => void,

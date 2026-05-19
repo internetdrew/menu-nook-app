@@ -1,127 +1,67 @@
-import { useState } from "react";
-import { ChevronsUpDown, FolderTree, Plus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { AnimatePresence, motion } from "motion/react";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
-import FormDialog from "./dialogs/FormDialog";
-import { CreateMenuForm } from "./forms/CreateMenuForm";
-import { useNavigate } from "react-router";
+import { MENU_SWITCHER_ENTER_TRANSITION } from "@/constants";
 import { Skeleton } from "./ui/skeleton";
-import { MAX_MENUS_PER_BUSINESS } from "@/constants";
-import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
-import { useAuth } from "@/contexts/auth";
 
 export function MenuSwitcher() {
-  const { isMobile, setOpenMobile } = useSidebar();
   const navigate = useNavigate();
-  const [renderDropdown, setRenderDropdown] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const { user, isLoading: authLoading } = useAuth();
-  const { data: business, isLoading: businessLoading } = useQuery(
-    trpc.business.getForUser.queryOptions(undefined, {
-      enabled: !!user && !authLoading,
-    }),
-  );
-
-  const {
-    menus,
-    activeMenu,
-    setActiveMenu,
-    loading: menuContextLoading,
-  } = useMenuContext();
-
-  const triggerDialog = () => {
-    setRenderDropdown(false);
-    setIsDialogOpen(true);
-  };
-
-  if (authLoading || businessLoading || menuContextLoading) {
-    return <Skeleton className="mt-2 h-10 w-full rounded-lg bg-neutral-200" />;
-  }
-
-  if (!business) {
-    return null;
-  }
+  const { menus, activeMenu, setActiveMenu, loading } = useMenuContext();
 
   return (
-    <SidebarMenu data-testid="menu-switcher">
-      <SidebarMenuItem>
-        <DropdownMenu open={renderDropdown} onOpenChange={setRenderDropdown}>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <FolderTree className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">
-                  {activeMenu?.name ?? "No menu selected"}
-                </span>
-              </div>
-              <ChevronsUpDown className="ml-auto" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            align="start"
-            side={isMobile ? "bottom" : "right"}
-            sideOffset={4}
+    <div className="w-40 max-w-64">
+      {loading ? (
+        <Skeleton className="h-9 w-full rounded-md" />
+      ) : (
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key="menu-switcher"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={MENU_SWITCHER_ENTER_TRANSITION}
           >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Menus
-            </DropdownMenuLabel>
-            {menus.map((menu) => (
-              <DropdownMenuItem
-                key={menu.id}
-                onClick={() => {
-                  setActiveMenu(menu);
-                  navigate("/");
-                  setOpenMobile(false);
-                }}
-                className="gap-2 p-2"
-              >
-                {menu.name}
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={menus.length >= MAX_MENUS_PER_BUSINESS}
-              className="gap-2 p-2"
-              onClick={triggerDialog}
-            >
-              <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                <Plus className="size-4" />
-              </div>
-              <div className="text-muted-foreground font-medium">Add Menu</div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-      <FormDialog
-        isDialogOpen={isDialogOpen}
-        setIsDialogOpen={setIsDialogOpen}
-        title="Add Menu"
-        description="Add a new menu to your business."
-        formComponent={
-          <CreateMenuForm onSuccess={() => setIsDialogOpen(false)} />
-        }
-      />
-    </SidebarMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start px-2 hover:bg-[#eee7dc]/80 focus-visible:bg-[#eee7dc]/80"
+                >
+                  <span className="truncate">
+                    {activeMenu?.name ?? "No menu selected"}
+                  </span>
+                  <ChevronDown className="text-muted-foreground ml-auto size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel className="text-muted-foreground text-xs">
+                  Menus
+                </DropdownMenuLabel>
+                {menus.map((menu) => (
+                  <DropdownMenuItem
+                    key={menu.id}
+                    onClick={() => {
+                      setActiveMenu(menu);
+                      navigate("/");
+                    }}
+                  >
+                    {menu.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </motion.div>
+        </AnimatePresence>
+      )}
+    </div>
   );
 }

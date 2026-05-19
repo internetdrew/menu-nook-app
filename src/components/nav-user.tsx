@@ -47,12 +47,12 @@ export function NavUser() {
           <SidebarMenu>
             <SidebarMenuItem>
               <div className="flex items-center gap-2 rounded-md px-2 py-2">
-                <Skeleton className="h-8 w-8 rounded-full bg-neutral-200" />
+                <Skeleton className="h-8 w-8 rounded-full" />
                 <div className="grid flex-1 gap-1.5">
-                  <Skeleton className="h-4 w-24 bg-neutral-200" />
-                  <Skeleton className="h-3 w-32 bg-neutral-200" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
                 </div>
-                <Skeleton className="h-4 w-4 rounded-sm bg-neutral-200" />
+                <Skeleton className="h-4 w-4 rounded-sm" />
               </div>
             </SidebarMenuItem>
           </SidebarMenu>
