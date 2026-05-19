@@ -14,8 +14,6 @@ import { Dialog } from "radix-ui";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import MenuPreviewBanner from "@/components/MenuPreviewBanner";
 import BusinessLogo from "@/components/BusinessLogo";
-import { Badge } from "@/components/ui/badge";
-import { normalizeMenuItemDetails } from "../../shared/menuItem";
 import type { Database } from "../../shared/database.types";
 
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
@@ -43,9 +41,6 @@ export const Menu = () => {
   const { hash, pathname, search } = useLocation();
   const navigate = useNavigate();
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const selectedItemDetails = selectedItem
-    ? normalizeMenuItemDetails(selectedItem.details)
-    : [];
 
   const isPreview = pathname.startsWith("/preview/");
   const successfulSubscription =
@@ -247,11 +242,8 @@ export const Menu = () => {
 
                 <motion.ul layout className="space-y-6">
                   {category.items?.map((item) => {
-                    const itemDetails = normalizeMenuItemDetails(item.details);
                     const shouldShowDetails =
-                      item.description ||
-                      item.image_url ||
-                      itemDetails.length > 0;
+                      item.description || item.image_url;
                     const isItemSelected = selectedItem?.id === item.id;
 
                     return (
@@ -277,27 +269,12 @@ export const Menu = () => {
                           )}
                           <div className="flex-1">
                             <div className="flex justify-between gap-4">
-                              <div className="flex items-center gap-1.5">
-                                <motion.h4
-                                  layoutId={`item-name-${item.id}`}
-                                  className="font-medium"
-                                >
-                                  {item.name}
-                                </motion.h4>
-                                {item.primary_tag && (
-                                  <motion.span
-                                    layoutId={`item-tag-${item.id}`}
-                                    className="flex items-center"
-                                  >
-                                    <Badge
-                                      variant="default"
-                                      className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
-                                    >
-                                      {item.primary_tag}
-                                    </Badge>
-                                  </motion.span>
-                                )}
-                              </div>
+                              <motion.h4
+                                layoutId={`item-name-${item.id}`}
+                                className="font-medium"
+                              >
+                                {item.name}
+                              </motion.h4>
                               <motion.span
                                 layoutId={`item-price-${item.id}`}
                                 className="text-sm text-neutral-700 tabular-nums"
@@ -385,29 +362,14 @@ export const Menu = () => {
                         <div className="flex gap-4 px-6 pt-6">
                           <div className="flex-1">
                             <div className="flex justify-between gap-4">
-                              <div className="flex items-center gap-1.5">
-                                <Dialog.Title asChild>
-                                  <motion.h4
-                                    layoutId={`item-name-${selectedItem.id}`}
-                                    className="font-medium"
-                                  >
-                                    {selectedItem.name}
-                                  </motion.h4>
-                                </Dialog.Title>
-                                {selectedItem.primary_tag && (
-                                  <motion.span
-                                    layoutId={`item-tag-${selectedItem.id}`}
-                                    className="flex items-center"
-                                  >
-                                    <Badge
-                                      variant="default"
-                                      className="px-2 py-0.5 text-[9px] tracking-[0.12em] uppercase"
-                                    >
-                                      {selectedItem.primary_tag}
-                                    </Badge>
-                                  </motion.span>
-                                )}
-                              </div>
+                              <Dialog.Title asChild>
+                                <motion.h4
+                                  layoutId={`item-name-${selectedItem.id}`}
+                                  className="font-medium"
+                                >
+                                  {selectedItem.name}
+                                </motion.h4>
+                              </Dialog.Title>
                               <motion.span
                                 layoutId={`item-price-${selectedItem.id}`}
                                 className="text-sm text-neutral-700 tabular-nums"
@@ -421,26 +383,6 @@ export const Menu = () => {
                             >
                               {selectedItem.tagline}
                             </motion.p>
-                            {selectedItem.tags &&
-                              selectedItem.tags.length > 0 && (
-                                <ul
-                                  className="mt-4 flex flex-wrap gap-2"
-                                  aria-label="Item tags"
-                                >
-                                  {selectedItem.tags.map((tag, index) => (
-                                    <li
-                                      key={`${selectedItem.id}-${tag}-${index}`}
-                                    >
-                                      <Badge
-                                        variant="outline"
-                                        className="bg-neutral-200/30 px-3 py-1 text-[10px] text-neutral-500 uppercase"
-                                      >
-                                        {tag}
-                                      </Badge>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
                           </div>
                         </div>
 
@@ -455,27 +397,6 @@ export const Menu = () => {
                                 {selectedItem.description}
                               </motion.p>
                             </Dialog.Description>
-                          </>
-                        )}
-
-                        {selectedItemDetails.length > 0 && (
-                          <>
-                            <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
-                            <div className="mb-6 grid grid-cols-2 gap-4 px-6">
-                              {selectedItemDetails.map((detail, index) => (
-                                <div
-                                  key={`${selectedItem.id}-${detail.key}-${index}`}
-                                  className="flex flex-col rounded-md border border-neutral-200 bg-neutral-200/30 p-2"
-                                >
-                                  <span className="text-[10px] font-semibold text-neutral-500 uppercase">
-                                    {detail.key}
-                                  </span>
-                                  <span className="mt-3 text-sm font-medium tracking-[-0.03em] text-neutral-900">
-                                    {detail.value}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
                           </>
                         )}
                       </motion.div>

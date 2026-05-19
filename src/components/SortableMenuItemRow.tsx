@@ -3,7 +3,6 @@ import type { MenuPreviewItem } from "@/types/menu";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Ellipsis, GripVertical, Pencil, Trash2 } from "lucide-react";
-import { Badge } from "./ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,14 +80,7 @@ export function SortableMenuItemRow({
           />
         )}
         <div className="pointer-events-none min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-1.5">
-            <h3 className="min-w-0 truncate text-[#281513]">{item.name}</h3>
-            {item.primary_tag && (
-              <Badge className="h-4 shrink-0 rounded-full px-1.5 text-[9px] leading-none font-semibold">
-                {item.primary_tag}
-              </Badge>
-            )}
-          </div>
+          <h3 className="min-w-0 truncate text-[#281513]">{item.name}</h3>
           <p className="line-clamp-1 truncate text-xs font-normal text-[#7d6b62]">
             {item.tagline || item.description || "No description added"}
           </p>

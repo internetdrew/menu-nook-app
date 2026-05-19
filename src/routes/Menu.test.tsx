@@ -76,11 +76,8 @@ describe("Preview Route (/preview/:id)", () => {
                     {
                       id: "item1",
                       name: "Item 1",
-                      primary_tag: "Special",
-                      tags: ["Gluten-Free", "Seasonal"],
                       tagline: "Fast favorite",
                       description: "Delicious item",
-                      details: [{ key: "Calories", value: "450 kcal" }],
                       image_url: "https://cdn.example.com/item-1.png",
                       price: 12.65,
                       sort_index: 0,
@@ -88,11 +85,8 @@ describe("Preview Route (/preview/:id)", () => {
                     {
                       id: "item2",
                       name: "Item 2",
-                      primary_tag: null,
-                      tags: [],
                       tagline: "Scrumptious teaser",
                       description: "Scrumptious item",
-                      details: [],
                       image_url: null,
                       price: 15.99,
                       sort_index: 1,
@@ -139,7 +133,6 @@ describe("Preview Route (/preview/:id)", () => {
       screen.getByRole("link", { name: "Category 2" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Item 1" })).toBeInTheDocument();
-    expect(screen.getByText("Special")).toBeInTheDocument();
     expect(screen.getByText("Fast favorite")).toBeInTheDocument();
     expect(screen.getAllByText(/view details/i)).toHaveLength(2);
   });
@@ -232,7 +225,6 @@ describe("Live Menu Route (/menu/:id)", () => {
                       name: "Item 1",
                       tagline: "Fast favorite",
                       description: "Delicious item",
-                      details: [],
                       price: 12.65,
                       sort_index: 0,
                     },
@@ -241,7 +233,6 @@ describe("Live Menu Route (/menu/:id)", () => {
                       name: "Item 2",
                       tagline: "Scrumptious teaser",
                       description: "Scrumptious item",
-                      details: [],
                       price: 15.99,
                       sort_index: 1,
                     },
@@ -306,13 +297,7 @@ describe("Live Menu Route (/menu/:id)", () => {
                     {
                       id: "item1",
                       name: "Item 1",
-                      primary_tag: "Most Popular",
-                      tags: ["Gluten-Free", "Seasonal"],
                       tagline: "Fast favorite",
-                      details: [
-                        { key: "Calories", value: "450 kcal" },
-                        { key: "Prep Time", value: "15 min" },
-                      ],
                       description: "A fuller item description for the dialog.",
                       price: 12.65,
                       sort_index: 0,
@@ -342,12 +327,9 @@ describe("Live Menu Route (/menu/:id)", () => {
       expect(screen.getByText("Fast favorite")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Most Popular")).toBeInTheDocument();
-
     expect(
       screen.queryByText("A fuller item description for the dialog."),
     ).not.toBeInTheDocument();
-    expect(screen.queryByText("Gluten-Free")).not.toBeInTheDocument();
 
     const div = screen.getByText("Fast favorite").closest("div");
     expect(within(div!).getByText(/View details/i)).toBeInTheDocument();
@@ -356,18 +338,12 @@ describe("Live Menu Route (/menu/:id)", () => {
 
     await waitFor(() => {
       const dialog = screen.getByRole("dialog");
-      expect(within(dialog).getByText("Gluten-Free")).toBeInTheDocument();
-      expect(within(dialog).getByText("Seasonal")).toBeInTheDocument();
-      expect(within(dialog).getByText("Calories")).toBeInTheDocument();
-      expect(within(dialog).getByText("450 kcal")).toBeInTheDocument();
-      expect(within(dialog).getByText("Prep Time")).toBeInTheDocument();
-      expect(within(dialog).getByText("15 min")).toBeInTheDocument();
       expect(
         within(dialog).getByText("A fuller item description for the dialog."),
       ).toBeInTheDocument();
     });
   });
-  it("opens item details when metadata pairs exist without image or description", async () => {
+  it("does not open item details when only a tagline exists", async () => {
     server.use(
       createTrpcQueryHandler({
         "subscription.getForMenu": () => ({
@@ -401,13 +377,7 @@ describe("Live Menu Route (/menu/:id)", () => {
                     {
                       id: "item1",
                       name: "Item 1",
-                      primary_tag: null,
-                      tags: [],
                       tagline: "Fast favorite",
-                      details: [
-                        { key: "Serves", value: "1 person" },
-                        { key: "Allergens", value: "Nuts, Soy" },
-                      ],
                       description: null,
                       image_url: null,
                       price: 12.65,
@@ -428,7 +398,6 @@ describe("Live Menu Route (/menu/:id)", () => {
       }),
     );
 
-    const user = userEvent.setup();
     renderApp({
       initialEntries: ["/menu/123"],
       authMock: authedUserState,
@@ -439,16 +408,7 @@ describe("Live Menu Route (/menu/:id)", () => {
     });
 
     const div = screen.getByText("Fast favorite").closest("div");
-    expect(within(div!).getByText(/View details/i)).toBeInTheDocument();
-
-    await user.click(div!);
-
-    await waitFor(() => {
-      const dialog = screen.getByRole("dialog");
-      expect(within(dialog).getByText("Serves")).toBeInTheDocument();
-      expect(within(dialog).getByText("1 person")).toBeInTheDocument();
-      expect(within(dialog).getByText("Allergens")).toBeInTheDocument();
-      expect(within(dialog).getByText("Nuts, Soy")).toBeInTheDocument();
-    });
+    expect(within(div!).queryByText(/View details/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

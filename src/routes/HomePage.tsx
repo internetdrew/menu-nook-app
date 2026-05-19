@@ -467,7 +467,7 @@ export function MenuManagerSkeleton() {
             className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(40,21,19,0.08)]"
           >
             <div className="flex items-center pr-2 pl-3">
-              <div className="flex min-w-0 flex-1 items-center gap-2 bg-red-100 py-3.5">
+              <div className="flex min-w-0 flex-1 items-center gap-2 py-3.5">
                 <Skeleton className="size-4 shrink-0 rounded-sm" />
                 <Skeleton className="h-4 w-28 rounded-sm" />
                 <Skeleton className="h-3 w-10 rounded-sm" />

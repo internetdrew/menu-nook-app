@@ -6,10 +6,7 @@ import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { AnimatePresence, motion } from "motion/react";
 import loginBackground from "@/assets/login-bg.png";
 import { MenuSwitcher } from "./components/MenuSwitcher";
-import {
-  MENU_SWITCHER_ENTER_TRANSITION,
-  MENU_SWITCHER_EXIT_TRANSITION,
-} from "./constants";
+import { MENU_SWITCHER_ENTER_TRANSITION } from "./constants";
 
 function App() {
   const { activeMenu, loading } = useMenuContext();
@@ -30,19 +27,11 @@ function App() {
         <div className="mt-4 flex items-center justify-between">
           <MenuSwitcher />
           <div className="flex w-24 items-center justify-end">
-            <AnimatePresence mode="wait" initial={false}>
-              {loading ? (
-                <motion.div
-                  key="share-skeleton"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={MENU_SWITCHER_EXIT_TRANSITION}
-                  className="w-full"
-                >
-                  <Skeleton className="h-9 w-full rounded-md" />
-                </motion.div>
-              ) : activeMenu ? (
+            {loading ? (
+              <Skeleton className="h-9 w-full rounded-md" />
+            ) : (
+              <AnimatePresence mode="wait" initial={false}>
+                {activeMenu ? (
                 <motion.div
                   key="share-button"
                   initial={{ opacity: 0, scale: 0.98 }}
@@ -55,8 +44,9 @@ function App() {
                     activeMenuName={activeMenu.name}
                   />
                 </motion.div>
-              ) : null}
-            </AnimatePresence>
+                ) : null}
+              </AnimatePresence>
+            )}
           </div>
         </div>
       </nav>
