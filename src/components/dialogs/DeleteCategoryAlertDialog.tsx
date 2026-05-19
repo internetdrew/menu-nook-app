@@ -11,14 +11,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../ui/alert-dialog";
-import type { CategoryIndex } from "@/routes/CategoriesPage";
+import type { MenuCategoryRecord } from "@/types/menu";
 
 const DeleteCategoryAlertDialog = ({
   category,
   open,
   onOpenChange,
 }: {
-  category: CategoryIndex["category"] | null;
+  category: Pick<MenuCategoryRecord, "id" | "name"> | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) => {

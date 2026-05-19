@@ -11,14 +11,12 @@ import {
 } from "../ui/alert-dialog";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "server";
-
-type ItemIndex =
-  inferRouterOutputs<AppRouter>["menuCategoryItem"]["getSortedForCategory"][number];
 
 interface DeleteItemAlertDialogProps {
-  item: ItemIndex["item"];
+  item: {
+    id: number;
+    name: string;
+  };
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

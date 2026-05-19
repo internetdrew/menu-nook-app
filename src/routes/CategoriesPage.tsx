@@ -34,7 +34,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { inferRouterOutputs } from "@trpc/server";
 import {
   ClipboardPen,
   EllipsisVertical,
@@ -43,7 +42,6 @@ import {
   Trash,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { AppRouter } from "server";
 import { toast } from "sonner";
 import { Link } from "react-router";
 import EmptyStatePrompt from "@/components/EmptyStatePrompt";
@@ -54,9 +52,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { CategoryIndex } from "@/types/menu";
 
-export type CategoryIndex =
-  inferRouterOutputs<AppRouter>["menuCategory"]["getAllSortedByIndex"][number];
+export type { CategoryIndex };
 
 export const CategoriesPage = () => {
   const [renderCategoryDialog, setRenderCategoryDialog] = useState(false);

@@ -3,7 +3,6 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import type { Database } from "../../shared/database.types";
 import { CSS } from "@dnd-kit/utilities";
 import * as Accordion from "@radix-ui/react-accordion";
 import {
@@ -24,18 +23,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import type { MenuPreviewCategory } from "@/types/menu";
 
-type MenuCategoryItem =
-  Database["public"]["Tables"]["menu_category_items"]["Row"] & {
-    order_index: number;
-    sort_index_id: number | null;
-  };
-
-type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"] & {
-  order_index: number;
-  sort_index_id: number | null;
-  items: MenuCategoryItem[];
-};
+type MenuCategory = MenuPreviewCategory;
 
 const getCategorySortableId = (categoryId: number) => `category-${categoryId}`;
 
@@ -44,11 +34,21 @@ export function SortableMenuCategorySection({
   isOpen,
   onAddItem,
   onDeleteCategory,
+  onEditItem,
+  onDeleteItem,
 }: {
   category: MenuCategory;
   isOpen: boolean;
   onAddItem: (category: MenuCategory) => void;
   onDeleteCategory: (category: MenuCategory) => void;
+  onEditItem: (
+    item: MenuCategory["items"][number],
+    category: MenuCategory,
+  ) => void;
+  onDeleteItem: (
+    item: MenuCategory["items"][number],
+    category: MenuCategory,
+  ) => void;
 }) {
   const {
     attributes,
@@ -83,12 +83,12 @@ export function SortableMenuCategorySection({
       }`}
     >
       <Accordion.Header
-        className={`m-0 flex items-center px-3 ${
+        className={`m-0 flex items-center pr-2 pl-3 ${
           isOpen ? "border-b border-neutral-200/60" : ""
         }`}
       >
         <div
-          className="group py-0-3 flex min-w-0 flex-1 cursor-grab touch-none items-center gap-2 pr-1 text-left active:cursor-grabbing"
+          className="group flex min-w-0 flex-1 cursor-grab touch-none items-center gap-2 py-3 text-left active:cursor-grabbing"
           {...attributes}
           {...listeners}
           aria-label={`Reorder ${category.name}`}
@@ -193,6 +193,12 @@ export function SortableMenuCategorySection({
                           key={item.id}
                           item={item}
                           categoryId={category.id}
+                          onEditItem={(selectedItem) =>
+                            onEditItem(selectedItem, category)
+                          }
+                          onDeleteItem={(selectedItem) =>
+                            onDeleteItem(selectedItem, category)
+                          }
                         />
                       ))}
                     </div>

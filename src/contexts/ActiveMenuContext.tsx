@@ -6,17 +6,14 @@ import {
   useState,
 } from "react";
 import { trpc } from "@/utils/trpc";
-import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "../../server";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./auth";
-
-type Menu = inferRouterOutputs<AppRouter>["menu"]["getAllForBusiness"][number];
+import type { MenuRecord } from "@/types/menu";
 
 interface MenuContextValue {
-  menus: Menu[];
-  activeMenu: Menu | null;
-  setActiveMenu: (r: Menu) => void;
+  menus: MenuRecord[];
+  activeMenu: MenuRecord | null;
+  setActiveMenu: (r: MenuRecord) => void;
   loading: boolean;
 }
 
@@ -43,7 +40,7 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
       },
     ),
   );
-  const [activeMenu, setActiveMenuState] = useState<Menu | null>(null);
+  const [activeMenu, setActiveMenuState] = useState<MenuRecord | null>(null);
   const [activeMenuResolved, setActiveMenuResolved] = useState(false);
 
   useEffect(() => {
@@ -82,7 +79,7 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
     }
   }, [authLoading, business, businessLoading, data, isLoading, user]);
 
-  const setActiveMenu = useCallback((m: Menu) => {
+  const setActiveMenu = useCallback((m: MenuRecord) => {
     setActiveMenuState(m);
     setActiveMenuResolved(true);
     localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, String(m.id));

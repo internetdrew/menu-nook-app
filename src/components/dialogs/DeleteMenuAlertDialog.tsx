@@ -12,12 +12,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
-import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "../../../server";
 import { Button } from "../ui/button";
 import { Trash } from "lucide-react";
-
-type Menu = inferRouterOutputs<AppRouter>["menu"]["getAllForBusiness"][number];
+import type { MenuRecord } from "@/types/menu";
 
 const DeleteMenuAlertDialog = ({
   menu,
@@ -25,7 +22,7 @@ const DeleteMenuAlertDialog = ({
   onOpenChange,
   onDeleted,
 }: {
-  menu: Menu | null;
+  menu: Pick<MenuRecord, "id" | "name"> | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDeleted?: () => void;

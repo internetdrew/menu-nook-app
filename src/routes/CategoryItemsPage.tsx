@@ -34,8 +34,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
-import type { AppRouter } from "../../server";
-import type { inferRouterOutputs } from "@trpc/server";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import FormDialog from "@/components/dialogs/FormDialog";
@@ -54,9 +52,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-type ItemIndex =
-  inferRouterOutputs<AppRouter>["menuCategoryItem"]["getSortedForCategory"][number];
+import type { ItemIndex } from "@/types/menu";
 
 export const CategoryItemsPage = () => {
   const { activeMenu } = useMenuContext();

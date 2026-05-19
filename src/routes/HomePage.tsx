@@ -1,5 +1,6 @@
 import FormDialog from "@/components/dialogs/FormDialog";
 import DeleteCategoryAlertDialog from "@/components/dialogs/DeleteCategoryAlertDialog";
+import DeleteItemAlertDialog from "@/components/dialogs/DeleteItemAlertDialog";
 import CategoryForm from "@/components/forms/CategoryForm";
 import ItemForm from "@/components/forms/ItemForm";
 import { Button } from "@/components/ui/button";
@@ -29,24 +30,17 @@ import { MotionConfig } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import type { Database } from "../../shared/database.types";
 import { accordionEaseOut } from "@/constants";
 import { SortableMenuCategorySection } from "@/components/SortableMenuCategorySection";
+import type {
+  MenuItemWithCategory,
+  MenuPreviewCategory,
+  MenuPreviewData,
+  MenuPreviewItem,
+} from "@/types/menu";
 
-type MenuCategoryItem =
-  Database["public"]["Tables"]["menu_category_items"]["Row"] & {
-    order_index: number;
-    sort_index_id: number | null;
-  };
-export type MenuCategory =
-  Database["public"]["Tables"]["menu_categories"]["Row"] & {
-    order_index: number;
-    sort_index_id: number | null;
-    items: MenuCategoryItem[];
-  };
-type MenuPreview = {
-  menu_categories: MenuCategory[];
-};
+type SelectedMenuCategoryItem = MenuPreviewItem & MenuItemWithCategory;
+export type MenuCategory = MenuPreviewCategory;
 type SortableDragData =
   | { type: "category"; categoryId: number }
   | { type: "item"; categoryId: number; itemId: number };
@@ -87,9 +81,12 @@ export const HomePage = () => {
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
   const [isDeleteCategoryDialogOpen, setIsDeleteCategoryDialogOpen] =
     useState(false);
+  const [isDeleteItemDialogOpen, setIsDeleteItemDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(
     null,
   );
+  const [selectedItem, setSelectedItem] =
+    useState<SelectedMenuCategoryItem | null>(null);
   const { activeMenu } = useMenuContext();
 
   const { data: menuPreview, isLoading } = useQuery(
@@ -98,7 +95,7 @@ export const HomePage = () => {
       { enabled: !!activeMenu },
     ),
   );
-  const menu = menuPreview as MenuPreview | null | undefined;
+  const menu = menuPreview as MenuPreviewData | null | undefined;
 
   const fetchedMenuCategories = useMemo(
     () => menu?.menu_categories ?? [],
@@ -273,12 +270,37 @@ export const HomePage = () => {
 
   const handleAddItem = (category: MenuCategory) => {
     setSelectedCategory(category);
+    setSelectedItem(null);
     setIsItemDialogOpen(true);
   };
 
   const handleDeleteCategory = (category: MenuCategory) => {
     setSelectedCategory(category);
     setIsDeleteCategoryDialogOpen(true);
+  };
+
+  const handleEditItem = (item: MenuPreviewItem, category: MenuCategory) => {
+    setSelectedCategory(category);
+    setSelectedItem({
+      ...item,
+      category: {
+        id: category.id,
+        name: category.name,
+      },
+    });
+    setIsItemDialogOpen(true);
+  };
+
+  const handleDeleteItem = (item: MenuPreviewItem, category: MenuCategory) => {
+    setSelectedCategory(category);
+    setSelectedItem({
+      ...item,
+      category: {
+        id: category.id,
+        name: category.name,
+      },
+    });
+    setIsDeleteItemDialogOpen(true);
   };
 
   useEffect(() => {
@@ -357,6 +379,8 @@ export const HomePage = () => {
                     isOpen={openCategories.includes(String(category.id))}
                     onAddItem={handleAddItem}
                     onDeleteCategory={handleDeleteCategory}
+                    onEditItem={handleEditItem}
+                    onDeleteItem={handleDeleteItem}
                   />
                 ))}
               </Accordion.Root>
@@ -376,15 +400,21 @@ export const HomePage = () => {
       />
       {selectedCategory && (
         <FormDialog
-          title={`Add Item`}
-          description={`Add a new item to ${selectedCategory.name}.`}
+          title={selectedItem ? `Edit ${selectedItem.name}` : `Add Item`}
+          description={
+            selectedItem
+              ? `Edit ${selectedItem.name}.`
+              : `Add a new item to ${selectedCategory.name}.`
+          }
           isDialogOpen={isItemDialogOpen}
           setIsDialogOpen={setIsItemDialogOpen}
           formComponent={
             <ItemForm
+              item={selectedItem}
               chosenCategory={selectedCategory}
               onSuccess={() => {
                 setIsItemDialogOpen(false);
+                setSelectedItem(null);
                 invalidateMenuPreview();
               }}
             />
@@ -402,6 +432,20 @@ export const HomePage = () => {
           }
         }}
       />
+      {selectedItem && (
+        <DeleteItemAlertDialog
+          item={selectedItem}
+          open={isDeleteItemDialogOpen}
+          onOpenChange={(open) => {
+            setIsDeleteItemDialogOpen(open);
+
+            if (!open) {
+              setSelectedItem(null);
+              invalidateMenuPreview();
+            }
+          }}
+        />
+      )}
     </main>
   );
 };

@@ -1,8 +1,8 @@
 import { sortableTransition } from "@/constants";
-import { type MenuCategory } from "@/routes/HomePage";
+import type { MenuPreviewItem } from "@/types/menu";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Ellipsis, GripVertical } from "lucide-react";
+import { Ellipsis, GripVertical, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "./ui/badge";
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-type MenuItem = MenuCategory["items"][number];
+type MenuItem = MenuPreviewItem;
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -22,9 +22,13 @@ const priceFormatter = new Intl.NumberFormat("en-US", {
 export function SortableMenuItemRow({
   item,
   categoryId,
+  onEditItem,
+  onDeleteItem,
 }: {
   item: MenuItem;
   categoryId: number;
+  onEditItem: (item: MenuItem, categoryId: number) => void;
+  onDeleteItem: (item: MenuItem, categoryId: number) => void;
 }) {
   const {
     attributes,
@@ -53,7 +57,7 @@ export function SortableMenuItemRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center bg-white py-2.5 pl-3 text-sm font-medium transition-colors select-none ${
+      className={`flex items-center bg-white py-2.5 pr-2 pl-3 text-sm font-medium transition-colors select-none ${
         isDragging ? "rounded-md" : ""
       }`}
     >
@@ -106,7 +110,17 @@ export function SortableMenuItemRow({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
-            <DropdownMenuItem>Manage item</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEditItem(item, categoryId)}>
+              <Pencil />
+              Edit item
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => onDeleteItem(item, categoryId)}
+            >
+              <Trash2 />
+              Delete item
+            </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -17,8 +17,6 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "server";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { supabaseBrowserClient } from "@/lib/supabase";
 import type { ChangeEvent, KeyboardEvent } from "react";
@@ -39,17 +37,12 @@ import {
   normalizeMenuItemDetails,
   normalizeMenuItemTags,
 } from "../../../shared/menuItem";
-
-type MenuCategory = NonNullable<
-  inferRouterOutputs<AppRouter>["menuCategory"]["getById"]
->;
-type Item =
-  inferRouterOutputs<AppRouter>["menuCategoryItem"]["getSortedForCategory"][number]["item"];
+import type { MenuCategoryRecord, MenuItemWithCategory } from "@/types/menu";
 
 interface ItemFormProps {
   onSuccess: () => void;
-  item?: Item | null;
-  chosenCategory: MenuCategory;
+  item?: MenuItemWithCategory | null;
+  chosenCategory: MenuCategoryRecord;
 }
 
 const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
@@ -59,15 +52,15 @@ const formSchema = menuItemFieldsSchema.extend({
   categoryId: z.number(),
 });
 
-const getInitialTags = (item?: Item | null) =>
+const getInitialTags = (item?: MenuItemWithCategory | null) =>
   item?.tags?.length ? item.tags : [];
 
-const getInitialDetails = (item?: Item | null) =>
+const getInitialDetails = (item?: MenuItemWithCategory | null) =>
   normalizeMenuItemDetails(item?.details);
 
 const getDefaultValues = (
-  item: Item | null | undefined,
-  chosenCategory: MenuCategory,
+  item: MenuItemWithCategory | null | undefined,
+  chosenCategory: MenuCategoryRecord,
 ): z.infer<typeof formSchema> => ({
   name: item?.name ?? "",
   primaryTag: item?.primary_tag ?? "",
