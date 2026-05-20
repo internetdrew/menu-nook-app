@@ -107,11 +107,7 @@ export const HomePage = () => {
     null,
   );
   const displayedMenuCategories = menuCategories ?? fetchedMenuCategories;
-  const defaultOpenCategory = useMemo(
-    () => fetchedMenuCategories[0]?.id?.toString(),
-    [fetchedMenuCategories],
-  );
-  const [openCategory, setOpenCategory] = useState<string | undefined>();
+  const [openCategory, setOpenCategory] = useState("");
   const updateCategoryOrderMutation = useMutation(
     trpc.menuCategory.updateOrder.mutationOptions(),
   );
@@ -125,10 +121,6 @@ export const HomePage = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
-  useEffect(() => {
-    setOpenCategory(defaultOpenCategory);
-  }, [defaultOpenCategory]);
 
   useEffect(() => {
     setMenuCategories(fetchedMenuCategories);
@@ -340,8 +332,8 @@ export const HomePage = () => {
 
   return (
     <div className="pb-10">
-      <div className="mx-auto max-w-xl bg-[#fff9ef]/95 px-4 pt-4 pb-3 backdrop-blur-sm after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-5/6 after:-translate-x-1/2 after:bg-neutral-200/60">
-        <div className="mt-4 flex items-center justify-between">
+      <div className="mx-auto max-w-xl bg-[#fff9ef]/95 pt-4 pb-3 backdrop-blur-sm after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-[90%] after:-translate-x-1/2 after:bg-neutral-200/60">
+        <div className="mt-12 flex items-center justify-between">
           <MenuSwitcher />
           <div className="flex w-24 items-center justify-end">
             {loadingMenu ? (
@@ -367,57 +359,85 @@ export const HomePage = () => {
           </div>
         </div>
       </div>
-      {displayedMenuCategories.length === 0 ? (
-        <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center shadow-[0_1px_3px_rgba(40,21,19,0.08)]">
-          <h2 className="font-semibold text-[#281513]">No categories yet</h2>
-          <p className="text-muted-foreground mt-2 text-sm">
-            Add your first category to start building this menu.
-          </p>
-          <Button
-            className="mt-4"
-            onClick={() => setIsCategoryDialogOpen(true)}
-          >
-            <Plus />
-            Add Category
-          </Button>
-        </div>
-      ) : (
-        <MotionConfig transition={{ duration: 0.24, ease: accordionEaseOut }}>
-          <DndContext
-            id="home-menu-preview"
-            sensors={sensors}
-            collisionDetection={collisionDetection}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={displayedMenuCategories.map((category) =>
-                getCategorySortableId(category.id),
-              )}
-              strategy={verticalListSortingStrategy}
+      <div className="mt-12">
+        {displayedMenuCategories.length === 0 ? (
+          <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center shadow-[0_1px_3px_rgba(40,21,19,0.08)]">
+            <h2 className="font-semibold text-[#281513]">No categories yet</h2>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Add your first category to start building this menu.
+            </p>
+            <Button
+              className="mt-4"
+              onClick={() => setIsCategoryDialogOpen(true)}
             >
-              <Accordion.Root
-                type="single"
-                collapsible
-                value={openCategory}
-                onValueChange={setOpenCategory}
-                className="space-y-4"
+              <Plus />
+              Add Category
+            </Button>
+          </div>
+        ) : (
+          <MotionConfig transition={{ duration: 0.24, ease: accordionEaseOut }}>
+            <>
+              <DndContext
+                id="home-menu-preview"
+                sensors={sensors}
+                collisionDetection={collisionDetection}
+                onDragEnd={handleDragEnd}
               >
-                {displayedMenuCategories.map((category) => (
-                  <SortableMenuCategorySection
-                    key={category.id}
-                    category={category}
-                    isOpen={openCategory === String(category.id)}
-                    onAddItem={handleAddItem}
-                    onDeleteCategory={handleDeleteCategory}
-                    onEditItem={handleEditItem}
-                    onDeleteItem={handleDeleteItem}
+                <SortableContext
+                  items={displayedMenuCategories.map((category) =>
+                    getCategorySortableId(category.id),
+                  )}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <Accordion.Root
+                    type="single"
+                    collapsible
+                    value={openCategory}
+                    onValueChange={setOpenCategory}
+                    className="space-y-4"
+                  >
+                    {displayedMenuCategories.map((category) => (
+                      <SortableMenuCategorySection
+                        key={category.id}
+                        category={category}
+                        isOpen={openCategory === String(category.id)}
+                        onAddItem={handleAddItem}
+                        onDeleteCategory={handleDeleteCategory}
+                        onEditItem={handleEditItem}
+                        onDeleteItem={handleDeleteItem}
+                      />
+                    ))}
+                  </Accordion.Root>
+                </SortableContext>
+              </DndContext>
+              <button
+                type="button"
+                onClick={() => setIsCategoryDialogOpen(true)}
+                className="group relative mt-4 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-transparent px-4 py-3.5 text-sm font-semibold text-[#6f5a51] transition-colors hover:bg-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
+              >
+                <svg
+                  className="pointer-events-none absolute inset-0 size-full overflow-visible"
+                  aria-hidden="true"
+                >
+                  <rect
+                    x="0.5"
+                    y="0.5"
+                    width="calc(100% - 1px)"
+                    height="calc(100% - 1px)"
+                    rx="10"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeDasharray="6 5"
+                    className="text-[#d9cbbd] transition-colors group-hover:text-[#c7b4a3]"
                   />
-                ))}
-              </Accordion.Root>
-            </SortableContext>
-          </DndContext>
-        </MotionConfig>
-      )}
+                </svg>
+                <Plus className="size-5" />
+                New category
+              </button>
+            </>
+          </MotionConfig>
+        )}
+      </div>
 
       <FormDialog
         title="Create New Category"

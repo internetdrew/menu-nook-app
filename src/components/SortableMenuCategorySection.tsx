@@ -63,7 +63,7 @@ export function SortableMenuCategorySection({
   });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition: isDragging ? transition : (transition ?? sortableTransition),
     boxShadow: isDragging
       ? "0 10px 28px rgba(40, 21, 19, 0.16)"
