@@ -5,6 +5,7 @@ import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
 import { screen, waitFor, within } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
+import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 
@@ -15,6 +16,68 @@ vi.mock("sonner", () => ({
   },
   Toaster: vi.fn(() => null),
 }));
+
+const createPreviewCategory = (id: number, name: string, orderIndex: number) => ({
+  id,
+  name,
+  description: null,
+  menu_id: "menu-123",
+  created_at: "2026-05-20T00:00:00.000Z",
+  order_index: orderIndex,
+  sort_index_id: id + 100,
+  items: [],
+});
+
+const menuManagerBaseResolvers = (
+  getCategories: () => ReturnType<typeof createPreviewCategory>[],
+) => ({
+  "business.getForUser": () => ({
+    result: {
+      data: {
+        id: "business-123",
+        name: "Test Business",
+        user_id: "user-123",
+      },
+    },
+  }),
+  "subscription.getForMenu": () => ({ result: { data: null } }),
+  "menu.getAllForBusiness": () => ({
+    result: {
+      data: [
+        {
+          id: "menu-123",
+          name: "Test Menu",
+          business_id: "business-123",
+          created_at: "2026-05-20T00:00:00.000Z",
+          updated_at: "2026-05-20T00:00:00.000Z",
+        },
+      ],
+    },
+  }),
+  "menu.getPreview": () => ({
+    result: {
+      data: {
+        id: "menu-123",
+        name: "Test Menu",
+        business_id: "business-123",
+        created_at: "2026-05-20T00:00:00.000Z",
+        updated_at: "2026-05-20T00:00:00.000Z",
+        menu_categories: getCategories(),
+        business: {
+          id: "business-123",
+          name: "Test Business",
+          user_id: "user-123",
+          image_path: null,
+          image_url: null,
+          created_at: "2026-05-20T00:00:00.000Z",
+        },
+      },
+    },
+  }),
+  "menuQRCode.getPublicUrlForMenu": () => ({
+    result: { data: { public_url: "https://example.com/qr-code.png" } },
+  }),
+});
 
 describe("Dashboard Home Page", () => {
   beforeEach(() => {
@@ -1131,5 +1194,125 @@ describe("Dashboard Home Page", () => {
     expect(writeTextSpy).toHaveBeenCalledWith(
       `${window.location.origin}/menu/menu-123`,
     );
+  });
+
+  it("keeps the open category open when fetched category order changes", async () => {
+    const drinks = createPreviewCategory(1, "Drinks", 0);
+    const mains = createPreviewCategory(2, "Mains", 1);
+    const desserts = createPreviewCategory(3, "Desserts", 2);
+    let categories = [drinks, mains, desserts];
+
+    server.use(
+      createTrpcQueryHandler(menuManagerBaseResolvers(() => categories)),
+    );
+
+    const user = userEvent.setup();
+    const queryClient = createTestQueryClient();
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+      queryClient,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: /expand mains/i }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: /collapse mains/i }),
+    ).toBeInTheDocument();
+
+    categories = [desserts, mains, drinks];
+    await act(async () => {
+      await queryClient.invalidateQueries();
+    });
+
+    await waitFor(() => {
+      expect(
+        screen
+          .getAllByRole("heading", { level: 2 })
+          .map((heading) => heading.textContent),
+      ).toEqual(["Desserts", "Mains", "Drinks"]);
+    });
+    expect(
+      screen.getByRole("button", { name: /collapse mains/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /expand desserts/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps every category closed when fetched category order changes with none open", async () => {
+    const drinks = createPreviewCategory(1, "Drinks", 0);
+    const mains = createPreviewCategory(2, "Mains", 1);
+    const desserts = createPreviewCategory(3, "Desserts", 2);
+    let categories = [drinks, mains, desserts];
+
+    server.use(
+      createTrpcQueryHandler(menuManagerBaseResolvers(() => categories)),
+    );
+
+    const queryClient = createTestQueryClient();
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+      queryClient,
+    });
+
+    expect(
+      await screen.findByRole("button", { name: /expand drinks/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /expand mains/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /expand desserts/i }),
+    ).toBeInTheDocument();
+
+    categories = [desserts, mains, drinks];
+    await act(async () => {
+      await queryClient.invalidateQueries();
+    });
+
+    await waitFor(() => {
+      expect(
+        screen
+          .getAllByRole("heading", { level: 2 })
+          .map((heading) => heading.textContent),
+      ).toEqual(["Desserts", "Mains", "Drinks"]);
+    });
+    expect(screen.queryByRole("button", { name: /collapse/i })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: /expand desserts/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /expand mains/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /expand drinks/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("opens the category form from the bottom new category button", async () => {
+    const drinks = createPreviewCategory(1, "Drinks", 0);
+
+    server.use(
+      createTrpcQueryHandler(menuManagerBaseResolvers(() => [drinks])),
+    );
+
+    const user = userEvent.setup();
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: /new category/i }),
+    );
+
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByText(/create new category/i),
+    ).toBeInTheDocument();
   });
 });
