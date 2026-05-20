@@ -53,7 +53,7 @@ function App() {
       <nav className="fixed inset-x-0 top-0 z-40">
         <p className="title mt-4 text-center font-bold">MenuNook</p>
       </nav>
-      <main className="mx-auto flex min-h-dvh max-w-xl items-start px-4 pt-28 pb-8">
+      <main className="mx-auto flex min-h-dvh max-w-xl items-start px-4 pb-8">
         <AnimatePresence mode="wait" initial={false}>
           {appView === "loading" ? (
             <motion.div
@@ -71,7 +71,7 @@ function App() {
           ) : appView === "onboarding" ? (
             <motion.div
               key="onboarding"
-              className="w-full"
+              className="mt-40 w-full"
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}

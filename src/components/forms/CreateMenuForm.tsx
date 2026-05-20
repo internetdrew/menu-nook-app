@@ -12,8 +12,8 @@ import {
 } from "../ui/form";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { queryClient, trpc } from "@/utils/trpc";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Spinner } from "../ui/spinner";
 
@@ -25,6 +25,7 @@ const formSchema = z.object({
 
 export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const createMenu = useMutation(trpc.menu.create.mutationOptions());
+  const queryClient = useQueryClient();
   const { data: business } = useQuery(trpc.business.getForUser.queryOptions());
 
   const form = useForm<z.infer<typeof formSchema>>({

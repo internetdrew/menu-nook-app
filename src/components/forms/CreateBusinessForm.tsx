@@ -12,8 +12,8 @@ import {
 } from "../ui/form";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { queryClient, trpc } from "@/utils/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -28,6 +28,7 @@ export const CreateBusinessForm = ({
   onSuccess: () => void;
 }) => {
   const createBusiness = useMutation(trpc.business.create.mutationOptions());
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
