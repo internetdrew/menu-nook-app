@@ -34,9 +34,13 @@ describe("Dashboard Home Page", () => {
     expect(await screen.findByText(/MenuNook/i)).toBeInTheDocument();
     expect(await screen.findByText(/Get Started/i)).toBeInTheDocument();
     expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
-    expect(screen.getByText(/Create your business/i)).toBeInTheDocument();
-    expect(screen.getByText(/Create your first menu/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Create/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your business/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Create/i })).not.toBeInTheDocument();
   });
 
   it("redirects guests to the login screen", async () => {
@@ -149,7 +153,9 @@ describe("Dashboard Home Page", () => {
     await waitFor(() => {
       expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
-    expect(screen.getByText(/Create your first menu/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeEnabled();
   });
 
   it("does not show cached business and menu UI to signed out users", async () => {
@@ -354,10 +360,11 @@ describe("Dashboard Home Page", () => {
 
     expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Add the customer-facing name for your restaurant./i),
+      screen.getByRole("button", { name: /Name your business/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Create your first menu/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /create/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeDisabled();
   });
 
   it("allows business creation when user has no business", async () => {
@@ -404,6 +411,9 @@ describe("Dashboard Home Page", () => {
       expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
     });
 
+    await user.click(
+      screen.getByRole("button", { name: /Name your business/i }),
+    );
     const nameInput = screen.getByLabelText(/^Name$/i);
     await user.type(nameInput, "Test Business");
     const submitButton = screen.getByRole("button", {
@@ -414,7 +424,9 @@ describe("Dashboard Home Page", () => {
     await waitFor(() => {
       expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
-    expect(screen.getByText(/Create your first menu/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeEnabled();
   });
 
   it("renders an error message when user tries to create a business without text entry", async () => {
@@ -448,6 +460,9 @@ describe("Dashboard Home Page", () => {
       expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
     });
 
+    await user.click(
+      screen.getByRole("button", { name: /Name your business/i }),
+    );
     const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
@@ -489,12 +504,12 @@ describe("Dashboard Home Page", () => {
       expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Create your business/i)).toBeInTheDocument();
-    expect(screen.getByText(/Create your first menu/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Name the first menu customers will browse./i),
+      screen.getByRole("button", { name: /Name your business/i }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /create/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeEnabled();
   });
   it("allows menu creation once the user has a business", async () => {
     let menusCreated = false;
@@ -571,12 +586,163 @@ describe("Dashboard Home Page", () => {
       expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
 
+    await user.click(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    );
     const nameInput = screen.getByLabelText(/Menu Name/i);
     await user.type(nameInput, "Test Menu");
     const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
     await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/You're all set!/i)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: /Continue/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/No categories yet/i)).toBeInTheDocument();
+    });
+  });
+
+  it("walks a new user through onboarding before entering the dashboard", async () => {
+    let createdBusiness:
+      | { id: string; name: string; user_id: string }
+      | null = null;
+    let createdMenu:
+      | { id: string; name: string; business_id: string }
+      | null = null;
+    let finishBusinessCreate: (() => void) | undefined;
+    let finishMenuCreate: (() => void) | undefined;
+
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: createdBusiness,
+          },
+        }),
+        "subscription.getForMenu": () => ({
+          result: {
+            data: null,
+          },
+        }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: createdMenu ? [createdMenu] : [],
+          },
+        }),
+        "menu.getPreview": () => ({
+          result: {
+            data: createdMenu
+              ? {
+                  id: createdMenu.id,
+                  name: createdMenu.name,
+                  business_id: createdMenu.business_id,
+                  menu_categories: [],
+                  business: {
+                    id: "business-123",
+                    image_url: null,
+                    name: createdBusiness?.name ?? "Test Business",
+                  },
+                }
+              : null,
+          },
+        }),
+        "menuQRCode.getPublicUrlForMenu": () => ({
+          result: { data: { public_url: "https://example.com/qr-code.png" } },
+        }),
+      }),
+      http.post("/trpc/business.create", async ({ request }) => {
+        const body = (await request.json()) as { name: string };
+        createdBusiness = {
+          id: "business-123",
+          name: body.name,
+          user_id: "user-123",
+        };
+        await new Promise<void>((resolve) => {
+          finishBusinessCreate = resolve;
+        });
+
+        return HttpResponse.json([
+          {
+            result: {
+              data: createdBusiness,
+            },
+          },
+        ]);
+      }),
+      http.post("/trpc/menu.create", async ({ request }) => {
+        const body = (await request.json()) as { name: string };
+        createdMenu = {
+          id: "menu-123",
+          name: body.name,
+          business_id: "business-123",
+        };
+        await new Promise<void>((resolve) => {
+          finishMenuCreate = resolve;
+        });
+
+        return HttpResponse.json([
+          {
+            result: {
+              data: createdMenu,
+            },
+          },
+        ]);
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    expect(await screen.findByText(/0 of 2 Completed/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeDisabled();
+
+    await user.click(
+      screen.getByRole("button", { name: /Name your business/i }),
+    );
+    await user.type(screen.getByLabelText(/^Name$/i), "Test Business");
+    await user.click(screen.getByRole("button", { name: /Create/i }));
+
+    const sendingBusinessButton = await screen.findByRole("button", {
+      name: /Sending/i,
+    });
+    expect(sendingBusinessButton).toBeDisabled();
+    finishBusinessCreate?.();
+
+    await waitFor(() => {
+      expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    );
+    const menuNameInput = screen.getByLabelText(/Menu Name/i);
+    await user.type(menuNameInput, "Dinner");
+    const menuForm = menuNameInput.closest("form");
+    expect(menuForm).not.toBeNull();
+    await user.click(
+      within(menuForm as HTMLFormElement).getByRole("button", {
+        name: /Create/i,
+      }),
+    );
+
+    const sendingMenuButton = await screen.findByRole("button", {
+      name: /Sending/i,
+    });
+    expect(sendingMenuButton).toBeDisabled();
+    finishMenuCreate?.();
+
+    expect(await screen.findByText(/You're all set!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Everything is set up and ready/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No categories yet/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Continue/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/No categories yet/i)).toBeInTheDocument();
@@ -622,6 +788,9 @@ describe("Dashboard Home Page", () => {
       expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
 
+    await user.click(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    );
     const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
