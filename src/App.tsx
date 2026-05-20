@@ -1,15 +1,42 @@
-import { DashboardPage } from "@/components/Dashboard";
-import ShareQRButtonDialog from "@/components/home/ShareQRButtonDialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/sonner";
-import { useMenuContext } from "@/contexts/ActiveMenuContext";
-import { AnimatePresence, motion } from "motion/react";
 import loginBackground from "@/assets/login-bg.png";
-import { MenuSwitcher } from "./components/MenuSwitcher";
-import { MENU_SWITCHER_ENTER_TRANSITION } from "./constants";
+import { useAuth } from "./contexts/auth";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "./utils/trpc";
+import { OnboardingChecklist } from "./components/OnboardingChecklist";
+import { HomePage } from "./routes/HomePage";
+import LoadingSpinner from "./components/LoadingSpinner";
+import { AnimatePresence, motion } from "motion/react";
+
+const appViewTransition = {
+  duration: 0.22,
+  ease: [0.215, 0.61, 0.355, 1],
+} as const;
 
 function App() {
-  const { activeMenu, loading } = useMenuContext();
+  const { user, isLoading: authLoading } = useAuth();
+
+  const { data: business, isLoading: businessLoading } = useQuery(
+    trpc.business.getForUser.queryOptions(undefined, {
+      enabled: !!user && !authLoading,
+    }),
+  );
+
+  const { data: menus, isLoading: menusLoading } = useQuery(
+    trpc.menu.getAllForBusiness.queryOptions(
+      {
+        businessId: business?.id || "",
+      },
+      { enabled: !!business && !!user && !authLoading },
+    ),
+  );
+
+  const isAppLoading = authLoading || businessLoading || menusLoading;
+  const appView = isAppLoading
+    ? "loading"
+    : !business || menus?.length === 0
+      ? "onboarding"
+      : "home";
 
   return (
     <div className="min-h-dvh">
@@ -24,37 +51,47 @@ function App() {
         }}
       />
       <nav className="fixed inset-x-0 top-0 z-40">
-        <div className="mx-auto max-w-xl border-b border-neutral-200 bg-[#fff9ef]/95 px-4 pt-4 pb-3 backdrop-blur-sm">
-          <p className="title text-center font-bold">MenuNook</p>
-          <div className="mt-4 flex items-center justify-between">
-            <MenuSwitcher />
-            <div className="flex w-24 items-center justify-end">
-              {loading ? (
-                <Skeleton className="h-9 w-full rounded-md" />
-              ) : (
-                <AnimatePresence mode="wait" initial={false}>
-                  {activeMenu ? (
-                    <motion.div
-                      key="share-button"
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={MENU_SWITCHER_ENTER_TRANSITION}
-                    >
-                      <ShareQRButtonDialog
-                        activeMenuId={activeMenu.id}
-                        activeMenuName={activeMenu.name}
-                      />
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              )}
-            </div>
-          </div>
-        </div>
+        <p className="title mt-4 text-center font-bold">MenuNook</p>
       </nav>
-      <main className="mx-auto max-w-xl px-4 pt-34 pb-10">
-        <DashboardPage />
+      <main className="mx-auto flex min-h-dvh max-w-xl items-start px-4 pt-28 pb-8">
+        <AnimatePresence mode="wait" initial={false}>
+          {appView === "loading" ? (
+            <motion.div
+              key="loading"
+              role="status"
+              aria-label="Loading menu setup"
+              className="flex w-full justify-center"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={appViewTransition}
+            >
+              <LoadingSpinner />
+            </motion.div>
+          ) : appView === "onboarding" ? (
+            <motion.div
+              key="onboarding"
+              className="w-full"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={appViewTransition}
+            >
+              <OnboardingChecklist business={business} menus={menus} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="home"
+              className="w-full"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={appViewTransition}
+            >
+              <HomePage />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
       <Toaster />
     </div>
