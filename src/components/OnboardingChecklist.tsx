@@ -11,10 +11,11 @@ import type { BusinessRecord, MenuRecord } from "@/types/menu";
 interface OnboardingChecklistProps {
   business: BusinessRecord | null | undefined;
   menus: MenuRecord[] | null | undefined;
+  onContinue: () => void;
 }
 
 const totalSteps = 2;
-type OnboardingPanel = "checklist" | "businessForm" | "menuForm";
+type OnboardingPanel = "checklist" | "businessForm" | "menuForm" | "success";
 
 const cardTransition = {
   type: "spring",
@@ -41,6 +42,7 @@ const panelVariants = {
 export function OnboardingChecklist({
   business,
   menus,
+  onContinue,
 }: OnboardingChecklistProps) {
   const [panel, setPanel] = useState<OnboardingPanel>("checklist");
   const [measureRef, bounds] = useMeasure();
@@ -51,6 +53,11 @@ export function OnboardingChecklist({
   const activeStep = hasBusiness ? "menu" : "business";
 
   useEffect(() => {
+    if (hasBusiness && hasMenu) {
+      setPanel("success");
+      return;
+    }
+
     if (
       (panel === "businessForm" && hasBusiness) ||
       (panel === "menuForm" && hasMenu)
@@ -124,6 +131,17 @@ export function OnboardingChecklist({
                       : "You're ready to build your menu"}
                 </div>
               </div>
+            </motion.div>
+          ) : panel === "success" ? (
+            <motion.div
+              key="success"
+              variants={panelVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={panelTransition}
+            >
+              <OnboardingSuccessPanel onContinue={onContinue} />
             </motion.div>
           ) : (
             <motion.div
@@ -288,6 +306,40 @@ function OnboardingFormPanel({
         </h1>
       </div>
       <div className="px-5 py-5">{children}</div>
+    </div>
+  );
+}
+
+function OnboardingSuccessPanel({ onContinue }: { onContinue: () => void }) {
+  return (
+    <div className="px-6 py-8 text-center">
+      <motion.div
+        className="mx-auto grid size-8 place-items-center rounded-full bg-pink-600 text-white shadow-sm"
+        initial={{ scale: 0.86, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", duration: 0.36, bounce: 0.18 }}
+      >
+        <Check className="size-5" />
+      </motion.div>
+
+      <div className="mt-6 space-y-2">
+        <h1 id="onboarding-title" className="text-xl font-semibold">
+          You're all set!
+        </h1>
+        <p className="text-sm leading-6 text-[#807d78]">
+          Everything is set up and ready.
+          <br />
+          You're good to go!
+        </p>
+      </div>
+
+      <Button
+        type="button"
+        className="mt-8 w-1/2 rounded-full text-base"
+        onClick={onContinue}
+      >
+        Continue
+      </Button>
     </div>
   );
 }

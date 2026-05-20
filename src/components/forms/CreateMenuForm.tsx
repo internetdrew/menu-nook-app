@@ -15,6 +15,7 @@ import { trpc } from "@/utils/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
+import type { MenuRecord } from "@/types/menu";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -48,6 +49,15 @@ export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
           toast.error("Failed to add menu. Please try again.");
         },
         onSuccess: async (menu) => {
+          queryClient.setQueryData<MenuRecord[]>(
+            trpc.menu.getAllForBusiness.queryKey({ businessId: business.id }),
+            (currentMenus = []) => [
+              ...currentMenus.filter(
+                (currentMenu) => currentMenu.id !== menu.id,
+              ),
+              menu,
+            ],
+          );
           toast.success(`${menu.name} added successfully!`);
           onSuccess();
           await queryClient.invalidateQueries({

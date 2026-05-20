@@ -7,7 +7,7 @@ import { OnboardingChecklist } from "./components/OnboardingChecklist";
 import { HomePage } from "./routes/HomePage";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const appViewTransition = {
   duration: 0.22,
@@ -17,6 +17,8 @@ const appViewTransition = {
 function App() {
   const { user, isLoading: authLoading } = useAuth();
   const wasOnboardingVisible = useRef(false);
+  const [hasAcceptedOnboardingSuccess, setHasAcceptedOnboardingSuccess] =
+    useState(false);
 
   const { data: business, isLoading: businessLoading } = useQuery(
     trpc.business.getForUser.queryOptions(undefined, {
@@ -39,9 +41,14 @@ function App() {
     menus === undefined &&
     !wasOnboardingVisible.current;
   const isAppLoading = authLoading || businessLoading || isInitialMenusLoading;
+  const isSetupComplete = !!business && !!menus?.length;
+  const shouldShowOnboardingSuccess =
+    isSetupComplete &&
+    wasOnboardingVisible.current &&
+    !hasAcceptedOnboardingSuccess;
   const appView = isAppLoading
     ? "loading"
-    : !business || !menus?.length
+    : !isSetupComplete || shouldShowOnboardingSuccess
       ? "onboarding"
       : "home";
 
@@ -54,6 +61,12 @@ function App() {
       wasOnboardingVisible.current = false;
     }
   }, [appView]);
+
+  useEffect(() => {
+    if (!isSetupComplete) {
+      setHasAcceptedOnboardingSuccess(false);
+    }
+  }, [isSetupComplete]);
 
   return (
     <div className="min-h-dvh">
@@ -94,7 +107,11 @@ function App() {
               exit={{ opacity: 0, y: -4 }}
               transition={appViewTransition}
             >
-              <OnboardingChecklist business={business} menus={menus} />
+              <OnboardingChecklist
+                business={business}
+                menus={menus}
+                onContinue={() => setHasAcceptedOnboardingSuccess(true)}
+              />
             </motion.div>
           ) : (
             <motion.div
