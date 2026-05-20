@@ -335,7 +335,7 @@ function OnboardingSuccessPanel({ onContinue }: { onContinue: () => void }) {
 
       <Button
         type="button"
-        className="mt-8 w-1/2 rounded-full text-base"
+        className="mt-8 w-3/4 rounded-full text-base"
         onClick={onContinue}
       >
         Continue
