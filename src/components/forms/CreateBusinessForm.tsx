@@ -10,11 +10,11 @@ import {
   FormMessage,
   Form,
 } from "../ui/form";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { trpc } from "@/utils/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -46,11 +46,15 @@ export const CreateBusinessForm = ({
           toast.error("Failed to create business. Please try again.");
         },
         onSuccess: async (business) => {
+          queryClient.setQueryData(
+            trpc.business.getForUser.queryKey(),
+            business,
+          );
+          toast.success(`${business.name} created successfully!`);
+          onSuccess();
           await queryClient.invalidateQueries({
             queryKey: trpc.business.getForUser.queryKey(),
           });
-          toast.success(`${business.name} created successfully!`);
-          onSuccess();
         },
       },
     );
@@ -76,9 +80,10 @@ export const CreateBusinessForm = ({
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Creating..." : "Create"}
-          </Button>
+          <AnimatedSubmitButton
+            isSubmitting={form.formState.isSubmitting}
+            idleLabel="Create"
+          />
         </div>
       </form>
     </Form>

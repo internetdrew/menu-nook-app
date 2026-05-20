@@ -10,12 +10,11 @@ import {
   FormMessage,
   Form,
 } from "../ui/form";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { trpc } from "@/utils/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Spinner } from "../ui/spinner";
+import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -49,11 +48,11 @@ export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
           toast.error("Failed to add menu. Please try again.");
         },
         onSuccess: async (menu) => {
+          toast.success(`${menu.name} added successfully!`);
+          onSuccess();
           await queryClient.invalidateQueries({
             queryKey: trpc.menu.getAllForBusiness.queryKey(),
           });
-          toast.success(`${menu.name} added successfully!`);
-          onSuccess();
         },
       },
     );
@@ -79,9 +78,10 @@ export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting && <Spinner />} Create
-          </Button>
+          <AnimatedSubmitButton
+            isSubmitting={form.formState.isSubmitting}
+            idleLabel="Create"
+          />
         </div>
       </form>
     </Form>

@@ -7,6 +7,7 @@ import { OnboardingChecklist } from "./components/OnboardingChecklist";
 import { HomePage } from "./routes/HomePage";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef } from "react";
 
 const appViewTransition = {
   duration: 0.22,
@@ -15,6 +16,7 @@ const appViewTransition = {
 
 function App() {
   const { user, isLoading: authLoading } = useAuth();
+  const wasOnboardingVisible = useRef(false);
 
   const { data: business, isLoading: businessLoading } = useQuery(
     trpc.business.getForUser.queryOptions(undefined, {
@@ -31,12 +33,27 @@ function App() {
     ),
   );
 
-  const isAppLoading = authLoading || businessLoading || menusLoading;
+  const isInitialMenusLoading =
+    !!business &&
+    menusLoading &&
+    menus === undefined &&
+    !wasOnboardingVisible.current;
+  const isAppLoading = authLoading || businessLoading || isInitialMenusLoading;
   const appView = isAppLoading
     ? "loading"
-    : !business || menus?.length === 0
+    : !business || !menus?.length
       ? "onboarding"
       : "home";
+
+  useEffect(() => {
+    if (appView === "onboarding") {
+      wasOnboardingVisible.current = true;
+    }
+
+    if (appView === "home") {
+      wasOnboardingVisible.current = false;
+    }
+  }, [appView]);
 
   return (
     <div className="min-h-dvh">
