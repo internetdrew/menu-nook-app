@@ -26,11 +26,11 @@ import {
 import * as Accordion from "@radix-ui/react-accordion";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { MotionConfig } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import { accordionEaseOut } from "@/constants";
+import { accordionEaseOut, MENU_SWITCHER_ENTER_TRANSITION } from "@/constants";
 import { SortableMenuCategorySection } from "@/components/SortableMenuCategorySection";
 import type {
   MenuItemWithCategory,
@@ -38,6 +38,8 @@ import type {
   MenuPreviewData,
   MenuPreviewItem,
 } from "@/types/menu";
+import { MenuSwitcher } from "@/components/MenuSwitcher";
+import ShareQRButtonDialog from "@/components/home/ShareQRButtonDialog";
 
 type SelectedMenuCategoryItem = MenuPreviewItem & MenuItemWithCategory;
 export type MenuCategory = MenuPreviewCategory;
@@ -87,7 +89,7 @@ export const HomePage = () => {
   );
   const [selectedItem, setSelectedItem] =
     useState<SelectedMenuCategoryItem | null>(null);
-  const { activeMenu } = useMenuContext();
+  const { activeMenu, loading: loadingMenu } = useMenuContext();
 
   const { data: menuPreview, isLoading } = useQuery(
     trpc.menu.getPreview.queryOptions(
@@ -337,7 +339,34 @@ export const HomePage = () => {
   }
 
   return (
-    <main className="pb-10">
+    <div className="pb-10">
+      <div className="mx-auto max-w-xl bg-[#fff9ef]/95 px-4 pt-4 pb-3 backdrop-blur-sm after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-5/6 after:-translate-x-1/2 after:bg-neutral-200/60">
+        <div className="mt-4 flex items-center justify-between">
+          <MenuSwitcher />
+          <div className="flex w-24 items-center justify-end">
+            {loadingMenu ? (
+              <Skeleton className="h-9 w-full rounded-md" />
+            ) : (
+              <AnimatePresence mode="wait" initial={false}>
+                {activeMenu ? (
+                  <motion.div
+                    key="share-button"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={MENU_SWITCHER_ENTER_TRANSITION}
+                  >
+                    <ShareQRButtonDialog
+                      activeMenuId={activeMenu.id}
+                      activeMenuName={activeMenu.name}
+                    />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            )}
+          </div>
+        </div>
+      </div>
       {displayedMenuCategories.length === 0 ? (
         <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center shadow-[0_1px_3px_rgba(40,21,19,0.08)]">
           <h2 className="font-semibold text-[#281513]">No categories yet</h2>
@@ -447,7 +476,7 @@ export const HomePage = () => {
           }}
         />
       )}
-    </main>
+    </div>
   );
 };
 

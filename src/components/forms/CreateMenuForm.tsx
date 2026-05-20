@@ -10,12 +10,12 @@ import {
   FormMessage,
   Form,
 } from "../ui/form";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { queryClient, trpc } from "@/utils/trpc";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Spinner } from "../ui/spinner";
+import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
+import type { MenuRecord } from "@/types/menu";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -25,6 +25,7 @@ const formSchema = z.object({
 
 export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const createMenu = useMutation(trpc.menu.create.mutationOptions());
+  const queryClient = useQueryClient();
   const { data: business } = useQuery(trpc.business.getForUser.queryOptions());
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -48,11 +49,20 @@ export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
           toast.error("Failed to add menu. Please try again.");
         },
         onSuccess: async (menu) => {
+          queryClient.setQueryData<MenuRecord[]>(
+            trpc.menu.getAllForBusiness.queryKey({ businessId: business.id }),
+            (currentMenus = []) => [
+              ...currentMenus.filter(
+                (currentMenu) => currentMenu.id !== menu.id,
+              ),
+              menu,
+            ],
+          );
+          toast.success(`${menu.name} added successfully!`);
+          onSuccess();
           await queryClient.invalidateQueries({
             queryKey: trpc.menu.getAllForBusiness.queryKey(),
           });
-          toast.success(`${menu.name} added successfully!`);
-          onSuccess();
         },
       },
     );
@@ -78,9 +88,10 @@ export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting && <Spinner />} Create
-          </Button>
+          <AnimatedSubmitButton
+            isSubmitting={form.formState.isSubmitting}
+            idleLabel="Create"
+          />
         </div>
       </form>
     </Form>

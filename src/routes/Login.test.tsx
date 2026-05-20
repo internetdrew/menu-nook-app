@@ -77,9 +77,8 @@ describe("Login Page", () => {
 
     renderApp({ initialEntries: ["/login"], authMock: authedUserState });
 
-    expect(
-      await screen.findByRole("button", { name: /create business/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/Get Started/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /continue with google/i }),
     ).not.toBeInTheDocument();

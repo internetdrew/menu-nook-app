@@ -34,7 +34,7 @@ export function MenuSwitcher() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start px-2 hover:bg-[#eee7dc]/80 focus-visible:bg-[#eee7dc]/80"
+                  className="justify-start px-2 hover:bg-[#eee7dc]/80 focus-visible:bg-[#eee7dc]/80"
                 >
                   <span className="truncate">
                     {activeMenu?.name ?? "No menu selected"}

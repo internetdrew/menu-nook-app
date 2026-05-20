@@ -31,11 +31,16 @@ describe("Dashboard Home Page", () => {
 
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
-    expect(screen.getByText(/MenuNook/i)).toBeInTheDocument();
-    expect(await screen.findByText(/No Business Found/i)).toBeInTheDocument();
+    expect(await screen.findByText(/MenuNook/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Get Started/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Create Business/i }),
+      screen.getByRole("button", { name: /Name your business/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Create/i })).not.toBeInTheDocument();
   });
 
   it("redirects guests to the login screen", async () => {
@@ -94,7 +99,7 @@ describe("Dashboard Home Page", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows the menu manager skeleton while menus are loading", async () => {
+  it("shows the app loading spinner while menus are loading", async () => {
     server.use(
       http.get("/trpc/*", async ({ request }) => {
         const url = new URL(request.url);
@@ -141,11 +146,16 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
     expect(screen.queryByText(/No menu selected/i)).not.toBeInTheDocument();
-    expect(screen.getByTestId("menu-manager-skeleton")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading menu setup/i }),
+    ).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/No menus found/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeEnabled();
   });
 
   it("does not show cached business and menu UI to signed out users", async () => {
@@ -326,7 +336,7 @@ describe("Dashboard Home Page", () => {
     });
   });
 
-  it("shows no business message card when user has no business", async () => {
+  it("shows the onboarding checklist when user has no business", async () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({
@@ -345,28 +355,41 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
     await waitFor(() => {
-      expect(screen.getByText(/No business found/i)).toBeInTheDocument();
+      expect(screen.getByText(/Get Started/i)).toBeInTheDocument();
     });
 
+    expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Add your business to start managing your menus./i),
+      screen.getByRole("button", { name: /Name your business/i }),
     ).toBeInTheDocument();
-    const button = screen.getByRole("button", {
-      name: /create business/i,
-    });
-    expect(button).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeDisabled();
   });
 
   it("allows business creation when user has no business", async () => {
+    let businessCreated = false;
+
     server.use(
       createTrpcQueryHandler({
-        "business.getForUser": () => ({ result: { data: null } }),
+        "business.getForUser": () => ({
+          result: {
+            data: businessCreated
+              ? {
+                  id: "business-123",
+                  name: "Test Business",
+                  user_id: "user-123",
+                }
+              : null,
+          },
+        }),
         "subscription.getForMenu": () => ({ result: { data: null } }),
-        "menu.getAllForBusiness": () => ({ result: { data: null } }),
+        "menu.getAllForBusiness": () => ({ result: { data: [] } }),
       }),
 
       http.post("/trpc/business.create", async ({ request }) => {
         const body = (await request.json()) as { name: string };
+        businessCreated = true;
         return HttpResponse.json([
           {
             result: {
@@ -385,40 +408,25 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
     await waitFor(() => {
-      expect(screen.getByText(/No business found/i)).toBeInTheDocument();
+      expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
     });
 
-    expect(
-      screen.getByText(/Add your business to start managing your menus./i),
-    ).toBeInTheDocument();
-    const button = screen.getByRole("button", {
-      name: /create business/i,
-    });
-    expect(button).toBeInTheDocument();
-    await user.click(button);
-
-    const dialog = await screen.findByRole("dialog");
-    expect(dialog).toBeInTheDocument();
-
-    expect(
-      within(dialog).getByText(/Create Your Business/i),
-    ).toBeInTheDocument();
-    expect(
-      within(dialog).getByText(
-        /Add your business to start managing your menus./i,
-      ),
-    ).toBeInTheDocument();
-
-    const nameInput = within(dialog).getByLabelText(/Name/i);
+    await user.click(
+      screen.getByRole("button", { name: /Name your business/i }),
+    );
+    const nameInput = screen.getByLabelText(/^Name$/i);
     await user.type(nameInput, "Test Business");
-    const submitButton = within(dialog).getByRole("button", {
+    const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(dialog).not.toBeInTheDocument();
+      expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeEnabled();
   });
 
   it("renders an error message when user tries to create a business without text entry", async () => {
@@ -449,31 +457,13 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
     await waitFor(() => {
-      expect(screen.getByText(/No business found/i)).toBeInTheDocument();
+      expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
     });
 
-    expect(
-      screen.getByText(/Add your business to start managing your menus./i),
-    ).toBeInTheDocument();
-    const button = screen.getByRole("button", {
-      name: /create business/i,
-    });
-    expect(button).toBeInTheDocument();
-    await user.click(button);
-
-    const dialog = await screen.findByRole("dialog");
-    expect(dialog).toBeInTheDocument();
-
-    expect(
-      within(dialog).getByText(/Create Your Business/i),
-    ).toBeInTheDocument();
-    expect(
-      within(dialog).getByText(
-        /Add your business to start managing your menus./i,
-      ),
-    ).toBeInTheDocument();
-
-    const submitButton = within(dialog).getByRole("button", {
+    await user.click(
+      screen.getByRole("button", { name: /Name your business/i }),
+    );
+    const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
     await user.click(submitButton);
@@ -511,18 +501,19 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
     await waitFor(() => {
-      expect(screen.getByText(/no menus found/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
 
     expect(
-      screen.getByText(/add your first menu to get started./i),
+      screen.getByRole("button", { name: /Name your business/i }),
     ).toBeInTheDocument();
-    const button = screen.getByRole("button", {
-      name: /add menu/i,
-    });
-    expect(button).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeEnabled();
   });
   it("allows menu creation once the user has a business", async () => {
+    let menusCreated = false;
+
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({
@@ -541,12 +532,39 @@ describe("Dashboard Home Page", () => {
         }),
         "menu.getAllForBusiness": () => ({
           result: {
-            data: [],
+            data: menusCreated
+              ? [
+                  {
+                    id: "menu-123",
+                    name: "Test Menu",
+                    business_id: "business-123",
+                  },
+                ]
+              : [],
           },
+        }),
+        "menu.getPreview": () => ({
+          result: {
+            data: {
+              id: "menu-123",
+              name: "Test Menu",
+              business_id: "business-123",
+              menu_categories: [],
+              business: {
+                id: "business-123",
+                image_url: null,
+                name: "Test Business",
+              },
+            },
+          },
+        }),
+        "menuQRCode.getPublicUrlForMenu": () => ({
+          result: { data: { public_url: "https://example.com/qr-code.png" } },
         }),
       }),
       http.post("/trpc/menu.create", async ({ request }) => {
         const body = (await request.json()) as { name: string };
+        menusCreated = true;
         return HttpResponse.json([
           {
             result: {
@@ -565,37 +583,169 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
     await waitFor(() => {
-      expect(screen.getByText(/no menus found/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
 
-    expect(
-      screen.getByText(/add your first menu to get started./i),
-    ).toBeInTheDocument();
-    const button = screen.getByRole("button", {
-      name: /add menu/i,
-    });
-    expect(button).toBeInTheDocument();
-    await user.click(button);
-
-    const dialog = await screen.findByRole("dialog");
-    expect(dialog).toBeInTheDocument();
-
-    expect(within(dialog).getByText(/Create New Menu/i)).toBeInTheDocument();
-    expect(
-      within(dialog).getByText(
-        /Fill in the details below to create a new menu./i,
-      ),
-    ).toBeInTheDocument();
-
-    const nameInput = within(dialog).getByLabelText(/Menu Name/i);
+    await user.click(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    );
+    const nameInput = screen.getByLabelText(/Menu Name/i);
     await user.type(nameInput, "Test Menu");
-    const submitButton = within(dialog).getByRole("button", {
+    const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(dialog).not.toBeInTheDocument();
+      expect(screen.getByText(/You're all set!/i)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: /Continue/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/No categories yet/i)).toBeInTheDocument();
+    });
+  });
+
+  it("walks a new user through onboarding before entering the dashboard", async () => {
+    let createdBusiness:
+      | { id: string; name: string; user_id: string }
+      | null = null;
+    let createdMenu:
+      | { id: string; name: string; business_id: string }
+      | null = null;
+    let finishBusinessCreate: (() => void) | undefined;
+    let finishMenuCreate: (() => void) | undefined;
+
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: createdBusiness,
+          },
+        }),
+        "subscription.getForMenu": () => ({
+          result: {
+            data: null,
+          },
+        }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: createdMenu ? [createdMenu] : [],
+          },
+        }),
+        "menu.getPreview": () => ({
+          result: {
+            data: createdMenu
+              ? {
+                  id: createdMenu.id,
+                  name: createdMenu.name,
+                  business_id: createdMenu.business_id,
+                  menu_categories: [],
+                  business: {
+                    id: "business-123",
+                    image_url: null,
+                    name: createdBusiness?.name ?? "Test Business",
+                  },
+                }
+              : null,
+          },
+        }),
+        "menuQRCode.getPublicUrlForMenu": () => ({
+          result: { data: { public_url: "https://example.com/qr-code.png" } },
+        }),
+      }),
+      http.post("/trpc/business.create", async ({ request }) => {
+        const body = (await request.json()) as { name: string };
+        createdBusiness = {
+          id: "business-123",
+          name: body.name,
+          user_id: "user-123",
+        };
+        await new Promise<void>((resolve) => {
+          finishBusinessCreate = resolve;
+        });
+
+        return HttpResponse.json([
+          {
+            result: {
+              data: createdBusiness,
+            },
+          },
+        ]);
+      }),
+      http.post("/trpc/menu.create", async ({ request }) => {
+        const body = (await request.json()) as { name: string };
+        createdMenu = {
+          id: "menu-123",
+          name: body.name,
+          business_id: "business-123",
+        };
+        await new Promise<void>((resolve) => {
+          finishMenuCreate = resolve;
+        });
+
+        return HttpResponse.json([
+          {
+            result: {
+              data: createdMenu,
+            },
+          },
+        ]);
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    expect(await screen.findByText(/0 of 2 Completed/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    ).toBeDisabled();
+
+    await user.click(
+      screen.getByRole("button", { name: /Name your business/i }),
+    );
+    await user.type(screen.getByLabelText(/^Name$/i), "Test Business");
+    await user.click(screen.getByRole("button", { name: /Create/i }));
+
+    const sendingBusinessButton = await screen.findByRole("button", {
+      name: /Sending/i,
+    });
+    expect(sendingBusinessButton).toBeDisabled();
+    finishBusinessCreate?.();
+
+    await waitFor(() => {
+      expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    );
+    const menuNameInput = screen.getByLabelText(/Menu Name/i);
+    await user.type(menuNameInput, "Dinner");
+    const menuForm = menuNameInput.closest("form");
+    expect(menuForm).not.toBeNull();
+    await user.click(
+      within(menuForm as HTMLFormElement).getByRole("button", {
+        name: /Create/i,
+      }),
+    );
+
+    const sendingMenuButton = await screen.findByRole("button", {
+      name: /Sending/i,
+    });
+    expect(sendingMenuButton).toBeDisabled();
+    finishMenuCreate?.();
+
+    expect(await screen.findByText(/You're all set!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Everything is set up and ready/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No categories yet/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Continue/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/No categories yet/i)).toBeInTheDocument();
     });
   });
 
@@ -635,34 +785,16 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
     await waitFor(() => {
-      expect(screen.getByText(/no menus found/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 of 2 Completed/i)).toBeInTheDocument();
     });
 
-    expect(
-      screen.getByText(/add your first menu to get started./i),
-    ).toBeInTheDocument();
-    const button = screen.getByRole("button", {
-      name: /add menu/i,
-    });
-    expect(button).toBeInTheDocument();
-    await user.click(button);
-
-    const dialog = await screen.findByRole("dialog");
-    expect(dialog).toBeInTheDocument();
-
-    expect(within(dialog).getByText(/Create New Menu/i)).toBeInTheDocument();
-    expect(
-      within(dialog).getByText(
-        /Fill in the details below to create a new menu./i,
-      ),
-    ).toBeInTheDocument();
-
-    const submitButton = within(dialog).getByRole("button", {
+    await user.click(
+      screen.getByRole("button", { name: /Name your first menu/i }),
+    );
+    const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
     await user.click(submitButton);
-
-    expect(dialog).toBeInTheDocument();
 
     expect(
       screen.getByText(/Menu name must have at least 2 characters./i),
