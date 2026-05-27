@@ -1315,4 +1315,28 @@ describe("Dashboard Home Page", () => {
       within(dialog).getByText(/create new category/i),
     ).toBeInTheDocument();
   });
+
+  it("uses an embedded new category trigger for the empty category state", async () => {
+    server.use(createTrpcQueryHandler(menuManagerBaseResolvers(() => [])));
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    expect(await screen.findByText(/No categories yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Create a category like Appetizers, Entrees, or Drinks/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /new category/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: /new category/i }),
+    ).toHaveLength(1);
+    expect(
+      screen.queryByRole("button", { name: /^add category$/i }),
+    ).not.toBeInTheDocument();
+  });
+
 });

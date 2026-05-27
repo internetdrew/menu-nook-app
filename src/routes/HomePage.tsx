@@ -361,22 +361,25 @@ export const HomePage = () => {
       </div>
       <div className="mt-12">
         {displayedMenuCategories.length === 0 ? (
-          <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center shadow-[0_1px_3px_rgba(40,21,19,0.08)]">
+          <div className="flex flex-col items-center rounded-lg border border-neutral-200 bg-white px-6 py-8 text-center shadow-[0_1px_3px_rgba(40,21,19,0.08)]">
             <h2 className="font-semibold text-[#281513]">No categories yet</h2>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Add your first category to start building this menu.
+            <p className="text-muted-foreground mt-2 max-w-sm text-sm">
+              Create a category like Appetizers, Entrees, or Drinks to start
+              building this menu.
             </p>
             <Button
               className="mt-4"
               onClick={() => setIsCategoryDialogOpen(true)}
             >
               <Plus />
-              Add Category
+              New category
             </Button>
           </div>
         ) : (
-          <MotionConfig transition={{ duration: 0.24, ease: accordionEaseOut }}>
-            <>
+          <>
+            <MotionConfig
+              transition={{ duration: 0.24, ease: accordionEaseOut }}
+            >
               <DndContext
                 id="home-menu-preview"
                 sensors={sensors}
@@ -410,32 +413,32 @@ export const HomePage = () => {
                   </Accordion.Root>
                 </SortableContext>
               </DndContext>
-              <button
-                type="button"
-                onClick={() => setIsCategoryDialogOpen(true)}
-                className="group relative mt-4 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-transparent px-4 py-3.5 text-sm font-semibold text-[#6f5a51] transition-colors hover:bg-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
+            </MotionConfig>
+            <button
+              type="button"
+              onClick={() => setIsCategoryDialogOpen(true)}
+              className="group relative mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-[#6f5a51] transition-colors hover:bg-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
+            >
+              <svg
+                className="pointer-events-none absolute inset-0 size-full overflow-visible"
+                aria-hidden="true"
               >
-                <svg
-                  className="pointer-events-none absolute inset-0 size-full overflow-visible"
-                  aria-hidden="true"
-                >
-                  <rect
-                    x="0.5"
-                    y="0.5"
-                    width="calc(100% - 1px)"
-                    height="calc(100% - 1px)"
-                    rx="10"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeDasharray="6 5"
-                    className="text-[#d9cbbd] transition-colors group-hover:text-[#c7b4a3]"
-                  />
-                </svg>
-                <Plus className="size-5" />
-                New category
-              </button>
-            </>
-          </MotionConfig>
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="calc(100% - 1px)"
+                  height="calc(100% - 1px)"
+                  rx="10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeDasharray="6 5"
+                  className="text-[#d9cbbd] transition-colors group-hover:text-[#c7b4a3]"
+                />
+              </svg>
+              <Plus className="size-4" />
+              New category
+            </button>
+          </>
         )}
       </div>
 
