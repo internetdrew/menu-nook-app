@@ -28,6 +28,25 @@ const createPreviewCategory = (id: number, name: string, orderIndex: number) => 
   items: [],
 });
 
+const createPreviewMenu = (
+  categories: ReturnType<typeof createPreviewCategory>[],
+) => ({
+  id: "menu-123",
+  name: "Test Menu",
+  business_id: "business-123",
+  created_at: "2026-05-20T00:00:00.000Z",
+  updated_at: "2026-05-20T00:00:00.000Z",
+  menu_categories: categories,
+  business: {
+    id: "business-123",
+    name: "Test Business",
+    user_id: "user-123",
+    image_path: null,
+    image_url: null,
+    created_at: "2026-05-20T00:00:00.000Z",
+  },
+});
+
 const menuManagerBaseResolvers = (
   getCategories: () => ReturnType<typeof createPreviewCategory>[],
 ) => ({
@@ -56,22 +75,7 @@ const menuManagerBaseResolvers = (
   }),
   "menu.getPreview": () => ({
     result: {
-      data: {
-        id: "menu-123",
-        name: "Test Menu",
-        business_id: "business-123",
-        created_at: "2026-05-20T00:00:00.000Z",
-        updated_at: "2026-05-20T00:00:00.000Z",
-        menu_categories: getCategories(),
-        business: {
-          id: "business-123",
-          name: "Test Business",
-          user_id: "user-123",
-          image_path: null,
-          image_url: null,
-          created_at: "2026-05-20T00:00:00.000Z",
-        },
-      },
+      data: createPreviewMenu(getCategories()),
     },
   }),
   "menuQRCode.getPublicUrlForMenu": () => ({
@@ -679,6 +683,7 @@ describe("Dashboard Home Page", () => {
       | null = null;
     let finishBusinessCreate: (() => void) | undefined;
     let finishMenuCreate: (() => void) | undefined;
+    let finishMenuPreview: (() => void) | undefined;
 
     server.use(
       createTrpcQueryHandler({
@@ -697,23 +702,31 @@ describe("Dashboard Home Page", () => {
             data: createdMenu ? [createdMenu] : [],
           },
         }),
-        "menu.getPreview": () => ({
-          result: {
-            data: createdMenu
-              ? {
-                  id: createdMenu.id,
-                  name: createdMenu.name,
-                  business_id: createdMenu.business_id,
-                  menu_categories: [],
-                  business: {
-                    id: "business-123",
-                    image_url: null,
-                    name: createdBusiness?.name ?? "Test Business",
-                  },
-                }
-              : null,
-          },
-        }),
+        "menu.getPreview": async () => {
+          if (createdMenu) {
+            await new Promise<void>((resolve) => {
+              finishMenuPreview = resolve;
+            });
+          }
+
+          return {
+            result: {
+              data: createdMenu
+                ? {
+                    id: createdMenu.id,
+                    name: createdMenu.name,
+                    business_id: createdMenu.business_id,
+                    menu_categories: [],
+                    business: {
+                      id: "business-123",
+                      image_url: null,
+                      name: createdBusiness?.name ?? "Test Business",
+                    },
+                  }
+                : null,
+            },
+          };
+        },
         "menuQRCode.getPublicUrlForMenu": () => ({
           result: { data: { public_url: "https://example.com/qr-code.png" } },
         }),
@@ -806,6 +819,16 @@ describe("Dashboard Home Page", () => {
     expect(screen.queryByText(/No categories yet/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Continue/i }));
+
+    expect(
+      await screen.findByRole("status", {
+        name: /loading menu categories/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/MenuNook/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No categories yet/i)).not.toBeInTheDocument();
+
+    finishMenuPreview?.();
 
     await waitFor(() => {
       expect(screen.getByText(/No categories yet/i)).toBeInTheDocument();
@@ -1293,6 +1316,52 @@ describe("Dashboard Home Page", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the home shell visible while menu categories load", async () => {
+    const drinks = createPreviewCategory(1, "Drinks", 0);
+    let resolvePreview: (() => void) | undefined;
+    const previewRequest = new Promise<void>((resolve) => {
+      resolvePreview = resolve;
+    });
+
+    server.use(
+      createTrpcQueryHandler({
+        ...menuManagerBaseResolvers(() => [drinks]),
+        "menu.getPreview": async () => {
+          await previewRequest;
+
+          return {
+            result: {
+              data: createPreviewMenu([drinks]),
+            },
+          };
+        },
+      }),
+    );
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    expect(
+      await screen.findByRole("status", {
+        name: /loading menu categories/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/MenuNook/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Test Menu/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No categories yet/i)).not.toBeInTheDocument();
+
+    resolvePreview?.();
+
+    expect(
+      await screen.findByRole("button", { name: /expand drinks/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /loading menu categories/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("opens the category form from the bottom new category button", async () => {
     const drinks = createPreviewCategory(1, "Drinks", 0);
 
@@ -1306,8 +1375,12 @@ describe("Dashboard Home Page", () => {
       authMock: authedUserState,
     });
 
+    expect(
+      await screen.findByRole("button", { name: /expand drinks/i }),
+    ).toBeInTheDocument();
+
     await user.click(
-      await screen.findByRole("button", { name: /new category/i }),
+      screen.getByRole("button", { name: /^new category$/i }),
     );
 
     const dialog = await screen.findByRole("dialog");

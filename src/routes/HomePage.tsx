@@ -326,9 +326,7 @@ export const HomePage = () => {
     });
   }, [showToast, activeMenu?.id]);
 
-  if (isLoading) {
-    return <MenuManagerSkeleton />;
-  }
+  const areMenuCategoriesLoading = loadingMenu || (!!activeMenu && isLoading);
 
   return (
     <div className="pb-10">
@@ -360,7 +358,9 @@ export const HomePage = () => {
         </div>
       </div>
       <div className="mt-12">
-        {displayedMenuCategories.length === 0 ? (
+        {areMenuCategoriesLoading ? (
+          <MenuCategoriesSkeleton />
+        ) : displayedMenuCategories.length === 0 ? (
           <div className="flex flex-col items-center rounded-lg border border-neutral-200 bg-white px-6 py-8 text-center shadow-[0_1px_3px_rgba(40,21,19,0.08)]">
             <h2 className="font-semibold text-[#281513]">No categories yet</h2>
             <p className="text-muted-foreground mt-2 max-w-sm text-sm">
@@ -503,34 +503,38 @@ export const HomePage = () => {
   );
 };
 
-export function MenuManagerSkeleton() {
+export function MenuCategoriesSkeleton() {
   return (
-    <main data-testid="menu-manager-skeleton" className="pb-10">
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={index}
-            className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(40,21,19,0.08)]"
-          >
-            <div className="flex items-center pr-2 pl-3">
-              <div className="flex min-w-0 flex-1 items-center gap-2 py-3.5">
-                <Skeleton className="size-4 shrink-0 rounded-sm" />
-                <Skeleton className="h-4 w-28 rounded-sm" />
-                <Skeleton className="h-3 w-10 rounded-sm" />
-              </div>
-              <div className="grid size-9 shrink-0 place-items-center">
-                <Skeleton className="size-5 rounded-sm" />
-              </div>
-              <div className="grid size-9 shrink-0 place-items-center">
-                <Skeleton className="size-5 rounded-sm" />
-              </div>
+    <div
+      role="status"
+      aria-label="Loading menu categories"
+      data-testid="menu-categories-skeleton"
+      className="space-y-4"
+    >
+      <span className="sr-only">Loading menu categories</span>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(40,21,19,0.08)]"
+        >
+          <div className="flex items-center pr-2 pl-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 py-3.5">
+              <Skeleton className="size-4 shrink-0 rounded-sm" />
+              <Skeleton className="h-4 w-28 rounded-sm" />
+              <Skeleton className="h-3 w-10 rounded-sm" />
             </div>
-            <div className="border-t border-neutral-200/60 p-2">
-              <Skeleton className="h-12 w-full rounded-md" />
+            <div className="grid size-9 shrink-0 place-items-center">
+              <Skeleton className="size-5 rounded-sm" />
+            </div>
+            <div className="grid size-9 shrink-0 place-items-center">
+              <Skeleton className="size-5 rounded-sm" />
             </div>
           </div>
-        ))}
-      </div>
-    </main>
+          <div className="border-t border-neutral-200/60 p-2">
+            <Skeleton className="h-12 w-full rounded-md" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
