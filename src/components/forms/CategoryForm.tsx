@@ -67,6 +67,13 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
             queryClient.invalidateQueries({
               queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
             });
+            if (activeMenu) {
+              queryClient.invalidateQueries({
+                queryKey: trpc.menu.getPreview.queryKey({
+                  menuId: activeMenu.id,
+                }),
+              });
+            }
             toast.success("Category updated successfully!");
             onSuccess();
           },
@@ -84,6 +91,13 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
             queryClient.invalidateQueries({
               queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
             });
+            if (activeMenu) {
+              queryClient.invalidateQueries({
+                queryKey: trpc.menu.getPreview.queryKey({
+                  menuId: activeMenu.id,
+                }),
+              });
+            }
             toast.success("Category created successfully!");
             onSuccess();
           },

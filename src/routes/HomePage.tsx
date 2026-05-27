@@ -326,9 +326,7 @@ export const HomePage = () => {
     });
   }, [showToast, activeMenu?.id]);
 
-  if (isLoading) {
-    return <MenuManagerSkeleton />;
-  }
+  const areMenuCategoriesLoading = loadingMenu || (!!activeMenu && isLoading);
 
   return (
     <div className="pb-10">
@@ -360,23 +358,28 @@ export const HomePage = () => {
         </div>
       </div>
       <div className="mt-12">
-        {displayedMenuCategories.length === 0 ? (
-          <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center shadow-[0_1px_3px_rgba(40,21,19,0.08)]">
+        {areMenuCategoriesLoading ? (
+          <MenuCategoriesSkeleton />
+        ) : displayedMenuCategories.length === 0 ? (
+          <div className="flex flex-col items-center rounded-lg border border-neutral-200 bg-white px-6 py-8 text-center shadow-[0_1px_3px_rgba(40,21,19,0.08)]">
             <h2 className="font-semibold text-[#281513]">No categories yet</h2>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Add your first category to start building this menu.
+            <p className="text-muted-foreground mt-2 max-w-sm text-sm">
+              Create a category like Appetizers, Entrees, or Drinks to start
+              building this menu.
             </p>
             <Button
               className="mt-4"
               onClick={() => setIsCategoryDialogOpen(true)}
             >
               <Plus />
-              Add Category
+              New category
             </Button>
           </div>
         ) : (
-          <MotionConfig transition={{ duration: 0.24, ease: accordionEaseOut }}>
-            <>
+          <>
+            <MotionConfig
+              transition={{ duration: 0.24, ease: accordionEaseOut }}
+            >
               <DndContext
                 id="home-menu-preview"
                 sensors={sensors}
@@ -410,32 +413,32 @@ export const HomePage = () => {
                   </Accordion.Root>
                 </SortableContext>
               </DndContext>
-              <button
-                type="button"
-                onClick={() => setIsCategoryDialogOpen(true)}
-                className="group relative mt-4 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg bg-transparent px-4 py-3.5 text-sm font-semibold text-[#6f5a51] transition-colors hover:bg-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
+            </MotionConfig>
+            <button
+              type="button"
+              onClick={() => setIsCategoryDialogOpen(true)}
+              className="group relative mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-[#6f5a51] transition-colors hover:bg-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
+            >
+              <svg
+                className="pointer-events-none absolute inset-0 size-full overflow-visible"
+                aria-hidden="true"
               >
-                <svg
-                  className="pointer-events-none absolute inset-0 size-full overflow-visible"
-                  aria-hidden="true"
-                >
-                  <rect
-                    x="0.5"
-                    y="0.5"
-                    width="calc(100% - 1px)"
-                    height="calc(100% - 1px)"
-                    rx="10"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeDasharray="6 5"
-                    className="text-[#d9cbbd] transition-colors group-hover:text-[#c7b4a3]"
-                  />
-                </svg>
-                <Plus className="size-5" />
-                New category
-              </button>
-            </>
-          </MotionConfig>
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="calc(100% - 1px)"
+                  height="calc(100% - 1px)"
+                  rx="10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeDasharray="6 5"
+                  className="text-[#d9cbbd] transition-colors group-hover:text-[#c7b4a3]"
+                />
+              </svg>
+              <Plus className="size-4" />
+              New category
+            </button>
+          </>
         )}
       </div>
 
@@ -500,34 +503,38 @@ export const HomePage = () => {
   );
 };
 
-export function MenuManagerSkeleton() {
+export function MenuCategoriesSkeleton() {
   return (
-    <main data-testid="menu-manager-skeleton" className="pb-10">
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={index}
-            className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(40,21,19,0.08)]"
-          >
-            <div className="flex items-center pr-2 pl-3">
-              <div className="flex min-w-0 flex-1 items-center gap-2 py-3.5">
-                <Skeleton className="size-4 shrink-0 rounded-sm" />
-                <Skeleton className="h-4 w-28 rounded-sm" />
-                <Skeleton className="h-3 w-10 rounded-sm" />
-              </div>
-              <div className="grid size-9 shrink-0 place-items-center">
-                <Skeleton className="size-5 rounded-sm" />
-              </div>
-              <div className="grid size-9 shrink-0 place-items-center">
-                <Skeleton className="size-5 rounded-sm" />
-              </div>
+    <div
+      role="status"
+      aria-label="Loading menu categories"
+      data-testid="menu-categories-skeleton"
+      className="space-y-4"
+    >
+      <span className="sr-only">Loading menu categories</span>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(40,21,19,0.08)]"
+        >
+          <div className="flex items-center pr-2 pl-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 py-3.5">
+              <Skeleton className="size-4 shrink-0 rounded-sm" />
+              <Skeleton className="h-4 w-28 rounded-sm" />
+              <Skeleton className="h-3 w-10 rounded-sm" />
             </div>
-            <div className="border-t border-neutral-200/60 p-2">
-              <Skeleton className="h-12 w-full rounded-md" />
+            <div className="grid size-9 shrink-0 place-items-center">
+              <Skeleton className="size-5 rounded-sm" />
+            </div>
+            <div className="grid size-9 shrink-0 place-items-center">
+              <Skeleton className="size-5 rounded-sm" />
             </div>
           </div>
-        ))}
-      </div>
-    </main>
+          <div className="border-t border-neutral-200/60 p-2">
+            <Skeleton className="h-12 w-full rounded-md" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
