@@ -206,6 +206,9 @@ const ItemForm = (props: ItemFormProps) => {
               queryClient.invalidateQueries({
                 queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
               });
+              queryClient.invalidateQueries({
+                queryKey: trpc.menu.getPreview.queryKey(),
+              });
               toast.success("Item updated successfully!");
               onSuccess();
             },
@@ -251,6 +254,9 @@ const ItemForm = (props: ItemFormProps) => {
 
       queryClient.invalidateQueries({
         queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: trpc.menu.getPreview.queryKey(),
       });
       toast.success("Item created successfully!");
       onSuccess();
