@@ -172,7 +172,7 @@ export function SortableMenuCategorySection({
                 }}
               >
                 {category.items.length === 0 ? (
-                  <div className="flex items-center justify-between gap-3 bg-white p-3 text-xs">
+                  <div className="flex items-center justify-between gap-3 bg-white p-3 pl-4 text-xs">
                     <p className="text-[#7d6b62]">No items in this category.</p>
                     <Button
                       variant="outline"
