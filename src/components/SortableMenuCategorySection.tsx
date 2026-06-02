@@ -1,15 +1,15 @@
+import * as Accordion from "@radix-ui/react-accordion";
 import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import * as Accordion from "@radix-ui/react-accordion";
 import {
   ChevronDown,
+  Edit,
   Ellipsis,
   GripVertical,
-  Plus,
   Trash2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -33,6 +33,7 @@ export function SortableMenuCategorySection({
   category,
   isOpen,
   onAddItem,
+  onEditCategory,
   onDeleteCategory,
   onEditItem,
   onDeleteItem,
@@ -41,6 +42,7 @@ export function SortableMenuCategorySection({
   isOpen: boolean;
   onAddItem: (category: MenuCategory) => void;
   onDeleteCategory: (category: MenuCategory) => void;
+  onEditCategory: (category: MenuCategory) => void;
   onEditItem: (
     item: MenuCategory["items"][number],
     category: MenuCategory,
@@ -136,9 +138,9 @@ export function SortableMenuCategorySection({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => onAddItem(category)}>
-                <Plus />
-                Add item
+              <DropdownMenuItem onClick={() => onEditCategory(category)}>
+                <Edit />
+                Edit Category
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
