@@ -1,5 +1,4 @@
 import { Plus } from "lucide-react";
-import { Button } from "../ui/button";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import MenuCategoriesSkeleton from "../skeletons/MenuCategoriesSkeleton";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -307,21 +306,6 @@ const CategoriesSection = () => {
       <div className="mt-12">
         {areMenuCategoriesLoading ? (
           <MenuCategoriesSkeleton />
-        ) : displayedMenuCategories.length === 0 ? (
-          <div className="flex flex-col items-center rounded-lg border border-neutral-200 bg-white px-6 py-8 text-center shadow-[0_1px_3px_rgba(40,21,19,0.08)]">
-            <h2 className="font-semibold text-[#281513]">No categories yet</h2>
-            <p className="text-muted-foreground mt-2 max-w-sm text-sm">
-              Create a category like Appetizers, Entrees, or Drinks to start
-              building this menu.
-            </p>
-            <Button
-              className="mt-4"
-              onClick={() => setIsCategoryDialogOpen(true)}
-            >
-              <Plus />
-              New category
-            </Button>
-          </div>
         ) : (
           <>
             <MotionConfig
