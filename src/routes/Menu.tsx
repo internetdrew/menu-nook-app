@@ -23,6 +23,7 @@ import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import MenuPreviewBanner from "@/components/MenuPreviewBanner";
 import BusinessLogo from "@/components/BusinessLogo";
 import type { Database } from "../../shared/database.types";
+import { isMenuSubscriptionActive } from "@/utils/subscription";
 
 const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
 const priceFormatter = new Intl.NumberFormat("en-US", {
@@ -83,9 +84,7 @@ export const Menu = () => {
     ),
   );
 
-  const subscriptionIsActive =
-    subscription?.status === "active" &&
-    new Date(subscription.current_period_end) > new Date();
+  const subscriptionIsActive = isMenuSubscriptionActive(subscription);
 
   const navRef = useRef<HTMLElement>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);

@@ -74,6 +74,18 @@ const createPreviewMenu = (
   },
 });
 
+const createActiveSubscription = () => ({
+  id: "sub-123",
+  menu_id: "menu-123",
+  status: "active",
+  current_period_end: new Date(Date.now() + 86_400_000).toISOString(),
+  stripe_customer_id: "cus_123",
+  stripe_price_id: "price_123",
+  stripe_subscription_id: "sub_stripe_123",
+  created_at: "2026-05-20T00:00:00.000Z",
+  updated_at: "2026-05-20T00:00:00.000Z",
+});
+
 const menuManagerBaseResolvers = (
   getCategories: () => ReturnType<typeof createPreviewCategory>[],
 ) => ({
@@ -966,13 +978,17 @@ describe("Dashboard Home Page", () => {
 
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
+    const previewLink = await screen.findByRole("link", { name: /^preview$/i });
+    expect(previewLink).toHaveAttribute("href", "/preview/menu/menu-123");
     expect(
-      await screen.findByRole("button", { name: /^share$/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /^share$/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /test menu/i }),
     ).toBeInTheDocument();
-    expect(await screen.findByText(/No categories yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^new category$/i }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /settings/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /categories/i })).toBeNull();
   });
@@ -991,10 +1007,7 @@ describe("Dashboard Home Page", () => {
         }),
         "subscription.getForMenu": () => ({
           result: {
-            data: {
-              id: "sub-123",
-              status: "active",
-            },
+            data: createActiveSubscription(),
           },
         }),
         "menu.getAllForBusiness": () => ({
@@ -1083,10 +1096,12 @@ describe("Dashboard Home Page", () => {
 
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
-    expect(await screen.findByText(/No categories yet/i)).toBeInTheDocument();
     expect(
-      await screen.findByRole("button", { name: /^share$/i }),
+      await screen.findByRole("button", { name: /^new category$/i }),
     ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("link", { name: /^preview$/i }),
+    ).toHaveAttribute("href", "/preview/menu/menu-123");
     expect(screen.queryByText(/categories managed/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/items managed/i)).not.toBeInTheDocument();
   });
@@ -1167,7 +1182,9 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForMenu": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({
+          result: { data: createActiveSubscription() },
+        }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -1245,7 +1262,9 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForMenu": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({
+          result: { data: createActiveSubscription() },
+        }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
