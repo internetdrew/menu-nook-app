@@ -2,6 +2,7 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { createTestQueryClient } from "@/utils/test/createTestQueryClient";
 import { renderApp } from "@/utils/test/renderApp";
+import { queryClient } from "@/utils/trpc";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
 import { screen, waitFor, within } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
@@ -17,7 +18,33 @@ vi.mock("sonner", () => ({
   Toaster: vi.fn(() => null),
 }));
 
-const createPreviewCategory = (id: number, name: string, orderIndex: number) => ({
+const createPreviewItem = (
+  id: number,
+  name: string,
+  categoryId: number,
+  orderIndex: number,
+) => ({
+  id,
+  name,
+  tagline: null,
+  description: null,
+  price: 12,
+  image_path: null,
+  image_url: null,
+  menu_id: "menu-123",
+  menu_category_id: categoryId,
+  created_at: "2026-05-20T00:00:00.000Z",
+  updated_at: "2026-05-20T00:00:00.000Z",
+  order_index: orderIndex,
+  sort_index_id: id + 200,
+});
+
+const createPreviewCategory = (
+  id: number,
+  name: string,
+  orderIndex: number,
+  items: ReturnType<typeof createPreviewItem>[] = [],
+) => ({
   id,
   name,
   description: null,
@@ -25,7 +52,7 @@ const createPreviewCategory = (id: number, name: string, orderIndex: number) => 
   created_at: "2026-05-20T00:00:00.000Z",
   order_index: orderIndex,
   sort_index_id: id + 100,
-  items: [],
+  items,
 });
 
 const createPreviewMenu = (
@@ -472,7 +499,12 @@ describe("Dashboard Home Page", () => {
     );
 
     const user = userEvent.setup();
-    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+    queryClient.clear();
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+      queryClient,
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
@@ -1057,6 +1089,70 @@ describe("Dashboard Home Page", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/categories managed/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/items managed/i)).not.toBeInTheDocument();
+  });
+
+  it("removes a deleted item from the menu manager without refreshing", async () => {
+    const burger = createPreviewItem(10, "Burger", 1, 0);
+    const fries = createPreviewItem(11, "Fries", 1, 1);
+    let deletedItemId: number | null = null;
+    let finishDelete: (() => void) | undefined;
+
+    server.use(
+      createTrpcQueryHandler(
+        menuManagerBaseResolvers(() => [
+          createPreviewCategory(
+            1,
+            "Mains",
+            0,
+            [burger, fries].filter((item) => item.id !== deletedItemId),
+          ),
+        ]),
+      ),
+      http.post("/trpc/menuCategoryItem.delete", async ({ request }) => {
+        await request.json();
+        await new Promise<void>((resolve) => {
+          finishDelete = resolve;
+        });
+        deletedItemId = burger.id;
+
+        return HttpResponse.json([
+          {
+            result: {
+              data: burger,
+            },
+          },
+        ]);
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await user.click(
+      await screen.findByRole("button", { name: /expand mains/i }),
+    );
+    expect(screen.getAllByText("Burger").length).toBeGreaterThan(0);
+    expect(screen.getByText("Fries")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /open actions for burger/i }),
+    );
+    await user.click(screen.getByRole("menuitem", { name: /delete item/i }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+
+    expect(screen.getByText("Burger")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(finishDelete).toBeDefined();
+    });
+    finishDelete?.();
+    await waitFor(() => {
+      expect(deletedItemId).toBe(burger.id);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText("Burger")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Fries")).toBeInTheDocument();
   });
 
   it("renders qr code share dialog when share menu button is clicked", async () => {

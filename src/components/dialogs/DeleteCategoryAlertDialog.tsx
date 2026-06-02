@@ -50,6 +50,9 @@ const DeleteCategoryAlertDialog = ({
             queryClient.invalidateQueries({
               queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
             });
+            queryClient.invalidateQueries({
+              queryKey: trpc.menu.getPreview.queryKey(),
+            });
             onOpenChange(false);
           },
           onError: (error) => {
