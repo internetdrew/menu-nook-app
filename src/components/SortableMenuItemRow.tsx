@@ -42,7 +42,7 @@ export function SortableMenuItemRow({
   });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition: isDragging ? transition : (transition ?? sortableTransition),
     boxShadow: isDragging
       ? "0 7px 20px rgba(40, 21, 19, 0.15)"
