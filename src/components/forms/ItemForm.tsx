@@ -27,12 +27,12 @@ import {
   ITEM_TAGLINE_LIMIT,
   menuItemFieldsSchema,
 } from "../../../shared/menuItem";
-import type { MenuCategoryRecord, MenuItemWithCategory } from "@/types/menu";
+import type { MenuPreviewCategory, MenuPreviewItem } from "@/types/menu";
 
 interface ItemFormProps {
   onSuccess: () => void;
-  item?: MenuItemWithCategory | null;
-  chosenCategory: MenuCategoryRecord;
+  item?: MenuPreviewItem | null;
+  chosenCategory: MenuPreviewCategory | null;
 }
 
 const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
@@ -40,17 +40,6 @@ const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
 
 const formSchema = menuItemFieldsSchema.extend({
   categoryId: z.number(),
-});
-
-const getDefaultValues = (
-  item: MenuItemWithCategory | null | undefined,
-  chosenCategory: MenuCategoryRecord,
-): z.infer<typeof formSchema> => ({
-  name: item?.name ?? "",
-  tagline: item?.tagline ?? "",
-  description: item?.description ?? "",
-  price: item?.price ?? 0,
-  categoryId: item?.category?.id ?? chosenCategory.id,
 });
 
 const MENU_ITEM_IMAGE_BUCKET = "menu_item_images";
@@ -66,9 +55,6 @@ const getMenuItemImageFilePath = (
 
 const ItemForm = (props: ItemFormProps) => {
   const { onSuccess, item, chosenCategory } = props;
-  const createItem = useMutation(
-    trpc.menuCategoryItem.create.mutationOptions(),
-  );
   const { activeMenu } = useMenuContext();
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,9 +63,19 @@ const ItemForm = (props: ItemFormProps) => {
   const [removedImage, setRemovedImage] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
+  const createItem = useMutation(
+    trpc.menuCategoryItem.create.mutationOptions(),
+  );
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: getDefaultValues(item, chosenCategory),
+    defaultValues: {
+      name: item?.name ?? "",
+      tagline: item?.tagline ?? "",
+      description: item?.description ?? "",
+      price: item?.price ?? 0,
+      categoryId: chosenCategory?.id,
+    },
   });
   const nameValue = form.watch("name");
   const taglineValue = form.watch("tagline");
@@ -111,7 +107,7 @@ const ItemForm = (props: ItemFormProps) => {
     clearPreview();
     setSelectedImageFile(null);
     setRemovedImage(false);
-    form.reset(getDefaultValues(item, chosenCategory));
+    form.reset();
   }, [chosenCategory, form, item, clearPreview]);
 
   const displayedImageUrl =
@@ -184,6 +180,8 @@ const ItemForm = (props: ItemFormProps) => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsProcessingImage(true);
+
+    if (!chosenCategory) return;
 
     if (item) {
       try {
