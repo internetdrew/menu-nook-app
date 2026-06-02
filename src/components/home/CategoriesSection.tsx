@@ -293,7 +293,7 @@ const CategoriesSection = () => {
         {areMenuCategoriesLoading ? (
           <MenuCategoriesSkeleton />
         ) : (
-          <>
+          <div className="pr-1 pl-3">
             <MotionConfig
               transition={{ duration: 0.24, ease: accordionEaseOut }}
             >
@@ -332,33 +332,31 @@ const CategoriesSection = () => {
                 </SortableContext>
               </DndContext>
             </MotionConfig>
-            <div className="px-4">
-              <button
-                type="button"
-                onClick={() => setIsCategoryDialogOpen(true)}
-                className="group relative mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-[#6f5a51] transition-colors hover:bg-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
+            <button
+              type="button"
+              onClick={() => setIsCategoryDialogOpen(true)}
+              className="group relative mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-[#6f5a51] transition-colors hover:bg-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
+            >
+              <svg
+                className="pointer-events-none absolute inset-0 size-full overflow-visible"
+                aria-hidden="true"
               >
-                <svg
-                  className="pointer-events-none absolute inset-0 size-full overflow-visible"
-                  aria-hidden="true"
-                >
-                  <rect
-                    x="0.5"
-                    y="0.5"
-                    width="calc(100% - 1px)"
-                    height="calc(100% - 1px)"
-                    rx="10"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeDasharray="6 5"
-                    className="text-[#d9cbbd] transition-colors group-hover:text-[#c7b4a3]"
-                  />
-                </svg>
-                <Plus className="size-4" />
-                New category
-              </button>
-            </div>
-          </>
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="calc(100% - 1px)"
+                  height="calc(100% - 1px)"
+                  rx="10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeDasharray="6 5"
+                  className="text-[#d9cbbd] transition-colors group-hover:text-[#c7b4a3]"
+                />
+              </svg>
+              <Plus className="size-4" />
+              New category
+            </button>
+          </div>
         )}
       </div>
 
