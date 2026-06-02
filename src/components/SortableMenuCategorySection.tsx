@@ -177,6 +177,7 @@ export function SortableMenuCategorySection({
                     <Button
                       variant="outline"
                       size="sm"
+                      className="text-xs"
                       onClick={() => onAddItem(category)}
                     >
                       Add Item
