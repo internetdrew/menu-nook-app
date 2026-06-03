@@ -32,12 +32,21 @@ const buttonTransition = {
 const HomeQuickActions = () => {
   const prefersReducedMotion = useReducedMotion();
   const { activeMenu, setActiveMenu } = useMenuContext();
-  const { data: business } = useQuery(trpc.business.getForUser.queryOptions());
+  const { data: business, isLoading } = useQuery(
+    trpc.business.getForUser.queryOptions(),
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [activeDialog, setActiveDialog] = useState<QuickActionDialog | null>(
     null,
   );
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const { isLoading: menuPreviewLoading } = useQuery(
+    trpc.menu.getPreview.queryOptions(
+      { menuId: activeMenu?.id ?? "" },
+      { enabled: !!activeMenu },
+    ),
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -106,6 +115,10 @@ const HomeQuickActions = () => {
       destructive: true,
     },
   ];
+
+  if (isLoading || menuPreviewLoading) {
+    return null;
+  }
 
   return (
     <>
