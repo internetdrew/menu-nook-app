@@ -146,7 +146,9 @@ describe("Dashboard Home Page", () => {
     expect(
       screen.getByRole("button", { name: /Name your first menu/i }),
     ).toBeDisabled();
-    expect(screen.queryByRole("button", { name: /Create/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Create/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("redirects guests to the login screen", async () => {
@@ -719,12 +721,10 @@ describe("Dashboard Home Page", () => {
   });
 
   it("walks a new user through onboarding before entering the dashboard", async () => {
-    let createdBusiness:
-      | { id: string; name: string; user_id: string }
-      | null = null;
-    let createdMenu:
-      | { id: string; name: string; business_id: string }
-      | null = null;
+    let createdBusiness: { id: string; name: string; user_id: string } | null =
+      null;
+    let createdMenu: { id: string; name: string; business_id: string } | null =
+      null;
     let finishBusinessCreate: (() => void) | undefined;
     let finishMenuCreate: (() => void) | undefined;
     let finishMenuPreview: (() => void) | undefined;
@@ -859,7 +859,9 @@ describe("Dashboard Home Page", () => {
     finishMenuCreate?.();
 
     expect(await screen.findByText(/You're all set!/i)).toBeInTheDocument();
-    expect(screen.getByText(/Everything is set up and ready/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Everything is set up and ready/i),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/No categories yet/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Continue/i }));
@@ -1330,7 +1332,7 @@ describe("Dashboard Home Page", () => {
     );
 
     expect(writeTextSpy).toHaveBeenCalledWith(
-      `${window.location.origin}/menu/menu-123`,
+      `https://menunook.com/m/menu-123`,
     );
   });
 
@@ -1494,9 +1496,7 @@ describe("Dashboard Home Page", () => {
       await screen.findByRole("button", { name: /expand drinks/i }),
     ).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole("button", { name: /^new category$/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /^new category$/i }));
 
     const dialog = await screen.findByRole("dialog");
     expect(
@@ -1514,7 +1514,9 @@ describe("Dashboard Home Page", () => {
 
     expect(await screen.findByText(/No categories yet/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Create a category like Appetizers, Entrees, or Drinks/i),
+      screen.getByText(
+        /Create a category like Appetizers, Entrees, or Drinks/i,
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /new category/i }),
@@ -1526,5 +1528,4 @@ describe("Dashboard Home Page", () => {
       screen.queryByRole("button", { name: /^add category$/i }),
     ).not.toBeInTheDocument();
   });
-
 });

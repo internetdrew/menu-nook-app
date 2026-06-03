@@ -6,17 +6,19 @@ import { generateQRFilePath } from "../utils/qrCode.js";
 import { supabaseAdminClient } from "../supabase.js";
 import { fetchMenuWithCategories } from "../utils/fetchMenuWithCategories.js";
 
+const PUBLIC_MENU_DOMAIN =
+  process.env.VITE_PUBLIC_MENU_DOMAIN || "https://menunook.com";
+
 export const menuRouter = router({
   create: protectedProcedure
     .input(
       z.object({
         name: z.string().min(1),
         businessId: z.uuid(),
-        baseUrl: z.url(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { name, businessId, baseUrl } = input;
+      const { name, businessId } = input;
 
       const { data: menu, error: menuCreationError } = await ctx.supabase
         .from("menus")
@@ -35,7 +37,7 @@ export const menuRouter = router({
       }
 
       const qrCodeDataUrl = await QRCode.toDataURL(
-        `${baseUrl}/menu/${menu.id}`,
+        `${PUBLIC_MENU_DOMAIN}/m/${menu.id}`,
         {
           width: 400,
           margin: 2,

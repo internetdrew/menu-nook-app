@@ -42,7 +42,7 @@ export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
 
     await createMenu.mutateAsync(
-      { ...values, businessId: business.id, baseUrl: window.location.origin },
+      { ...values, businessId: business.id },
       {
         onError: (error) => {
           console.error("Failed to add menu:", error);

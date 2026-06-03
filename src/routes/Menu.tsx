@@ -25,7 +25,8 @@ import BusinessLogo from "@/components/BusinessLogo";
 import type { Database } from "../../shared/database.types";
 import { isMenuSubscriptionActive } from "@/utils/subscription";
 
-const liveSiteUrl = import.meta.env.VITE_APP_DOMAIN;
+const publicMenuDomain =
+  import.meta.env.VITE_PUBLIC_MENU_DOMAIN || "https://menunook.com";
 const priceFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -195,7 +196,7 @@ export const Menu = () => {
     <div className="relative flex min-h-dvh flex-col">
       <MenuPreviewBanner
         subscriptionIsActive={subscriptionIsActive}
-        liveSiteUrl={liveSiteUrl}
+        publicMenuDomain={publicMenuDomain}
         menu={menu}
       />
 

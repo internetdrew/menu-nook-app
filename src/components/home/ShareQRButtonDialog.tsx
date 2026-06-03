@@ -23,7 +23,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Copy, Download, ExternalLink, QrCode } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
 import { toast } from "sonner";
 
 interface ShareQRButtonDialogProps {
@@ -49,6 +48,8 @@ const QR_CONTENT_TRANSITION = {
   ease: [0.26, 0.08, 0.25, 1],
 } as const;
 const QR_REVEAL_DELAY_MS = 180;
+const PUBLIC_MENU_DOMAIN =
+  import.meta.env.VITE_PUBLIC_MENU_DOMAIN || "https://menunook.com";
 
 const ShareQRButtonDialog = ({
   activeMenuId,
@@ -74,7 +75,7 @@ const ShareQRButtonDialog = ({
   const title = mode === "launch-success" ? LAUNCH_SUCCESS_TITLE : SHARE_TITLE;
   const description =
     mode === "launch-success" ? LAUNCH_SUCCESS_DESCRIPTION : SHARE_DESCRIPTION;
-  const menuUrl = `/menu/${activeMenuId}`;
+  const menuUrl = `${PUBLIC_MENU_DOMAIN}/m/${activeMenuId}`;
 
   useEffect(() => {
     return () => {
@@ -220,9 +221,7 @@ const ShareQRButtonDialog = ({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}${menuUrl}`,
-      );
+      await navigator.clipboard.writeText(menuUrl);
 
       setCopied(true);
       swapCopyLabel("Link copied!");
@@ -337,13 +336,13 @@ const ShareQRButtonDialog = ({
     mode === "launch-success" ? (
       <>
         {description}{" "}
-        <Link
-          to={menuUrl}
+        <a
+          href={menuUrl}
           className="inline-flex items-center gap-1 font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-4 transition-colors hover:decoration-neutral-600"
         >
           View live menu.
           <ExternalLink className="size-3.5" />
-        </Link>
+        </a>
       </>
     ) : (
       description
