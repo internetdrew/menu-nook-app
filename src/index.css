@@ -3,6 +3,7 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/eb-garamond/wght.css";
 @import "@fontsource-variable/playfair-display/wght.css";
+@import "@fontsource-variable/inter/wght.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -159,8 +160,8 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply text-foreground bg-[#fffaef];
-    font-family: "Geist Variable", sans-serif;
+    @apply text-foreground;
+    font-family: "Inter Variable", sans-serif;
   }
 
   .title {
