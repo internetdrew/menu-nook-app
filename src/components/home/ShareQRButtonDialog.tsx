@@ -20,18 +20,25 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { Copy, Download, QrCode } from "lucide-react";
+import { Copy, Download, ExternalLink, QrCode } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import { toast } from "sonner";
 
 interface ShareQRButtonDialogProps {
   activeMenuId: string;
   activeMenuName: string;
+  mode?: "share" | "launch-success";
+  openOnMount?: boolean;
+  onLaunchSuccessComplete?: () => void;
 }
 
 const SHARE_TITLE = "Share menu";
 const SHARE_DESCRIPTION = "Scan the QR code or copy the menu link.";
+const LAUNCH_SUCCESS_TITLE = "Your menu is live";
+const LAUNCH_SUCCESS_DESCRIPTION =
+  "Customers can now view it from this link or scan the QR code.";
 const TEXT_SWAP_DURATION_MS = 120;
 const QR_HEIGHT_TRANSITION = {
   duration: 0.27,
@@ -45,6 +52,9 @@ const QR_CONTENT_TRANSITION = {
 const ShareQRButtonDialog = ({
   activeMenuId,
   activeMenuName,
+  mode = "share",
+  openOnMount = false,
+  onLaunchSuccessComplete,
 }: ShareQRButtonDialogProps) => {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
@@ -56,6 +66,11 @@ const ShareQRButtonDialog = ({
   const copyLabelRef = useRef<HTMLSpanElement>(null);
   const copyTimeoutRef = useRef<number | undefined>(undefined);
   const textSwapTimeoutRef = useRef<number | undefined>(undefined);
+  const autoOpenedMenuIdRef = useRef<string | null>(null);
+  const title = mode === "launch-success" ? LAUNCH_SUCCESS_TITLE : SHARE_TITLE;
+  const description =
+    mode === "launch-success" ? LAUNCH_SUCCESS_DESCRIPTION : SHARE_DESCRIPTION;
+  const menuUrl = `/menu/${activeMenuId}`;
 
   useEffect(() => {
     return () => {
@@ -67,6 +82,15 @@ const ShareQRButtonDialog = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!openOnMount || autoOpenedMenuIdRef.current === activeMenuId) {
+      return;
+    }
+
+    autoOpenedMenuIdRef.current = activeMenuId;
+    setOpen(true);
+  }, [activeMenuId, openOnMount]);
 
   const { data, isLoading } = useQuery(
     trpc.menuQRCode.getPublicUrlForMenu.queryOptions(
@@ -154,11 +178,9 @@ const ShareQRButtonDialog = ({
   };
 
   const handleCopyLink = async () => {
-    if (!publicUrl) return;
-
     try {
       await navigator.clipboard.writeText(
-        `${window.location.origin}/menu/${activeMenuId}`,
+        `${window.location.origin}${menuUrl}`,
       );
 
       setCopied(true);
@@ -188,6 +210,14 @@ const ShareQRButtonDialog = ({
       Share
     </Button>
   );
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+
+    if (!nextOpen && mode === "launch-success") {
+      onLaunchSuccessComplete?.();
+    }
+  };
 
   const qrCode = (
     <div className="overflow-hidden">
@@ -236,14 +266,12 @@ const ShareQRButtonDialog = ({
   );
 
   const actionsDisabled = !publicUrl;
+  const descriptionClassName =
+    mode === "launch-success" ? undefined : "sr-only";
 
   const QRActions = (
     <div className="flex w-full flex-col gap-2">
-      <Button
-        className="flex-1"
-        onClick={handleCopyLink}
-        disabled={actionsDisabled || copied}
-      >
+      <Button className="flex-1" onClick={handleCopyLink} disabled={copied}>
         <Copy />
         <span className="inline-flex min-w-20 overflow-hidden">
           <span
@@ -254,6 +282,13 @@ const ShareQRButtonDialog = ({
           </span>
         </span>
       </Button>
+      {mode === "launch-success" && (
+        <Button asChild variant="outline" className="flex-1">
+          <Link to={menuUrl}>
+            <ExternalLink /> View Live Menu
+          </Link>
+        </Button>
+      )}
       <Button
         variant="outline"
         className="flex-1"
@@ -267,13 +302,13 @@ const ShareQRButtonDialog = ({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>{trigger}</DrawerTrigger>
         <DrawerContent>
           <DrawerHeader className="px-6 pt-6 pb-2 text-left">
-            <DrawerTitle>{SHARE_TITLE}</DrawerTitle>
-            <DrawerDescription className="sr-only">
-              {SHARE_DESCRIPTION}
+            <DrawerTitle className="text-base">{title}</DrawerTitle>
+            <DrawerDescription className={descriptionClassName}>
+              {description}
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-6">{qrCode}</div>
@@ -284,13 +319,13 @@ const ShareQRButtonDialog = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>{SHARE_TITLE}</DialogTitle>
-          <DialogDescription className="sr-only">
-            {SHARE_DESCRIPTION}
+          <DialogTitle className="text-base">{title}</DialogTitle>
+          <DialogDescription className={`${descriptionClassName} text-sm`}>
+            {description}
           </DialogDescription>
         </DialogHeader>
         {qrCode}

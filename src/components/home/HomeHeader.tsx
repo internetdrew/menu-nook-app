@@ -11,12 +11,23 @@ import { Button } from "../ui/button";
 import { Link } from "react-router";
 import { ScrollText } from "lucide-react";
 
-const HomeHeader = () => {
+interface HomeHeaderProps {
+  showLaunchSuccess?: boolean;
+  onLaunchSuccessComplete?: () => void;
+}
+
+const HomeHeader = ({
+  showLaunchSuccess = false,
+  onLaunchSuccessComplete,
+}: HomeHeaderProps) => {
   const { activeMenu, loading: loadingMenu } = useMenuContext();
   const { data: subscription, isLoading: loadingSubscription } = useQuery(
     trpc.subscription.getForMenu.queryOptions(
       { menuId: activeMenu?.id ?? "" },
-      { enabled: !!activeMenu?.id },
+      {
+        enabled: !!activeMenu?.id,
+        refetchInterval: showLaunchSuccess ? 2000 : false,
+      },
     ),
   );
   const subscriptionIsActive = isMenuSubscriptionActive(subscription);
@@ -44,6 +55,9 @@ const HomeHeader = () => {
                     <ShareQRButtonDialog
                       activeMenuId={activeMenu.id}
                       activeMenuName={activeMenu.name}
+                      mode={showLaunchSuccess ? "launch-success" : "share"}
+                      openOnMount={showLaunchSuccess}
+                      onLaunchSuccessComplete={onLaunchSuccessComplete}
                     />
                   ) : (
                     <Button
