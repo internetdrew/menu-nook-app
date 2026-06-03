@@ -32,11 +32,13 @@ const DeleteMenuAlertDialog = ({
   open,
   onOpenChange,
   onDeleted,
+  showTrigger = true,
 }: {
   menu: Pick<MenuRecord, "id" | "name"> | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDeleted?: () => void;
+  showTrigger?: boolean;
 }) => {
   const isMobile = useIsMobile();
   const deleteMenuMutation = useMutation(trpc.menu.delete.mutationOptions());
@@ -88,7 +90,7 @@ const DeleteMenuAlertDialog = ({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        {showTrigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
         <DrawerContent>
           <DrawerHeader className="px-6 pt-6 pb-2 text-left">
             <DrawerTitle>{title}</DrawerTitle>
@@ -107,7 +109,7 @@ const DeleteMenuAlertDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      {showTrigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

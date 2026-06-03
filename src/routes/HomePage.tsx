@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import type { MenuPreviewCategory } from "@/types/menu";
 import HomeHeader from "@/components/home/HomeHeader";
 import CategoriesSection from "@/components/home/CategoriesSection";
+import HomeQuickActions from "@/components/home/HomeQuickActions";
 
 export type MenuCategory = MenuPreviewCategory;
 
@@ -29,6 +30,7 @@ export const HomePage = () => {
         onLaunchSuccessComplete={() => setShowLaunchSuccess(false)}
       />
       <CategoriesSection />
+      <HomeQuickActions />
     </div>
   );
 };
