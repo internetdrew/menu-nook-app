@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
@@ -287,6 +288,8 @@ export const Menu = () => {
                             <motion.img
                               src={item.image_url}
                               alt={item.name}
+                              loading="lazy"
+                              decoding="async"
                               className="size-16 shrink-0 object-cover"
                               style={{ borderRadius: "12px" }}
                             />
@@ -347,11 +350,23 @@ export const Menu = () => {
               <DrawerContent className="overflow-hidden">
                 <div className="no-scrollbar max-h-[80vh] overflow-y-auto">
                   {selectedItem.image_url && (
-                    <img
-                      src={selectedItem.image_url}
-                      alt={selectedItem.name}
-                      className="h-48 w-full shrink-0 bg-red-50 object-cover"
-                    />
+                    <div className="bg-muted relative aspect-[4/3] max-h-[55dvh] w-full shrink-0 overflow-hidden">
+                      <img
+                        src={selectedItem.image_url}
+                        alt={selectedItem.name}
+                        decoding="async"
+                        className="size-full object-cover"
+                      />
+                      <DrawerClose asChild>
+                        <button
+                          type="button"
+                          className="absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-white/75 text-neutral-700 shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 focus-visible:outline-none"
+                          aria-label="Close item details"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </DrawerClose>
+                    </div>
                   )}
                   <DrawerHeader className="px-6 pt-6 pb-2 text-left">
                     <div className="flex items-start justify-between gap-4">
@@ -430,16 +445,17 @@ export const Menu = () => {
                           borderRadius: 12,
                           willChange: "transform, opacity",
                         }}
-                        className="my-auto h-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto bg-white shadow-xl outline-none"
+                        className="my-auto h-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto bg-white pb-6 shadow-xl outline-none"
                       >
                         {selectedItem.image_url && (
                           <div
-                            className="relative h-48 w-full shrink-0 overflow-hidden bg-red-50"
+                            className="bg-muted relative aspect-[4/3] max-h-[55dvh] w-full shrink-0 overflow-hidden"
                             style={{ borderRadius: "12px 12px 0 0" }}
                           >
                             <img
                               src={selectedItem.image_url}
                               alt={selectedItem.name}
+                              decoding="async"
                               className="size-full object-cover"
                             />
                             <Dialog.Close asChild>
