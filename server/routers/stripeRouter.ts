@@ -49,8 +49,8 @@ export const stripeRouter = router({
             quantity: 1,
           },
         ],
-        success_url: `${APP_DOMAIN}/preview/menu/${input.menuId}?success=true`,
-        cancel_url: `${APP_DOMAIN}/preview/menu/${input.menuId}?canceled=true`,
+        success_url: `${APP_DOMAIN}?success=true`,
+        cancel_url: `${APP_DOMAIN}?canceled=true`,
         metadata: {
           menuId: input.menuId,
         },
