@@ -21,8 +21,8 @@ const itemTransition = {
 
 const buttonTransition = {
   type: "spring",
-  stiffness: 500,
-  damping: 32,
+  stiffness: 650,
+  damping: 38,
 } as const;
 
 const HomeQuickActions = () => {
@@ -163,9 +163,7 @@ const HomeQuickActions = () => {
 
         <motion.div
           animate={
-            prefersReducedMotion
-              ? undefined
-              : { width: isOpen ? 48 : 116, rotate: isOpen ? 45 : 0 }
+            prefersReducedMotion ? undefined : { width: isOpen ? 48 : 116 }
           }
           transition={buttonTransition}
           className="overflow-hidden rounded-full"
@@ -174,29 +172,62 @@ const HomeQuickActions = () => {
           <Button
             type="button"
             size="lg"
-            className={`h-12 w-full rounded-full px-4 shadow-lg ${
-              isOpen ? "justify-center px-0" : ""
-            }`}
+            className="relative h-12 w-full overflow-hidden rounded-full px-0 shadow-lg"
             aria-expanded={isOpen}
             aria-label={isOpen ? "Close quick actions" : "Open quick actions"}
             onClick={() => setIsOpen((current) => !current)}
           >
-            {isOpen ? (
-              <X className="size-4 rotate-45" />
-            ) : (
-              <Settings className="size-4" />
-            )}
+            <span className="absolute top-0 left-0 grid h-12 w-12 place-items-center">
+              <motion.span
+                className="absolute grid size-4 place-items-center"
+                aria-hidden="true"
+                animate={
+                  prefersReducedMotion
+                    ? { opacity: isOpen ? 0 : 1 }
+                    : {
+                        opacity: isOpen ? 0 : 1,
+                        rotate: isOpen ? -45 : 0,
+                        scale: isOpen ? 0.86 : 1,
+                      }
+                }
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0 }
+                    : { duration: 0.1, ease: [0.25, 1, 0.5, 1] }
+                }
+              >
+                <Settings className="size-4" />
+              </motion.span>
+              <motion.span
+                className="absolute grid size-4 place-items-center"
+                aria-hidden="true"
+                animate={
+                  prefersReducedMotion
+                    ? { opacity: isOpen ? 1 : 0 }
+                    : {
+                        opacity: isOpen ? 1 : 0,
+                        rotate: isOpen ? 0 : -45,
+                        scale: isOpen ? 1 : 0.86,
+                      }
+                }
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0 }
+                    : { duration: 0.1, ease: [0.25, 1, 0.5, 1] }
+                }
+              >
+                <X className="size-4" />
+              </motion.span>
+            </span>
             <AnimatePresence initial={false}>
               {!isOpen && (
                 <motion.span
                   key="actions-label"
-                  className="overflow-hidden whitespace-nowrap"
-                  initial={
-                    prefersReducedMotion ? false : { opacity: 0, width: 0 }
-                  }
-                  animate={{ opacity: 1, width: "auto" }}
+                  className="absolute top-1/2 left-11 -translate-y-1/2 overflow-hidden whitespace-nowrap"
+                  initial={prefersReducedMotion ? false : { opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
                   exit={
-                    prefersReducedMotion ? undefined : { opacity: 0, width: 0 }
+                    prefersReducedMotion ? undefined : { opacity: 0, x: -4 }
                   }
                   transition={
                     prefersReducedMotion
