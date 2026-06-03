@@ -21,7 +21,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Copy, Download, ExternalLink, QrCode } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
@@ -48,6 +48,7 @@ const QR_CONTENT_TRANSITION = {
   duration: 0.27,
   ease: [0.26, 0.08, 0.25, 1],
 } as const;
+const QR_REVEAL_DELAY_MS = 180;
 
 const ShareQRButtonDialog = ({
   activeMenuId,
@@ -57,15 +58,18 @@ const ShareQRButtonDialog = ({
   onLaunchSuccessComplete,
 }: ShareQRButtonDialogProps) => {
   const isMobile = useIsMobile();
+  const prefersReducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [copyLabelClass, setCopyLabelClass] = useState("");
   const [isQrImageReady, setIsQrImageReady] = useState(false);
+  const [shouldRevealQr, setShouldRevealQr] = useState(false);
   const copyLabelRef = useRef<HTMLSpanElement>(null);
   const copyTimeoutRef = useRef<number | undefined>(undefined);
   const textSwapTimeoutRef = useRef<number | undefined>(undefined);
+  const qrRevealTimeoutRef = useRef<number | undefined>(undefined);
   const autoOpenedMenuIdRef = useRef<string | null>(null);
   const title = mode === "launch-success" ? LAUNCH_SUCCESS_TITLE : SHARE_TITLE;
   const description =
@@ -80,8 +84,45 @@ const ShareQRButtonDialog = ({
       if (textSwapTimeoutRef.current) {
         clearTimeout(textSwapTimeoutRef.current);
       }
+      if (qrRevealTimeoutRef.current) {
+        clearTimeout(qrRevealTimeoutRef.current);
+      }
     };
   }, []);
+
+  const openShareSurface = () => {
+    if (qrRevealTimeoutRef.current) {
+      clearTimeout(qrRevealTimeoutRef.current);
+    }
+
+    setShouldRevealQr(false);
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (prefersReducedMotion) {
+      setShouldRevealQr(true);
+      return;
+    }
+
+    if (qrRevealTimeoutRef.current) {
+      clearTimeout(qrRevealTimeoutRef.current);
+    }
+
+    qrRevealTimeoutRef.current = window.setTimeout(() => {
+      setShouldRevealQr(true);
+    }, QR_REVEAL_DELAY_MS);
+
+    return () => {
+      if (qrRevealTimeoutRef.current) {
+        clearTimeout(qrRevealTimeoutRef.current);
+      }
+    };
+  }, [open, prefersReducedMotion]);
 
   useEffect(() => {
     if (!openOnMount || autoOpenedMenuIdRef.current === activeMenuId) {
@@ -89,7 +130,7 @@ const ShareQRButtonDialog = ({
     }
 
     autoOpenedMenuIdRef.current = activeMenuId;
-    setOpen(true);
+    openShareSurface();
   }, [activeMenuId, openOnMount]);
 
   const { data, isLoading } = useQuery(
@@ -212,7 +253,17 @@ const ShareQRButtonDialog = ({
   );
 
   const handleOpenChange = (nextOpen: boolean) => {
-    setOpen(nextOpen);
+    if (nextOpen) {
+      openShareSurface();
+      return;
+    }
+
+    if (qrRevealTimeoutRef.current) {
+      clearTimeout(qrRevealTimeoutRef.current);
+    }
+
+    setShouldRevealQr(false);
+    setOpen(false);
 
     if (!nextOpen && mode === "launch-success") {
       onLaunchSuccessComplete?.();
@@ -222,15 +273,19 @@ const ShareQRButtonDialog = ({
   const qrCode = (
     <div className="overflow-hidden">
       <AnimatePresence initial={false}>
-        {isQrImageReady && publicUrl ? (
+        {open && shouldRevealQr && isQrImageReady && publicUrl ? (
           <motion.div
             key="qr-code"
-            initial={{ height: 0, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
             transition={{
-              height: QR_HEIGHT_TRANSITION,
-              opacity: QR_CONTENT_TRANSITION,
+              height: prefersReducedMotion
+                ? { duration: 0 }
+                : QR_HEIGHT_TRANSITION,
+              opacity: prefersReducedMotion
+                ? { duration: 0 }
+                : QR_CONTENT_TRANSITION,
             }}
             className="my-3 flex justify-center"
           >
@@ -238,10 +293,20 @@ const ShareQRButtonDialog = ({
               <motion.img
                 src={publicUrl}
                 alt="Menu QR Code"
-                initial={{ opacity: 0, scale: 0.96 }}
+                initial={
+                  prefersReducedMotion ? false : { opacity: 0, scale: 0.96 }
+                }
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={QR_CONTENT_TRANSITION}
+                exit={
+                  prefersReducedMotion
+                    ? undefined
+                    : { opacity: 0, scale: 0.96 }
+                }
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0 }
+                    : QR_CONTENT_TRANSITION
+                }
                 className="h-52 w-52"
               />
             </div>
@@ -249,12 +314,16 @@ const ShareQRButtonDialog = ({
         ) : !isLoading && !publicUrl ? (
           <motion.p
             key="qr-error"
-            initial={{ height: 0, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
             transition={{
-              height: QR_HEIGHT_TRANSITION,
-              opacity: QR_CONTENT_TRANSITION,
+              height: prefersReducedMotion
+                ? { duration: 0 }
+                : QR_HEIGHT_TRANSITION,
+              opacity: prefersReducedMotion
+                ? { duration: 0 }
+                : QR_CONTENT_TRANSITION,
             }}
             className="text-muted-foreground my-3 text-center text-sm"
           >
