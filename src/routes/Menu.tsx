@@ -297,7 +297,7 @@ export const Menu = () => {
                                 {item.name}
                               </motion.h4>
                               <div className="flex shrink-0 items-center gap-1">
-                                <motion.span className="text-neutral-700 tabular-nums">
+                                <motion.span className="text-xs text-neutral-700 tabular-nums">
                                   {priceFormatter.format(item.price)}
                                 </motion.span>
                                 {shouldShowDetails && (
