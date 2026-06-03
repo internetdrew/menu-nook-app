@@ -1,4 +1,4 @@
-import { queryClient, trpc } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -9,7 +9,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "../ui/alert-dialog";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import {
   Drawer,
@@ -38,6 +38,7 @@ const DeleteItemAlertDialog = ({
   onOpenChange,
 }: DeleteItemAlertDialogProps) => {
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const deleteItem = useMutation(
     trpc.menuCategoryItem.delete.mutationOptions(),
   );

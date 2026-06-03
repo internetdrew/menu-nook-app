@@ -14,6 +14,8 @@ import DeleteMenuAlertDialog from "../dialogs/DeleteMenuAlertDialog";
 type QuickActionDialog = "business" | "menu" | "createMenu" | "deleteMenu";
 
 const actionStagger = 0.035;
+const compactButtonWidth = 48;
+const closedButtonWidth = 124;
 
 const itemTransition = {
   type: "spring",
@@ -159,11 +161,15 @@ const HomeQuickActions = () => {
 
         <motion.div
           animate={
-            prefersReducedMotion ? undefined : { width: isOpen ? 48 : 116 }
+            prefersReducedMotion
+              ? undefined
+              : { width: isOpen ? compactButtonWidth : closedButtonWidth }
           }
           transition={buttonTransition}
           className="overflow-hidden rounded-full"
-          style={{ width: prefersReducedMotion ? undefined : 116 }}
+          style={{
+            width: prefersReducedMotion ? undefined : closedButtonWidth,
+          }}
         >
           <Button
             type="button"
@@ -219,7 +225,7 @@ const HomeQuickActions = () => {
               {!isOpen && (
                 <motion.span
                   key="actions-label"
-                  className="absolute top-1/2 left-11 -translate-y-1/2 overflow-hidden whitespace-nowrap"
+                  className="absolute top-1/2 left-12 -translate-y-1/2 overflow-hidden whitespace-nowrap"
                   initial={prefersReducedMotion ? false : { opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={
@@ -241,7 +247,7 @@ const HomeQuickActions = () => {
 
       <FormDialog
         title="Business profile"
-        description="Update the business name customers see on your menu."
+        description="Update the business name and logo customers see on your menu."
         isDialogOpen={activeDialog === "business"}
         setIsDialogOpen={(open) => setActiveDialog(open ? "business" : null)}
         formComponent={

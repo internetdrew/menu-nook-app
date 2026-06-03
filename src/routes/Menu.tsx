@@ -210,9 +210,7 @@ export const Menu = () => {
         <h1 className="text-center text-lg font-semibold">
           {menu.business.name}
         </h1>
-        {/* <h2 className="text-muted-foreground mt-1 text-center text-lg">
-            {menu.name}
-          </h2> */}
+        <h2 className="text-center text-sm text-neutral-700">{menu.name}</h2>
         <nav
           ref={navRef}
           className="my-6 flex flex-wrap items-center justify-center gap-4 text-neutral-700"

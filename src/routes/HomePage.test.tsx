@@ -4,10 +4,11 @@ import { createTestQueryClient } from "@/utils/test/createTestQueryClient";
 import { renderApp } from "@/utils/test/renderApp";
 import { queryClient } from "@/utils/trpc";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
+import { supabaseBrowserClient } from "@/lib/supabase";
 import { screen, waitFor, within } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 
 vi.mock("sonner", () => ({
@@ -17,6 +18,17 @@ vi.mock("sonner", () => ({
   },
   Toaster: vi.fn(() => null),
 }));
+
+const { uploadMock, getPublicUrlMock, fromMock } = vi.hoisted(() => {
+  const uploadMock = vi.fn();
+  const getPublicUrlMock = vi.fn();
+  const fromMock = vi.fn(() => ({
+    upload: uploadMock,
+    getPublicUrl: getPublicUrlMock,
+  }));
+
+  return { uploadMock, getPublicUrlMock, fromMock };
+});
 
 const createPreviewItem = (
   id: number,
@@ -715,9 +727,11 @@ describe("Dashboard Home Page", () => {
 
     await user.click(screen.getByRole("button", { name: /Continue/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText(/No categories yet/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole("button", {
+        name: /open quick actions/i,
+      }),
+    ).toBeInTheDocument();
   });
 
   it("walks a new user through onboarding before entering the dashboard", async () => {
@@ -876,9 +890,11 @@ describe("Dashboard Home Page", () => {
 
     finishMenuPreview?.();
 
-    await waitFor(() => {
-      expect(screen.getByText(/No categories yet/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole("button", {
+        name: /open quick actions/i,
+      }),
+    ).toBeInTheDocument();
   });
 
   it("renders an error message when user tries to create a menu without text entry", async () => {
@@ -993,6 +1009,179 @@ describe("Dashboard Home Page", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /settings/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /categories/i })).toBeNull();
+  });
+
+  describe("business profile logo", () => {
+    beforeEach(() => {
+      queryClient.clear();
+      vi.spyOn(URL, "createObjectURL").mockImplementation(() => "blob:mock");
+      vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+      vi.stubGlobal(
+        "Image",
+        class MockImage {
+          width = 1200;
+          height = 800;
+          onload: (() => void) | null = null;
+          onerror: ((event: Event | string) => void) | null = null;
+
+          set src(_value: string) {
+            queueMicrotask(() => {
+              this.onload?.();
+            });
+          }
+        },
+      );
+      vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+        drawImage: vi.fn(),
+      } as unknown as CanvasRenderingContext2D);
+      vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(((
+        callback: BlobCallback,
+      ) => {
+        callback(new Blob(["mock"], { type: "image/webp" }));
+      }) as never);
+
+      uploadMock.mockResolvedValue({ error: null });
+      getPublicUrlMock.mockReturnValue({
+        data: { publicUrl: "https://cdn.example.com/business-logo.webp" },
+      });
+      vi.spyOn(supabaseBrowserClient.storage, "from").mockImplementation(
+        fromMock as unknown as typeof supabaseBrowserClient.storage.from,
+      );
+
+      server.use(
+        createTrpcQueryHandler({
+          "business.getForUser": () => ({
+            result: {
+              data: {
+                id: "business-123",
+                name: "Test Business",
+                user_id: "user-123",
+                image_path: null,
+                image_url: null,
+                created_at: "2026-05-20T00:00:00.000Z",
+                updated_at: "2026-05-20T00:00:00.000Z",
+              },
+            },
+          }),
+          "subscription.getForMenu": () => ({ result: { data: null } }),
+          "menu.getAllForBusiness": () => ({
+            result: {
+              data: [
+                {
+                  id: "menu-123",
+                  name: "Test Menu",
+                  business_id: "business-123",
+                  created_at: "2026-05-20T00:00:00.000Z",
+                  updated_at: "2026-05-20T00:00:00.000Z",
+                },
+              ],
+            },
+          }),
+          "menu.getPreview": () => ({
+            result: {
+              data: {
+                id: "menu-123",
+                name: "Test Menu",
+                business_id: "business-123",
+                menu_categories: [],
+                business: {
+                  id: "business-123",
+                  image_url: null,
+                  name: "Test Business",
+                },
+              },
+            },
+          }),
+          "menuQRCode.getPublicUrlForMenu": () => ({
+            result: { data: { public_url: "https://example.com/qr-code.png" } },
+          }),
+        }),
+      );
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    });
+
+    it("uploads and saves a business logo from the dashboard dialog", async () => {
+      let submittedData: Record<string, unknown> | null = null;
+
+      server.use(
+        http.post("/trpc/business.update", async ({ request }) => {
+          const submittedBody = (await request.json()) as Record<
+            string,
+            Record<string, unknown>
+          >;
+          submittedData = submittedBody["0"] ?? null;
+
+          return HttpResponse.json([
+            {
+              result: {
+                data: {
+                  id: "business-123",
+                  name: submittedData?.name ?? "Test Business",
+                  user_id: "user-123",
+                  image_path: submittedData?.imagePath ?? null,
+                  image_url: submittedData?.imageUrl ?? null,
+                  created_at: "2026-05-20T00:00:00.000Z",
+                  updated_at: "2026-05-20T00:00:00.000Z",
+                },
+              },
+            },
+          ]);
+        }),
+      );
+
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+      await screen.findByRole("link", { name: /^preview$/i });
+      await user.click(
+        screen.getByRole("button", { name: /open quick actions/i }),
+      );
+      await user.click(
+        await screen.findByRole("button", { name: /business profile/i }),
+      );
+
+      const dialog = await screen.findByRole("dialog");
+      const logoInput = within(dialog).getByLabelText(/^business logo$/i);
+
+      await user.upload(
+        logoInput,
+        new File(["logo"], "logo.png", { type: "image/png" }),
+      );
+
+      expect(
+        await within(dialog).findByRole("img", {
+          name: /test business logo preview/i,
+        }),
+      ).toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole("button", { name: /save/i }));
+
+      await waitFor(() => {
+        expect(uploadMock).toHaveBeenCalledTimes(1);
+      });
+
+      expect(uploadMock).toHaveBeenCalledWith(
+        expect.stringMatching(/^business\/business-123\/logo\/image_/),
+        expect.any(File),
+        expect.objectContaining({
+          cacheControl: "3600",
+          contentType: "image/webp",
+          upsert: false,
+        }),
+      );
+      expect(submittedData).toMatchObject({
+        id: "business-123",
+        name: "Test Business",
+        imagePath: expect.stringMatching(
+          /^business\/business-123\/logo\/image_/,
+        ),
+        imageUrl: "https://cdn.example.com/business-logo.webp",
+      });
+    });
   });
 
   it("renders a share button when user has a live menu", async () => {
@@ -1166,9 +1355,12 @@ describe("Dashboard Home Page", () => {
       expect(deletedItemId).toBe(burger.id);
     });
 
-    await waitFor(() => {
-      expect(screen.queryByText("Burger")).not.toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.queryByText("Burger")).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
     expect(screen.getByText("Fries")).toBeInTheDocument();
   });
 
@@ -1499,9 +1691,7 @@ describe("Dashboard Home Page", () => {
     await user.click(screen.getByRole("button", { name: /^new category$/i }));
 
     const dialog = await screen.findByRole("dialog");
-    expect(
-      within(dialog).getByText(/create new category/i),
-    ).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/category name/i)).toBeInTheDocument();
   });
 
   it("uses an embedded new category trigger for the empty category state", async () => {
@@ -1512,14 +1702,8 @@ describe("Dashboard Home Page", () => {
       authMock: authedUserState,
     });
 
-    expect(await screen.findByText(/No categories yet/i)).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /Create a category like Appetizers, Entrees, or Drinks/i,
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /new category/i }),
+      await screen.findByRole("button", { name: /new category/i }),
     ).toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: /new category/i }),

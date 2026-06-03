@@ -1,5 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
-import { queryClient, trpc } from "@/utils/trpc";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -41,6 +41,7 @@ const DeleteMenuAlertDialog = ({
   showTrigger?: boolean;
 }) => {
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const deleteMenuMutation = useMutation(trpc.menu.delete.mutationOptions());
 
   const deleteMenu = async () => {

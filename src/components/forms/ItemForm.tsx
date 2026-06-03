@@ -12,8 +12,8 @@ import {
 } from "../ui/form";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { queryClient, trpc } from "@/utils/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
@@ -142,6 +142,7 @@ const compressImageFile = async (file: File) => {
 const ItemForm = (props: ItemFormProps) => {
   const { onSuccess, item, chosenCategory } = props;
   const { activeMenu } = useMenuContext();
+  const queryClient = useQueryClient();
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);

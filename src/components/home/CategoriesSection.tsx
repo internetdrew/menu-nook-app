@@ -2,12 +2,13 @@ import { Plus } from "lucide-react";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import MenuCategoriesSkeleton from "../skeletons/MenuCategoriesSkeleton";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient, trpc } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc";
 import { useEffect, useMemo, useState } from "react";
 import type { MenuPreviewCategory, MenuPreviewItem } from "@/types/menu";
 import FormDialog from "../dialogs/FormDialog";
 import CategoryForm from "../forms/CategoryForm";
 import { MotionConfig } from "motion/react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   closestCenter,
   DndContext,
@@ -67,6 +68,7 @@ const collisionDetection: CollisionDetection = (args) => {
 
 const CategoriesSection = () => {
   const { activeMenu, loading: loadingMenu } = useMenuContext();
+  const queryClient = useQueryClient();
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState("");
   const [menuCategories, setMenuCategories] = useState<
