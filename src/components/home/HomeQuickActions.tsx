@@ -162,19 +162,52 @@ const HomeQuickActions = () => {
         </AnimatePresence>
 
         <motion.div
-          animate={prefersReducedMotion ? undefined : { rotate: isOpen ? 45 : 0 }}
+          animate={
+            prefersReducedMotion
+              ? undefined
+              : { width: isOpen ? 48 : 116, rotate: isOpen ? 45 : 0 }
+          }
           transition={buttonTransition}
+          className="overflow-hidden rounded-full"
+          style={{ width: prefersReducedMotion ? undefined : 116 }}
         >
           <Button
             type="button"
             size="lg"
-            className="rounded-full shadow-lg"
+            className={`h-12 w-full rounded-full px-4 shadow-lg ${
+              isOpen ? "justify-center px-0" : ""
+            }`}
             aria-expanded={isOpen}
             aria-label={isOpen ? "Close quick actions" : "Open quick actions"}
             onClick={() => setIsOpen((current) => !current)}
           >
-            {isOpen ? <X className="size-4" /> : <Settings className="size-4" />}
-            Actions
+            {isOpen ? (
+              <X className="size-4 rotate-45" />
+            ) : (
+              <Settings className="size-4" />
+            )}
+            <AnimatePresence initial={false}>
+              {!isOpen && (
+                <motion.span
+                  key="actions-label"
+                  className="overflow-hidden whitespace-nowrap"
+                  initial={
+                    prefersReducedMotion ? false : { opacity: 0, width: 0 }
+                  }
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={
+                    prefersReducedMotion ? undefined : { opacity: 0, width: 0 }
+                  }
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0 }
+                      : { duration: 0.14, ease: [0.25, 1, 0.5, 1] }
+                  }
+                >
+                  Actions
+                </motion.span>
+              )}
+            </AnimatePresence>
           </Button>
         </motion.div>
       </div>
@@ -213,7 +246,9 @@ const HomeQuickActions = () => {
         description="Add another menu for this business."
         isDialogOpen={activeDialog === "createMenu"}
         setIsDialogOpen={(open) => setActiveDialog(open ? "createMenu" : null)}
-        formComponent={<CreateMenuForm onSuccess={() => setActiveDialog(null)} />}
+        formComponent={
+          <CreateMenuForm onSuccess={() => setActiveDialog(null)} />
+        }
       />
 
       <DeleteMenuAlertDialog
