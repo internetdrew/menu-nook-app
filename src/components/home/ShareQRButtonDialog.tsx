@@ -298,14 +298,10 @@ const ShareQRButtonDialog = ({
                 }
                 animate={{ opacity: 1, scale: 1 }}
                 exit={
-                  prefersReducedMotion
-                    ? undefined
-                    : { opacity: 0, scale: 0.96 }
+                  prefersReducedMotion ? undefined : { opacity: 0, scale: 0.96 }
                 }
                 transition={
-                  prefersReducedMotion
-                    ? { duration: 0 }
-                    : QR_CONTENT_TRANSITION
+                  prefersReducedMotion ? { duration: 0 } : QR_CONTENT_TRANSITION
                 }
                 className="h-52 w-52"
               />
@@ -337,6 +333,21 @@ const ShareQRButtonDialog = ({
   const actionsDisabled = !publicUrl;
   const descriptionClassName =
     mode === "launch-success" ? undefined : "sr-only";
+  const dialogDescription =
+    mode === "launch-success" ? (
+      <>
+        {description}{" "}
+        <Link
+          to={menuUrl}
+          className="inline-flex items-center gap-1 font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-4 transition-colors hover:decoration-neutral-600"
+        >
+          View live menu.
+          <ExternalLink className="size-3.5" />
+        </Link>
+      </>
+    ) : (
+      description
+    );
 
   const QRActions = (
     <div className="flex w-full flex-col gap-2">
@@ -351,13 +362,6 @@ const ShareQRButtonDialog = ({
           </span>
         </span>
       </Button>
-      {mode === "launch-success" && (
-        <Button asChild variant="outline" className="flex-1">
-          <Link to={menuUrl}>
-            <ExternalLink /> View Live Menu
-          </Link>
-        </Button>
-      )}
       <Button
         variant="outline"
         className="flex-1"
@@ -377,7 +381,7 @@ const ShareQRButtonDialog = ({
           <DrawerHeader className="px-6 pt-6 pb-2 text-left">
             <DrawerTitle className="text-base">{title}</DrawerTitle>
             <DrawerDescription className={descriptionClassName}>
-              {description}
+              {dialogDescription}
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-6">{qrCode}</div>
@@ -394,7 +398,7 @@ const ShareQRButtonDialog = ({
         <DialogHeader>
           <DialogTitle className="text-base">{title}</DialogTitle>
           <DialogDescription className={`${descriptionClassName} text-sm`}>
-            {description}
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
         {qrCode}
