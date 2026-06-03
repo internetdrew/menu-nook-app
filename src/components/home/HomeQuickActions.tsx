@@ -13,6 +13,8 @@ import DeleteMenuAlertDialog from "../dialogs/DeleteMenuAlertDialog";
 
 type QuickActionDialog = "business" | "menu" | "createMenu" | "deleteMenu";
 
+const actionStagger = 0.035;
+
 const itemTransition = {
   type: "spring",
   stiffness: 420,
@@ -109,18 +111,13 @@ const HomeQuickActions = () => {
         ref={containerRef}
         className="fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3"
       >
-        <AnimatePresence initial={false}>
-          {isOpen && (
-            <motion.div
-              key="quick-actions"
-              className="flex flex-col items-end gap-2"
-              initial={prefersReducedMotion ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={prefersReducedMotion ? undefined : { opacity: 0 }}
-              transition={{ duration: prefersReducedMotion ? 0 : 0.12 }}
-            >
-              {actions.map((action, index) => {
+        <div className="flex flex-col items-end gap-2">
+          <AnimatePresence initial={false}>
+            {isOpen &&
+              actions.map((action, index) => {
                 const Icon = action.icon;
+                const distanceFromButton = actions.length - 1 - index;
+                const delay = distanceFromButton * actionStagger;
 
                 return (
                   <motion.button
@@ -134,20 +131,20 @@ const HomeQuickActions = () => {
                     initial={
                       prefersReducedMotion
                         ? false
-                        : { opacity: 0, y: 8, scale: 0.96 }
+                        : { opacity: 0, y: 10, scale: 0.94 }
                     }
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={
                       prefersReducedMotion
                         ? undefined
-                        : { opacity: 0, y: 8, scale: 0.96 }
+                        : { opacity: 0, y: 10, scale: 0.94 }
                     }
                     transition={
                       prefersReducedMotion
                         ? { duration: 0 }
                         : {
                             ...itemTransition,
-                            delay: index * 0.035,
+                            delay,
                           }
                     }
                     onClick={action.onSelect}
@@ -157,9 +154,8 @@ const HomeQuickActions = () => {
                   </motion.button>
                 );
               })}
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
 
         <motion.div
           animate={
