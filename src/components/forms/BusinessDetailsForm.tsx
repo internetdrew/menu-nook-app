@@ -1,19 +1,13 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowUpFromLine, Image as ImageIcon, Trash2 } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
+import type { ChangeEvent } from "react";
 import type { BusinessRecord } from "@/types/menu";
 import { supabaseBrowserClient } from "@/lib/supabase";
-import { useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { Button } from "../ui/button";
 import { Field, FieldDescription, FieldLabel } from "../ui/field";
@@ -28,7 +22,6 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
-import { z } from "zod";
 
 const formSchema = z.object({
   name: z.string().min(1, "Business name is required.").max(32),
@@ -128,15 +121,15 @@ const compressImageFile = async (file: File) => {
   });
 };
 
-interface BusinessSettingsFormProps {
+interface BusinessDetailsFormProps {
   business: BusinessRecord;
   onSuccess: () => void;
 }
 
-export const BusinessSettingsForm = ({
+export const BusinessDetailsForm = ({
   business,
   onSuccess,
-}: BusinessSettingsFormProps) => {
+}: BusinessDetailsFormProps) => {
   const updateBusiness = useMutation(trpc.business.update.mutationOptions());
   const queryClient = useQueryClient();
   const fileInputId = useId();
@@ -154,6 +147,9 @@ export const BusinessSettingsForm = ({
       name: business.name,
     },
   });
+
+  const hasUnsavedChanges =
+    form.formState.isDirty || selectedImageFile !== null || removedImage;
 
   useEffect(() => {
     if (selectedImageFile) {
@@ -316,93 +312,96 @@ export const BusinessSettingsForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Business Name</FormLabel>
-              <FormControl>
-                <Input placeholder="The Blonde Wolf" {...field} />
-              </FormControl>
-              <FormDescription>
-                This is the business name customers see on your menu.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Field>
-          <FieldLabel htmlFor={fileInputId}>Business Logo</FieldLabel>
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="bg-muted flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
-              onClick={openFilePicker}
-              disabled={form.formState.isSubmitting || isProcessingImage}
-              aria-label="Upload business logo"
-            >
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt={`${business.name} logo preview`}
-                  className="h-full w-full object-contain p-2"
-                />
-              ) : (
-                <ImageIcon className="text-muted-foreground size-5" />
-              )}
-            </button>
-
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <input
-                id={fileInputId}
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED_IMAGE_INPUT_TYPES}
-                className="sr-only"
-                tabIndex={-1}
-                onChange={handleImageSelected}
-              />
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={openFilePicker}
-                  disabled={form.formState.isSubmitting || isProcessingImage}
-                >
-                  <ArrowUpFromLine className="size-4" />
-                  Upload
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemoveImage}
-                  disabled={
-                    form.formState.isSubmitting ||
-                    isProcessingImage ||
-                    (!previewUrl && !business.image_url)
-                  }
-                >
-                  <Trash2 className="size-4" />
-                  Remove
-                </Button>
-              </div>
-              <FieldDescription className="text-xs">
-                Displayed on the public menu. JPEG, PNG, or WebP up to 25MB.
-              </FieldDescription>
-            </div>
-          </div>
-        </Field>
-
-        <div className="flex justify-end">
-          <AnimatedSubmitButton
-            isSubmitting={form.formState.isSubmitting || isProcessingImage}
-            idleLabel="Save"
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="space-y-8">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="The Blonde Wolf" {...field} />
+                </FormControl>
+                <FormDescription>
+                  This is the business name customers see on your menu.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
           />
+
+          <Field>
+            <FieldLabel htmlFor={fileInputId}>Business Logo</FieldLabel>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                className="bg-muted flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={openFilePicker}
+                disabled={form.formState.isSubmitting || isProcessingImage}
+                aria-label="Upload business logo"
+              >
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt={`${business.name} logo preview`}
+                    className="h-full w-full object-contain p-2"
+                  />
+                ) : (
+                  <ImageIcon className="text-muted-foreground size-5" />
+                )}
+              </button>
+
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <input
+                  id={fileInputId}
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_IMAGE_INPUT_TYPES}
+                  className="sr-only"
+                  tabIndex={-1}
+                  onChange={handleImageSelected}
+                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={openFilePicker}
+                    disabled={form.formState.isSubmitting || isProcessingImage}
+                  >
+                    <ArrowUpFromLine className="size-4" />
+                    Upload
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveImage}
+                    disabled={
+                      form.formState.isSubmitting ||
+                      isProcessingImage ||
+                      (!previewUrl && !business.image_url)
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                    Remove
+                  </Button>
+                </div>
+                <FieldDescription className="text-xs">
+                  Displayed on the public menu. JPEG, PNG, or WebP up to 25MB.
+                </FieldDescription>
+              </div>
+            </div>
+          </Field>
+
+          <div className="flex justify-end">
+            <AnimatedSubmitButton
+              isSubmitting={form.formState.isSubmitting || isProcessingImage}
+              disabled={!hasUnsavedChanges}
+              idleLabel="Save"
+            />
+          </div>
         </div>
       </form>
     </Form>

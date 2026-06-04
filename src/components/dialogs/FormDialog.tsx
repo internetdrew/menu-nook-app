@@ -30,11 +30,7 @@ const FormDialog = ({
   formComponent,
 }: DialogProps) => {
   const isMobile = useIsMobile();
-  const formContent = (
-    <div className="no-scrollbar -mx-4 max-h-[60vh] overflow-y-auto px-4">
-      {formComponent}
-    </div>
-  );
+  const formContent = <div className="no-scrollbar">{formComponent}</div>;
 
   if (isMobile) {
     return (
@@ -46,7 +42,7 @@ const FormDialog = ({
               <DrawerDescription>{description}</DrawerDescription>
             )}
           </DrawerHeader>
-          <div className="px-6 pb-6">{formContent}</div>
+          <div>{formContent}</div>
         </DrawerContent>
       </Drawer>
     );

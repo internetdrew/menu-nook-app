@@ -10,17 +10,19 @@ const SPRING_CONFIG = {
 
 export function AnimatedSubmitButton({
   isSubmitting,
+  disabled = false,
   idleLabel,
   submittingLabel = "Sending...",
 }: {
   isSubmitting: boolean;
+  disabled?: boolean;
   idleLabel: string;
   submittingLabel?: string;
 }) {
   return (
     <Button
       type="submit"
-      disabled={isSubmitting}
+      disabled={isSubmitting || disabled}
       className="min-w-24 overflow-hidden"
     >
       <motion.span

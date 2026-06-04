@@ -1124,6 +1124,8 @@ describe("Dashboard Home Page", () => {
                   user_id: "user-123",
                   image_path: submittedData?.imagePath ?? null,
                   image_url: submittedData?.imageUrl ?? null,
+                  seo_title: submittedData?.seoTitle ?? null,
+                  seo_description: submittedData?.seoDescription ?? null,
                   created_at: "2026-05-20T00:00:00.000Z",
                   updated_at: "2026-05-20T00:00:00.000Z",
                 },
@@ -1145,6 +1147,9 @@ describe("Dashboard Home Page", () => {
       );
 
       const dialog = await screen.findByRole("dialog");
+      expect(
+        within(dialog).getByRole("button", { name: /save/i }),
+      ).toBeDisabled();
       const logoInput = within(dialog).getByLabelText(/^business logo$/i);
 
       await user.upload(
@@ -1157,6 +1162,9 @@ describe("Dashboard Home Page", () => {
           name: /test business logo preview/i,
         }),
       ).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole("button", { name: /save/i }),
+      ).toBeEnabled();
 
       await user.click(within(dialog).getByRole("button", { name: /save/i }));
 

@@ -1,5 +1,13 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Plus, Settings, Store, Trash2, Utensils, X } from "lucide-react";
+import {
+  Globe,
+  Plus,
+  Settings,
+  Store,
+  Trash2,
+  Utensils,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
@@ -7,26 +15,24 @@ import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { Button } from "../ui/button";
 import FormDialog from "../dialogs/FormDialog";
 import { CreateMenuForm } from "../forms/CreateMenuForm";
-import { BusinessSettingsForm } from "../forms/BusinessSettingsForm";
 import { MenuSettingsForm } from "../forms/MenuSettingsForm";
 import DeleteMenuAlertDialog from "../dialogs/DeleteMenuAlertDialog";
+import { BusinessDetailsForm } from "../forms/BusinessDetailsForm";
+import { BusinessDiscoveryForm } from "../forms/BusinessDiscoveryForm";
 
-type QuickActionDialog = "business" | "menu" | "createMenu" | "deleteMenu";
+type QuickActionDialog =
+  | "business"
+  | "menu"
+  | "createMenu"
+  | "deleteMenu"
+  | "search";
 
 const actionStagger = 0.035;
-const compactButtonWidth = 48;
-const closedButtonWidth = 124;
 
 const itemTransition = {
   type: "spring",
   stiffness: 420,
   damping: 28,
-} as const;
-
-const buttonTransition = {
-  type: "spring",
-  stiffness: 650,
-  damping: 38,
 } as const;
 
 const HomeQuickActions = () => {
@@ -93,6 +99,11 @@ const HomeQuickActions = () => {
   };
 
   const actions = [
+    {
+      label: "Search Appearance",
+      icon: Globe,
+      onSelect: () => openDialog("search"),
+    },
     {
       label: "Business profile",
       icon: Store,
@@ -172,99 +183,76 @@ const HomeQuickActions = () => {
           </AnimatePresence>
         </div>
 
-        <motion.div
-          animate={
-            prefersReducedMotion
-              ? undefined
-              : { width: isOpen ? compactButtonWidth : closedButtonWidth }
-          }
-          transition={buttonTransition}
-          className="overflow-hidden rounded-full"
-          style={{
-            width: prefersReducedMotion ? undefined : closedButtonWidth,
-          }}
+        <Button
+          type="button"
+          size="icon-lg"
+          className="relative overflow-hidden rounded-full shadow-lg"
+          aria-expanded={isOpen}
+          aria-label={isOpen ? "Close quick actions" : "Open quick actions"}
+          onClick={() => setIsOpen((current) => !current)}
         >
-          <Button
-            type="button"
-            size="lg"
-            className="relative h-12 w-full overflow-hidden rounded-full px-0 shadow-lg"
-            aria-expanded={isOpen}
-            aria-label={isOpen ? "Close quick actions" : "Open quick actions"}
-            onClick={() => setIsOpen((current) => !current)}
+          <motion.span
+            className="absolute grid size-4 place-items-center"
+            aria-hidden="true"
+            animate={
+              prefersReducedMotion
+                ? { opacity: isOpen ? 0 : 1 }
+                : {
+                    opacity: isOpen ? 0 : 1,
+                    rotate: isOpen ? -45 : 0,
+                    scale: isOpen ? 0.86 : 1,
+                  }
+            }
+            transition={
+              prefersReducedMotion
+                ? { duration: 0 }
+                : { duration: 0.1, ease: [0.25, 1, 0.5, 1] }
+            }
           >
-            <span className="absolute top-0 left-0 grid h-12 w-12 place-items-center">
-              <motion.span
-                className="absolute grid size-4 place-items-center"
-                aria-hidden="true"
-                animate={
-                  prefersReducedMotion
-                    ? { opacity: isOpen ? 0 : 1 }
-                    : {
-                        opacity: isOpen ? 0 : 1,
-                        rotate: isOpen ? -45 : 0,
-                        scale: isOpen ? 0.86 : 1,
-                      }
-                }
-                transition={
-                  prefersReducedMotion
-                    ? { duration: 0 }
-                    : { duration: 0.1, ease: [0.25, 1, 0.5, 1] }
-                }
-              >
-                <Settings className="size-4" />
-              </motion.span>
-              <motion.span
-                className="absolute grid size-4 place-items-center"
-                aria-hidden="true"
-                animate={
-                  prefersReducedMotion
-                    ? { opacity: isOpen ? 1 : 0 }
-                    : {
-                        opacity: isOpen ? 1 : 0,
-                        rotate: isOpen ? 0 : -45,
-                        scale: isOpen ? 1 : 0.86,
-                      }
-                }
-                transition={
-                  prefersReducedMotion
-                    ? { duration: 0 }
-                    : { duration: 0.1, ease: [0.25, 1, 0.5, 1] }
-                }
-              >
-                <X className="size-4" />
-              </motion.span>
-            </span>
-            <AnimatePresence initial={false}>
-              {!isOpen && (
-                <motion.span
-                  key="actions-label"
-                  className="absolute top-1/2 left-12 -translate-y-1/2 overflow-hidden whitespace-nowrap"
-                  initial={prefersReducedMotion ? false : { opacity: 0, x: -4 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={
-                    prefersReducedMotion ? undefined : { opacity: 0, x: -4 }
+            <Settings className="size-4" />
+          </motion.span>
+          <motion.span
+            className="absolute grid size-4 place-items-center"
+            aria-hidden="true"
+            animate={
+              prefersReducedMotion
+                ? { opacity: isOpen ? 1 : 0 }
+                : {
+                    opacity: isOpen ? 1 : 0,
+                    rotate: isOpen ? 0 : -45,
+                    scale: isOpen ? 1 : 0.86,
                   }
-                  transition={
-                    prefersReducedMotion
-                      ? { duration: 0 }
-                      : { duration: 0.14, ease: [0.25, 1, 0.5, 1] }
-                  }
-                >
-                  Actions
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </Button>
-        </motion.div>
+            }
+            transition={
+              prefersReducedMotion
+                ? { duration: 0 }
+                : { duration: 0.1, ease: [0.25, 1, 0.5, 1] }
+            }
+          >
+            <X className="size-4" />
+          </motion.span>
+        </Button>
       </div>
 
+      <FormDialog
+        title="Search Appearance"
+        description="Help people understand what you sell when they find your menu on Google."
+        isDialogOpen={activeDialog === "search"}
+        setIsDialogOpen={(open) => setActiveDialog(open ? "business" : null)}
+        formComponent={
+          <BusinessDiscoveryForm
+            business={business}
+            onSuccess={() => setActiveDialog(null)}
+          />
+        }
+      />
       <FormDialog
         title="Business profile"
         description="Update the business name and logo customers see on your menu."
         isDialogOpen={activeDialog === "business"}
         setIsDialogOpen={(open) => setActiveDialog(open ? "business" : null)}
         formComponent={
-          <BusinessSettingsForm
+          <BusinessDetailsForm
             business={business}
             onSuccess={() => setActiveDialog(null)}
           />
