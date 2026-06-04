@@ -7,7 +7,7 @@ import { toast } from "sonner";
 interface MenuPreviewBannerProps {
   subscriptionIsActive: boolean;
   publicMenuDomain: string;
-  menu: { id: string };
+  menu: { id: string; slug?: string | null };
 }
 
 const MenuPreviewBanner: FC<MenuPreviewBannerProps> = ({
@@ -42,7 +42,10 @@ const MenuPreviewBanner: FC<MenuPreviewBannerProps> = ({
         {subscriptionIsActive ? (
           <p>
             This is a preview of your{" "}
-            <a href={`${publicMenuDomain}/m/${menu.id}`}>live menu</a>.
+            <a href={`${publicMenuDomain}/m/${menu.slug ?? menu.id}`}>
+              live menu
+            </a>
+            .
           </p>
         ) : (
           <AnimatePresence mode="popLayout" initial={false}>

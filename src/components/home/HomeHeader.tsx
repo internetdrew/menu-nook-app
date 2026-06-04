@@ -54,6 +54,7 @@ const HomeHeader = ({
                   {subscriptionIsActive ? (
                     <ShareQRButtonDialog
                       activeMenuId={activeMenu.id}
+                      activeMenuSlug={activeMenu.slug}
                       activeMenuName={activeMenu.name}
                       mode={showLaunchSuccess ? "launch-success" : "share"}
                       openOnMount={showLaunchSuccess}

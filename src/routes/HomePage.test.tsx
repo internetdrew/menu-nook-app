@@ -1216,6 +1216,7 @@ describe("Dashboard Home Page", () => {
                 id: "menu-123",
                 name: "Test Menu",
                 business_id: "business-123",
+                slug: "test-menu",
               },
             ],
           },
@@ -1226,6 +1227,7 @@ describe("Dashboard Home Page", () => {
               id: "menu-123",
               name: "Test Menu",
               business_id: "business-123",
+              slug: "test-menu",
               menu_categories: [],
               business: {
                 id: "business-123",
@@ -1248,6 +1250,158 @@ describe("Dashboard Home Page", () => {
     ).toBeInTheDocument();
   });
 
+  it("updates the public menu link from menu settings and uses the slug in share links", async () => {
+    let submittedUpdate:
+      | {
+          menuId: string;
+          name: string;
+          slug: string;
+        }
+      | null = null;
+
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForMenu": () => ({
+          result: { data: createActiveSubscription() },
+        }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                name: "Test Menu",
+                business_id: "business-123",
+                slug: "test-menu",
+              },
+            ],
+          },
+        }),
+        "menu.checkSlugAvailability": () => ({
+          result: {
+            data: {
+              available: true,
+              slug: "marys-bakery",
+            },
+          },
+        }),
+        "menu.getPreview": () => ({
+          result: {
+            data: {
+              id: "menu-123",
+              name: "Test Menu",
+              business_id: "business-123",
+              slug: "test-menu",
+              menu_categories: [],
+              business: {
+                id: "business-123",
+                image_url: null,
+                name: "Test Business",
+              },
+            },
+          },
+        }),
+        "menuQRCode.getPublicUrlForMenu": () => ({
+          result: {
+            data: {
+              public_url: "data:image/png;base64,iVBORw0KGgo=",
+            },
+          },
+        }),
+      }),
+      http.post("/trpc/menu.update", async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        const input = (body["0"] ?? body) as {
+          menuId: string;
+          name: string;
+          slug: string;
+        };
+
+        submittedUpdate = input;
+
+        return HttpResponse.json([
+          {
+            result: {
+              data: {
+                id: "menu-123",
+                name: input.name,
+                business_id: "business-123",
+                slug: input.slug,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+            },
+          },
+        ]);
+      }),
+    );
+
+    const user = userEvent.setup();
+    const writeTextSpy = vi
+      .spyOn(navigator.clipboard, "writeText")
+      .mockResolvedValue();
+
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await user.click(
+      await screen.findByRole("button", { name: /open quick actions/i }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: /rename menu/i }),
+    );
+
+    const dialog = await screen.findByRole("dialog");
+    const slugInput = within(dialog).getByLabelText(/public menu link/i);
+    await user.clear(slugInput);
+    await user.type(slugInput, "marysbakery");
+
+    await waitFor(() => {
+      expect(
+        within(dialog).getByText(/available: https:\/\/menunook.com\/m\/marysbakery/i),
+      ).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(
+        within(dialog).getByRole("button", { name: /save/i }),
+      ).not.toBeDisabled();
+    });
+
+    await user.click(within(dialog).getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(submittedUpdate).toMatchObject({
+        menuId: "menu-123",
+        name: "Test Menu",
+        slug: "marysbakery",
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    expect(await screen.findByRole("button", { name: /^share$/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^share$/i }));
+    const shareDialog = await screen.findByRole("dialog");
+    await user.click(
+      within(shareDialog).getByRole("button", { name: /copy link/i }),
+    );
+
+    expect(writeTextSpy).toHaveBeenCalledWith(
+      "https://menunook.com/m/marysbakery",
+    );
+  });
+
   it("renders the menu manager when user has business and menus", async () => {
     server.use(
       createTrpcQueryHandler({
@@ -1268,6 +1422,7 @@ describe("Dashboard Home Page", () => {
                 id: "menu-123",
                 name: "Test Menu",
                 business_id: "business-123",
+                slug: "test-menu",
               },
             ],
           },
@@ -1278,6 +1433,7 @@ describe("Dashboard Home Page", () => {
               id: "menu-123",
               name: "Test Menu",
               business_id: "business-123",
+              slug: "test-menu",
               menu_categories: [],
               business: {
                 id: "business-123",
@@ -1394,6 +1550,7 @@ describe("Dashboard Home Page", () => {
                 id: "menu-123",
                 name: "Test Menu",
                 business_id: "business-123",
+                slug: "test-menu",
               },
             ],
           },
@@ -1413,6 +1570,7 @@ describe("Dashboard Home Page", () => {
               id: "menu-123",
               name: "Test Menu",
               business_id: "business-123",
+              slug: "test-menu",
               menu_categories: [],
               business: {
                 id: "business-123",
@@ -1474,6 +1632,7 @@ describe("Dashboard Home Page", () => {
                 id: "menu-123",
                 name: "Test Menu",
                 business_id: "business-123",
+                slug: "test-menu",
               },
             ],
           },
@@ -1493,6 +1652,7 @@ describe("Dashboard Home Page", () => {
               id: "menu-123",
               name: "Test Menu",
               business_id: "business-123",
+              slug: "test-menu",
               menu_categories: [],
               business: {
                 id: "business-123",
@@ -1532,7 +1692,7 @@ describe("Dashboard Home Page", () => {
     );
 
     expect(writeTextSpy).toHaveBeenCalledWith(
-      `https://menunook.com/m/menu-123`,
+      `https://menunook.com/m/test-menu`,
     );
   });
 

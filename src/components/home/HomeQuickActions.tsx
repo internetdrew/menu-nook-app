@@ -261,7 +261,7 @@ const HomeQuickActions = () => {
 
       <FormDialog
         title="Menu settings"
-        description="Rename the current menu."
+        description="Rename the current menu and edit its public link."
         isDialogOpen={activeDialog === "menu"}
         setIsDialogOpen={(open) => setActiveDialog(open ? "menu" : null)}
         formComponent={

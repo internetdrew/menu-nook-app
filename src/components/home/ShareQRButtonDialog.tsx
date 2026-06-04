@@ -27,6 +27,7 @@ import { toast } from "sonner";
 
 interface ShareQRButtonDialogProps {
   activeMenuId: string;
+  activeMenuSlug?: string | null;
   activeMenuName: string;
   mode?: "share" | "launch-success";
   openOnMount?: boolean;
@@ -53,6 +54,7 @@ const PUBLIC_MENU_DOMAIN =
 
 const ShareQRButtonDialog = ({
   activeMenuId,
+  activeMenuSlug,
   activeMenuName,
   mode = "share",
   openOnMount = false,
@@ -75,7 +77,7 @@ const ShareQRButtonDialog = ({
   const title = mode === "launch-success" ? LAUNCH_SUCCESS_TITLE : SHARE_TITLE;
   const description =
     mode === "launch-success" ? LAUNCH_SUCCESS_DESCRIPTION : SHARE_DESCRIPTION;
-  const menuUrl = `${PUBLIC_MENU_DOMAIN}/m/${activeMenuId}`;
+  const menuUrl = `${PUBLIC_MENU_DOMAIN}/m/${activeMenuSlug ?? activeMenuId}`;
 
   useEffect(() => {
     return () => {
