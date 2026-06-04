@@ -135,7 +135,7 @@ const HomeQuickActions = () => {
     <>
       <div
         ref={containerRef}
-        className="fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3"
+        className="fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3 sm:right-8 sm:bottom-8"
       >
         <div className="flex flex-col items-end gap-2">
           <AnimatePresence initial={false}>
