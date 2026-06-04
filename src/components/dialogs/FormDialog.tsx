@@ -30,7 +30,7 @@ const FormDialog = ({
   formComponent,
 }: DialogProps) => {
   const isMobile = useIsMobile();
-  const formContent = <div className="no-scrollbar">{formComponent}</div>;
+  const formContent = <div className="no-scrollbar p-6">{formComponent}</div>;
 
   if (isMobile) {
     return (
