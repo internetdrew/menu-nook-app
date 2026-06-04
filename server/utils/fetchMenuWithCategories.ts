@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../shared/database.types.js";
 import { TRPCError } from "@trpc/server";
+import type { MenuRow } from "./menuTypes.js";
 
 export async function fetchMenuWithCategories(
   supabase: SupabaseClient<Database>,
@@ -74,7 +75,7 @@ export async function fetchMenuWithCategories(
   });
 
   return {
-    ...menu,
+    ...(menu as unknown as MenuRow),
     menu_categories: categoriesWithSortedItems,
   };
 }

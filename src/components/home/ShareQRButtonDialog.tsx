@@ -20,18 +20,25 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { Copy, Download, QrCode } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { Copy, Download, ExternalLink, QrCode } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface ShareQRButtonDialogProps {
   activeMenuId: string;
+  activeMenuSlug?: string | null;
   activeMenuName: string;
+  mode?: "share" | "launch-success";
+  openOnMount?: boolean;
+  onLaunchSuccessComplete?: () => void;
 }
 
 const SHARE_TITLE = "Share menu";
 const SHARE_DESCRIPTION = "Scan the QR code or copy the menu link.";
+const LAUNCH_SUCCESS_TITLE = "Your menu is live";
+const LAUNCH_SUCCESS_DESCRIPTION =
+  "Customers can now view it from this link or scan the QR code.";
 const TEXT_SWAP_DURATION_MS = 120;
 const QR_HEIGHT_TRANSITION = {
   duration: 0.27,
@@ -41,21 +48,36 @@ const QR_CONTENT_TRANSITION = {
   duration: 0.27,
   ease: [0.26, 0.08, 0.25, 1],
 } as const;
+const QR_REVEAL_DELAY_MS = 180;
+const PUBLIC_MENU_DOMAIN =
+  import.meta.env.VITE_PUBLIC_MENU_DOMAIN || "https://menunook.com";
 
 const ShareQRButtonDialog = ({
   activeMenuId,
+  activeMenuSlug,
   activeMenuName,
+  mode = "share",
+  openOnMount = false,
+  onLaunchSuccessComplete,
 }: ShareQRButtonDialogProps) => {
   const isMobile = useIsMobile();
+  const prefersReducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [copyLabelClass, setCopyLabelClass] = useState("");
   const [isQrImageReady, setIsQrImageReady] = useState(false);
+  const [shouldRevealQr, setShouldRevealQr] = useState(false);
   const copyLabelRef = useRef<HTMLSpanElement>(null);
   const copyTimeoutRef = useRef<number | undefined>(undefined);
   const textSwapTimeoutRef = useRef<number | undefined>(undefined);
+  const qrRevealTimeoutRef = useRef<number | undefined>(undefined);
+  const autoOpenedMenuIdRef = useRef<string | null>(null);
+  const title = mode === "launch-success" ? LAUNCH_SUCCESS_TITLE : SHARE_TITLE;
+  const description =
+    mode === "launch-success" ? LAUNCH_SUCCESS_DESCRIPTION : SHARE_DESCRIPTION;
+  const menuUrl = `${PUBLIC_MENU_DOMAIN}/m/${activeMenuSlug ?? activeMenuId}`;
 
   useEffect(() => {
     return () => {
@@ -65,8 +87,54 @@ const ShareQRButtonDialog = ({
       if (textSwapTimeoutRef.current) {
         clearTimeout(textSwapTimeoutRef.current);
       }
+      if (qrRevealTimeoutRef.current) {
+        clearTimeout(qrRevealTimeoutRef.current);
+      }
     };
   }, []);
+
+  const openShareSurface = () => {
+    if (qrRevealTimeoutRef.current) {
+      clearTimeout(qrRevealTimeoutRef.current);
+    }
+
+    setShouldRevealQr(false);
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (prefersReducedMotion) {
+      setShouldRevealQr(true);
+      return;
+    }
+
+    if (qrRevealTimeoutRef.current) {
+      clearTimeout(qrRevealTimeoutRef.current);
+    }
+
+    qrRevealTimeoutRef.current = window.setTimeout(() => {
+      setShouldRevealQr(true);
+    }, QR_REVEAL_DELAY_MS);
+
+    return () => {
+      if (qrRevealTimeoutRef.current) {
+        clearTimeout(qrRevealTimeoutRef.current);
+      }
+    };
+  }, [open, prefersReducedMotion]);
+
+  useEffect(() => {
+    if (!openOnMount || autoOpenedMenuIdRef.current === activeMenuId) {
+      return;
+    }
+
+    autoOpenedMenuIdRef.current = activeMenuId;
+    openShareSurface();
+  }, [activeMenuId, openOnMount]);
 
   const { data, isLoading } = useQuery(
     trpc.menuQRCode.getPublicUrlForMenu.queryOptions(
@@ -154,12 +222,8 @@ const ShareQRButtonDialog = ({
   };
 
   const handleCopyLink = async () => {
-    if (!publicUrl) return;
-
     try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}/menu/${activeMenuId}`,
-      );
+      await navigator.clipboard.writeText(menuUrl);
 
       setCopied(true);
       swapCopyLabel("Link copied!");
@@ -189,18 +253,40 @@ const ShareQRButtonDialog = ({
     </Button>
   );
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      openShareSurface();
+      return;
+    }
+
+    if (qrRevealTimeoutRef.current) {
+      clearTimeout(qrRevealTimeoutRef.current);
+    }
+
+    setShouldRevealQr(false);
+    setOpen(false);
+
+    if (!nextOpen && mode === "launch-success") {
+      onLaunchSuccessComplete?.();
+    }
+  };
+
   const qrCode = (
     <div className="overflow-hidden">
       <AnimatePresence initial={false}>
-        {isQrImageReady && publicUrl ? (
+        {open && shouldRevealQr && isQrImageReady && publicUrl ? (
           <motion.div
             key="qr-code"
-            initial={{ height: 0, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
             transition={{
-              height: QR_HEIGHT_TRANSITION,
-              opacity: QR_CONTENT_TRANSITION,
+              height: prefersReducedMotion
+                ? { duration: 0 }
+                : QR_HEIGHT_TRANSITION,
+              opacity: prefersReducedMotion
+                ? { duration: 0 }
+                : QR_CONTENT_TRANSITION,
             }}
             className="my-3 flex justify-center"
           >
@@ -208,10 +294,16 @@ const ShareQRButtonDialog = ({
               <motion.img
                 src={publicUrl}
                 alt="Menu QR Code"
-                initial={{ opacity: 0, scale: 0.96 }}
+                initial={
+                  prefersReducedMotion ? false : { opacity: 0, scale: 0.96 }
+                }
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={QR_CONTENT_TRANSITION}
+                exit={
+                  prefersReducedMotion ? undefined : { opacity: 0, scale: 0.96 }
+                }
+                transition={
+                  prefersReducedMotion ? { duration: 0 } : QR_CONTENT_TRANSITION
+                }
                 className="h-52 w-52"
               />
             </div>
@@ -219,12 +311,16 @@ const ShareQRButtonDialog = ({
         ) : !isLoading && !publicUrl ? (
           <motion.p
             key="qr-error"
-            initial={{ height: 0, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
             transition={{
-              height: QR_HEIGHT_TRANSITION,
-              opacity: QR_CONTENT_TRANSITION,
+              height: prefersReducedMotion
+                ? { duration: 0 }
+                : QR_HEIGHT_TRANSITION,
+              opacity: prefersReducedMotion
+                ? { duration: 0 }
+                : QR_CONTENT_TRANSITION,
             }}
             className="text-muted-foreground my-3 text-center text-sm"
           >
@@ -236,14 +332,27 @@ const ShareQRButtonDialog = ({
   );
 
   const actionsDisabled = !publicUrl;
+  const descriptionClassName =
+    mode === "launch-success" ? undefined : "sr-only";
+  const dialogDescription =
+    mode === "launch-success" ? (
+      <>
+        {description}{" "}
+        <a
+          href={menuUrl}
+          className="inline-flex items-center gap-1 font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-4 transition-colors hover:decoration-neutral-600"
+        >
+          View live menu.
+          <ExternalLink className="size-3.5" />
+        </a>
+      </>
+    ) : (
+      description
+    );
 
   const QRActions = (
     <div className="flex w-full flex-col gap-2">
-      <Button
-        className="flex-1"
-        onClick={handleCopyLink}
-        disabled={actionsDisabled || copied}
-      >
+      <Button className="flex-1" onClick={handleCopyLink} disabled={copied}>
         <Copy />
         <span className="inline-flex min-w-20 overflow-hidden">
           <span
@@ -267,13 +376,13 @@ const ShareQRButtonDialog = ({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>{trigger}</DrawerTrigger>
         <DrawerContent>
           <DrawerHeader className="px-6 pt-6 pb-2 text-left">
-            <DrawerTitle>{SHARE_TITLE}</DrawerTitle>
-            <DrawerDescription className="sr-only">
-              {SHARE_DESCRIPTION}
+            <DrawerTitle className="text-base">{title}</DrawerTitle>
+            <DrawerDescription className={descriptionClassName}>
+              {dialogDescription}
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-6">{qrCode}</div>
@@ -284,13 +393,13 @@ const ShareQRButtonDialog = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>{SHARE_TITLE}</DialogTitle>
-          <DialogDescription className="sr-only">
-            {SHARE_DESCRIPTION}
+          <DialogTitle className="text-base">{title}</DialogTitle>
+          <DialogDescription className={`${descriptionClassName} text-sm`}>
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
         {qrCode}

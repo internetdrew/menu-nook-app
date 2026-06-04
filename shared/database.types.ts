@@ -41,6 +41,8 @@ export type Database = {
           image_path: string | null
           image_url: string | null
           name: string
+          seo_description: string | null
+          seo_title: string | null
           user_id: string
         }
         Insert: {
@@ -49,6 +51,8 @@ export type Database = {
           image_path?: string | null
           image_url?: string | null
           name: string
+          seo_description?: string | null
+          seo_title?: string | null
           user_id: string
         }
         Update: {
@@ -57,6 +61,8 @@ export type Database = {
           image_path?: string | null
           image_url?: string | null
           name?: string
+          seo_description?: string | null
+          seo_title?: string | null
           user_id?: string
         }
         Relationships: []

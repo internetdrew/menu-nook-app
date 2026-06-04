@@ -42,7 +42,7 @@ export function SortableMenuItemRow({
   });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition: isDragging ? transition : (transition ?? sortableTransition),
     boxShadow: isDragging
       ? "0 7px 20px rgba(40, 21, 19, 0.15)"
@@ -82,7 +82,9 @@ export function SortableMenuItemRow({
         <div className="pointer-events-none min-w-0 flex-1">
           <h3 className="min-w-0 truncate text-[#281513]">{item.name}</h3>
           <p className="line-clamp-1 truncate text-xs font-normal text-[#7d6b62]">
-            {item.tagline || item.description || "No description added"}
+            {item.tagline ||
+              item.description ||
+              "No tagline or description added"}
           </p>
         </div>
       </div>

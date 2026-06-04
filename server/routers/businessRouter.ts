@@ -52,10 +52,14 @@ export const businessRouter = router({
           imagePath: z.string().nullable().optional(),
           imageUrl: z.url().nullable().optional(),
           name: z.string().min(1).max(32).optional(),
+          seoTitle: z.string().max(80).nullable().optional(),
+          seoDescription: z.string().max(180).nullable().optional(),
         })
         .superRefine((input, ctx) => {
           if (
             input.name === undefined &&
+            input.seoTitle === undefined &&
+            input.seoDescription === undefined &&
             input.imageUrl === undefined &&
             input.imagePath === undefined
           ) {
@@ -116,6 +120,8 @@ export const businessRouter = router({
           image_path: input.imagePath,
           image_url: input.imageUrl,
           name: input.name,
+          seo_title: input.seoTitle,
+          seo_description: input.seoDescription,
         })
         .eq("id", input.id)
         .eq("user_id", ctx.user.id)

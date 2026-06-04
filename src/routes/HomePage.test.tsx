@@ -2,11 +2,13 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { createTestQueryClient } from "@/utils/test/createTestQueryClient";
 import { renderApp } from "@/utils/test/renderApp";
+import { queryClient } from "@/utils/trpc";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
+import { supabaseBrowserClient } from "@/lib/supabase";
 import { screen, waitFor, within } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 
 vi.mock("sonner", () => ({
@@ -17,7 +19,44 @@ vi.mock("sonner", () => ({
   Toaster: vi.fn(() => null),
 }));
 
-const createPreviewCategory = (id: number, name: string, orderIndex: number) => ({
+const { uploadMock, getPublicUrlMock, fromMock } = vi.hoisted(() => {
+  const uploadMock = vi.fn();
+  const getPublicUrlMock = vi.fn();
+  const fromMock = vi.fn(() => ({
+    upload: uploadMock,
+    getPublicUrl: getPublicUrlMock,
+  }));
+
+  return { uploadMock, getPublicUrlMock, fromMock };
+});
+
+const createPreviewItem = (
+  id: number,
+  name: string,
+  categoryId: number,
+  orderIndex: number,
+) => ({
+  id,
+  name,
+  tagline: null,
+  description: null,
+  price: 12,
+  image_path: null,
+  image_url: null,
+  menu_id: "menu-123",
+  menu_category_id: categoryId,
+  created_at: "2026-05-20T00:00:00.000Z",
+  updated_at: "2026-05-20T00:00:00.000Z",
+  order_index: orderIndex,
+  sort_index_id: id + 200,
+});
+
+const createPreviewCategory = (
+  id: number,
+  name: string,
+  orderIndex: number,
+  items: ReturnType<typeof createPreviewItem>[] = [],
+) => ({
   id,
   name,
   description: null,
@@ -25,7 +64,7 @@ const createPreviewCategory = (id: number, name: string, orderIndex: number) => 
   created_at: "2026-05-20T00:00:00.000Z",
   order_index: orderIndex,
   sort_index_id: id + 100,
-  items: [],
+  items,
 });
 
 const createPreviewMenu = (
@@ -45,6 +84,18 @@ const createPreviewMenu = (
     image_url: null,
     created_at: "2026-05-20T00:00:00.000Z",
   },
+});
+
+const createActiveSubscription = () => ({
+  id: "sub-123",
+  menu_id: "menu-123",
+  status: "active",
+  current_period_end: new Date(Date.now() + 86_400_000).toISOString(),
+  stripe_customer_id: "cus_123",
+  stripe_price_id: "price_123",
+  stripe_subscription_id: "sub_stripe_123",
+  created_at: "2026-05-20T00:00:00.000Z",
+  updated_at: "2026-05-20T00:00:00.000Z",
 });
 
 const menuManagerBaseResolvers = (
@@ -107,7 +158,9 @@ describe("Dashboard Home Page", () => {
     expect(
       screen.getByRole("button", { name: /Name your first menu/i }),
     ).toBeDisabled();
-    expect(screen.queryByRole("button", { name: /Create/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Create/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("redirects guests to the login screen", async () => {
@@ -472,7 +525,12 @@ describe("Dashboard Home Page", () => {
     );
 
     const user = userEvent.setup();
-    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+    queryClient.clear();
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+      queryClient,
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
@@ -669,18 +727,18 @@ describe("Dashboard Home Page", () => {
 
     await user.click(screen.getByRole("button", { name: /Continue/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText(/No categories yet/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole("button", {
+        name: /open quick actions/i,
+      }),
+    ).toBeInTheDocument();
   });
 
   it("walks a new user through onboarding before entering the dashboard", async () => {
-    let createdBusiness:
-      | { id: string; name: string; user_id: string }
-      | null = null;
-    let createdMenu:
-      | { id: string; name: string; business_id: string }
-      | null = null;
+    let createdBusiness: { id: string; name: string; user_id: string } | null =
+      null;
+    let createdMenu: { id: string; name: string; business_id: string } | null =
+      null;
     let finishBusinessCreate: (() => void) | undefined;
     let finishMenuCreate: (() => void) | undefined;
     let finishMenuPreview: (() => void) | undefined;
@@ -815,7 +873,9 @@ describe("Dashboard Home Page", () => {
     finishMenuCreate?.();
 
     expect(await screen.findByText(/You're all set!/i)).toBeInTheDocument();
-    expect(screen.getByText(/Everything is set up and ready/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Everything is set up and ready/i),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/No categories yet/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Continue/i }));
@@ -830,9 +890,11 @@ describe("Dashboard Home Page", () => {
 
     finishMenuPreview?.();
 
-    await waitFor(() => {
-      expect(screen.getByText(/No categories yet/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole("button", {
+        name: /open quick actions/i,
+      }),
+    ).toBeInTheDocument();
   });
 
   it("renders an error message when user tries to create a menu without text entry", async () => {
@@ -934,15 +996,200 @@ describe("Dashboard Home Page", () => {
 
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
+    const previewLink = await screen.findByRole("link", { name: /^preview$/i });
+    expect(previewLink).toHaveAttribute("href", "/preview/menu/menu-123");
     expect(
-      await screen.findByRole("button", { name: /^share$/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /^share$/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /test menu/i }),
     ).toBeInTheDocument();
-    expect(await screen.findByText(/No categories yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^new category$/i }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /settings/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /categories/i })).toBeNull();
+  });
+
+  describe("business profile logo", () => {
+    beforeEach(() => {
+      queryClient.clear();
+      vi.spyOn(URL, "createObjectURL").mockImplementation(() => "blob:mock");
+      vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+      vi.stubGlobal(
+        "Image",
+        class MockImage {
+          width = 1200;
+          height = 800;
+          onload: (() => void) | null = null;
+          onerror: ((event: Event | string) => void) | null = null;
+
+          set src(_value: string) {
+            queueMicrotask(() => {
+              this.onload?.();
+            });
+          }
+        },
+      );
+      vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+        drawImage: vi.fn(),
+      } as unknown as CanvasRenderingContext2D);
+      vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(((
+        callback: BlobCallback,
+      ) => {
+        callback(new Blob(["mock"], { type: "image/webp" }));
+      }) as never);
+
+      uploadMock.mockResolvedValue({ error: null });
+      getPublicUrlMock.mockReturnValue({
+        data: { publicUrl: "https://cdn.example.com/business-logo.webp" },
+      });
+      vi.spyOn(supabaseBrowserClient.storage, "from").mockImplementation(
+        fromMock as unknown as typeof supabaseBrowserClient.storage.from,
+      );
+
+      server.use(
+        createTrpcQueryHandler({
+          "business.getForUser": () => ({
+            result: {
+              data: {
+                id: "business-123",
+                name: "Test Business",
+                user_id: "user-123",
+                image_path: null,
+                image_url: null,
+                created_at: "2026-05-20T00:00:00.000Z",
+                updated_at: "2026-05-20T00:00:00.000Z",
+              },
+            },
+          }),
+          "subscription.getForMenu": () => ({ result: { data: null } }),
+          "menu.getAllForBusiness": () => ({
+            result: {
+              data: [
+                {
+                  id: "menu-123",
+                  name: "Test Menu",
+                  business_id: "business-123",
+                  created_at: "2026-05-20T00:00:00.000Z",
+                  updated_at: "2026-05-20T00:00:00.000Z",
+                },
+              ],
+            },
+          }),
+          "menu.getPreview": () => ({
+            result: {
+              data: {
+                id: "menu-123",
+                name: "Test Menu",
+                business_id: "business-123",
+                menu_categories: [],
+                business: {
+                  id: "business-123",
+                  image_url: null,
+                  name: "Test Business",
+                },
+              },
+            },
+          }),
+          "menuQRCode.getPublicUrlForMenu": () => ({
+            result: { data: { public_url: "https://example.com/qr-code.png" } },
+          }),
+        }),
+      );
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    });
+
+    it("uploads and saves a business logo from the dashboard dialog", async () => {
+      let submittedData: Record<string, unknown> | null = null;
+
+      server.use(
+        http.post("/trpc/business.update", async ({ request }) => {
+          const submittedBody = (await request.json()) as Record<
+            string,
+            Record<string, unknown>
+          >;
+          submittedData = submittedBody["0"] ?? null;
+
+          return HttpResponse.json([
+            {
+              result: {
+                data: {
+                  id: "business-123",
+                  name: submittedData?.name ?? "Test Business",
+                  user_id: "user-123",
+                  image_path: submittedData?.imagePath ?? null,
+                  image_url: submittedData?.imageUrl ?? null,
+                  seo_title: submittedData?.seoTitle ?? null,
+                  seo_description: submittedData?.seoDescription ?? null,
+                  created_at: "2026-05-20T00:00:00.000Z",
+                  updated_at: "2026-05-20T00:00:00.000Z",
+                },
+              },
+            },
+          ]);
+        }),
+      );
+
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+      await screen.findByRole("link", { name: /^preview$/i });
+      await user.click(
+        screen.getByRole("button", { name: /open quick actions/i }),
+      );
+      await user.click(
+        await screen.findByRole("button", { name: /business profile/i }),
+      );
+
+      const dialog = await screen.findByRole("dialog");
+      expect(
+        within(dialog).getByRole("button", { name: /save/i }),
+      ).toBeDisabled();
+      const logoInput = within(dialog).getByLabelText(/^business logo$/i);
+
+      await user.upload(
+        logoInput,
+        new File(["logo"], "logo.png", { type: "image/png" }),
+      );
+
+      expect(
+        await within(dialog).findByRole("img", {
+          name: /test business logo preview/i,
+        }),
+      ).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole("button", { name: /save/i }),
+      ).toBeEnabled();
+
+      await user.click(within(dialog).getByRole("button", { name: /save/i }));
+
+      await waitFor(() => {
+        expect(uploadMock).toHaveBeenCalledTimes(1);
+      });
+
+      expect(uploadMock).toHaveBeenCalledWith(
+        expect.stringMatching(/^business\/business-123\/logo\/image_/),
+        expect.any(File),
+        expect.objectContaining({
+          cacheControl: "3600",
+          contentType: "image/webp",
+          upsert: false,
+        }),
+      );
+      expect(submittedData).toMatchObject({
+        id: "business-123",
+        name: "Test Business",
+        imagePath: expect.stringMatching(
+          /^business\/business-123\/logo\/image_/,
+        ),
+        imageUrl: "https://cdn.example.com/business-logo.webp",
+      });
+    });
   });
 
   it("renders a share button when user has a live menu", async () => {
@@ -959,10 +1206,7 @@ describe("Dashboard Home Page", () => {
         }),
         "subscription.getForMenu": () => ({
           result: {
-            data: {
-              id: "sub-123",
-              status: "active",
-            },
+            data: createActiveSubscription(),
           },
         }),
         "menu.getAllForBusiness": () => ({
@@ -972,6 +1216,7 @@ describe("Dashboard Home Page", () => {
                 id: "menu-123",
                 name: "Test Menu",
                 business_id: "business-123",
+                slug: "test-menu",
               },
             ],
           },
@@ -982,6 +1227,7 @@ describe("Dashboard Home Page", () => {
               id: "menu-123",
               name: "Test Menu",
               business_id: "business-123",
+              slug: "test-menu",
               menu_categories: [],
               business: {
                 id: "business-123",
@@ -1002,6 +1248,158 @@ describe("Dashboard Home Page", () => {
     expect(
       await screen.findByRole("button", { name: /^share$/i }),
     ).toBeInTheDocument();
+  });
+
+  it("updates the public menu link from menu settings and uses the slug in share links", async () => {
+    let submittedUpdate:
+      | {
+          menuId: string;
+          name: string;
+          slug: string;
+        }
+      | null = null;
+
+    server.use(
+      createTrpcQueryHandler({
+        "business.getForUser": () => ({
+          result: {
+            data: {
+              id: "business-123",
+              name: "Test Business",
+              user_id: "user-123",
+            },
+          },
+        }),
+        "subscription.getForMenu": () => ({
+          result: { data: createActiveSubscription() },
+        }),
+        "menu.getAllForBusiness": () => ({
+          result: {
+            data: [
+              {
+                id: "menu-123",
+                name: "Test Menu",
+                business_id: "business-123",
+                slug: "test-menu",
+              },
+            ],
+          },
+        }),
+        "menu.checkSlugAvailability": () => ({
+          result: {
+            data: {
+              available: true,
+              slug: "marys-bakery",
+            },
+          },
+        }),
+        "menu.getPreview": () => ({
+          result: {
+            data: {
+              id: "menu-123",
+              name: "Test Menu",
+              business_id: "business-123",
+              slug: "test-menu",
+              menu_categories: [],
+              business: {
+                id: "business-123",
+                image_url: null,
+                name: "Test Business",
+              },
+            },
+          },
+        }),
+        "menuQRCode.getPublicUrlForMenu": () => ({
+          result: {
+            data: {
+              public_url: "data:image/png;base64,iVBORw0KGgo=",
+            },
+          },
+        }),
+      }),
+      http.post("/trpc/menu.update", async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        const input = (body["0"] ?? body) as {
+          menuId: string;
+          name: string;
+          slug: string;
+        };
+
+        submittedUpdate = input;
+
+        return HttpResponse.json([
+          {
+            result: {
+              data: {
+                id: "menu-123",
+                name: input.name,
+                business_id: "business-123",
+                slug: input.slug,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+            },
+          },
+        ]);
+      }),
+    );
+
+    const user = userEvent.setup();
+    const writeTextSpy = vi
+      .spyOn(navigator.clipboard, "writeText")
+      .mockResolvedValue();
+
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await user.click(
+      await screen.findByRole("button", { name: /open quick actions/i }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: /rename menu/i }),
+    );
+
+    const dialog = await screen.findByRole("dialog");
+    const slugInput = within(dialog).getByLabelText(/public menu link/i);
+    await user.clear(slugInput);
+    await user.type(slugInput, "marysbakery");
+
+    await waitFor(() => {
+      expect(
+        within(dialog).getByText(/available: https:\/\/menunook.com\/m\/marysbakery/i),
+      ).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(
+        within(dialog).getByRole("button", { name: /save/i }),
+      ).not.toBeDisabled();
+    });
+
+    await user.click(within(dialog).getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(submittedUpdate).toMatchObject({
+        menuId: "menu-123",
+        name: "Test Menu",
+        slug: "marysbakery",
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    expect(await screen.findByRole("button", { name: /^share$/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^share$/i }));
+    const shareDialog = await screen.findByRole("dialog");
+    await user.click(
+      within(shareDialog).getByRole("button", { name: /copy link/i }),
+    );
+
+    expect(writeTextSpy).toHaveBeenCalledWith(
+      "https://menunook.com/m/marysbakery",
+    );
   });
 
   it("renders the menu manager when user has business and menus", async () => {
@@ -1024,6 +1422,7 @@ describe("Dashboard Home Page", () => {
                 id: "menu-123",
                 name: "Test Menu",
                 business_id: "business-123",
+                slug: "test-menu",
               },
             ],
           },
@@ -1034,6 +1433,7 @@ describe("Dashboard Home Page", () => {
               id: "menu-123",
               name: "Test Menu",
               business_id: "business-123",
+              slug: "test-menu",
               menu_categories: [],
               business: {
                 id: "business-123",
@@ -1051,12 +1451,81 @@ describe("Dashboard Home Page", () => {
 
     renderApp({ initialEntries: ["/"], authMock: authedUserState });
 
-    expect(await screen.findByText(/No categories yet/i)).toBeInTheDocument();
     expect(
-      await screen.findByRole("button", { name: /^share$/i }),
+      await screen.findByRole("button", { name: /^new category$/i }),
     ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("link", { name: /^preview$/i }),
+    ).toHaveAttribute("href", "/preview/menu/menu-123");
     expect(screen.queryByText(/categories managed/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/items managed/i)).not.toBeInTheDocument();
+  });
+
+  it("removes a deleted item from the menu manager without refreshing", async () => {
+    const burger = createPreviewItem(10, "Burger", 1, 0);
+    const fries = createPreviewItem(11, "Fries", 1, 1);
+    let deletedItemId: number | null = null;
+    let finishDelete: (() => void) | undefined;
+
+    server.use(
+      createTrpcQueryHandler(
+        menuManagerBaseResolvers(() => [
+          createPreviewCategory(
+            1,
+            "Mains",
+            0,
+            [burger, fries].filter((item) => item.id !== deletedItemId),
+          ),
+        ]),
+      ),
+      http.post("/trpc/menuCategoryItem.delete", async ({ request }) => {
+        await request.json();
+        await new Promise<void>((resolve) => {
+          finishDelete = resolve;
+        });
+        deletedItemId = burger.id;
+
+        return HttpResponse.json([
+          {
+            result: {
+              data: burger,
+            },
+          },
+        ]);
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await user.click(
+      await screen.findByRole("button", { name: /expand mains/i }),
+    );
+    expect(screen.getAllByText("Burger").length).toBeGreaterThan(0);
+    expect(screen.getByText("Fries")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /open actions for burger/i }),
+    );
+    await user.click(screen.getByRole("menuitem", { name: /delete item/i }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+
+    expect(screen.getByText("Burger")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(finishDelete).toBeDefined();
+    });
+    finishDelete?.();
+    await waitFor(() => {
+      expect(deletedItemId).toBe(burger.id);
+    });
+
+    await waitFor(
+      () => {
+        expect(screen.queryByText("Burger")).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
+    expect(screen.getByText("Fries")).toBeInTheDocument();
   });
 
   it("renders qr code share dialog when share menu button is clicked", async () => {
@@ -1071,7 +1540,9 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForMenu": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({
+          result: { data: createActiveSubscription() },
+        }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -1079,6 +1550,7 @@ describe("Dashboard Home Page", () => {
                 id: "menu-123",
                 name: "Test Menu",
                 business_id: "business-123",
+                slug: "test-menu",
               },
             ],
           },
@@ -1098,6 +1570,7 @@ describe("Dashboard Home Page", () => {
               id: "menu-123",
               name: "Test Menu",
               business_id: "business-123",
+              slug: "test-menu",
               menu_categories: [],
               business: {
                 id: "business-123",
@@ -1149,7 +1622,9 @@ describe("Dashboard Home Page", () => {
             },
           },
         }),
-        "subscription.getForMenu": () => ({ result: { data: null } }),
+        "subscription.getForMenu": () => ({
+          result: { data: createActiveSubscription() },
+        }),
         "menu.getAllForBusiness": () => ({
           result: {
             data: [
@@ -1157,6 +1632,7 @@ describe("Dashboard Home Page", () => {
                 id: "menu-123",
                 name: "Test Menu",
                 business_id: "business-123",
+                slug: "test-menu",
               },
             ],
           },
@@ -1176,6 +1652,7 @@ describe("Dashboard Home Page", () => {
               id: "menu-123",
               name: "Test Menu",
               business_id: "business-123",
+              slug: "test-menu",
               menu_categories: [],
               business: {
                 id: "business-123",
@@ -1215,7 +1692,7 @@ describe("Dashboard Home Page", () => {
     );
 
     expect(writeTextSpy).toHaveBeenCalledWith(
-      `${window.location.origin}/menu/menu-123`,
+      `https://menunook.com/m/test-menu`,
     );
   });
 
@@ -1379,14 +1856,10 @@ describe("Dashboard Home Page", () => {
       await screen.findByRole("button", { name: /expand drinks/i }),
     ).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole("button", { name: /^new category$/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /^new category$/i }));
 
     const dialog = await screen.findByRole("dialog");
-    expect(
-      within(dialog).getByText(/create new category/i),
-    ).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/category name/i)).toBeInTheDocument();
   });
 
   it("uses an embedded new category trigger for the empty category state", async () => {
@@ -1397,12 +1870,8 @@ describe("Dashboard Home Page", () => {
       authMock: authedUserState,
     });
 
-    expect(await screen.findByText(/No categories yet/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Create a category like Appetizers, Entrees, or Drinks/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /new category/i }),
+      await screen.findByRole("button", { name: /new category/i }),
     ).toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: /new category/i }),
@@ -1411,5 +1880,4 @@ describe("Dashboard Home Page", () => {
       screen.queryByRole("button", { name: /^add category$/i }),
     ).not.toBeInTheDocument();
   });
-
 });

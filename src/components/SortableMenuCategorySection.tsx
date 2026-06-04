@@ -1,15 +1,15 @@
+import * as Accordion from "@radix-ui/react-accordion";
 import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import * as Accordion from "@radix-ui/react-accordion";
 import {
   ChevronDown,
+  Edit,
   Ellipsis,
   GripVertical,
-  Plus,
   Trash2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -33,6 +33,7 @@ export function SortableMenuCategorySection({
   category,
   isOpen,
   onAddItem,
+  onEditCategory,
   onDeleteCategory,
   onEditItem,
   onDeleteItem,
@@ -41,6 +42,7 @@ export function SortableMenuCategorySection({
   isOpen: boolean;
   onAddItem: (category: MenuCategory) => void;
   onDeleteCategory: (category: MenuCategory) => void;
+  onEditCategory: (category: MenuCategory) => void;
   onEditItem: (
     item: MenuCategory["items"][number],
     category: MenuCategory,
@@ -136,9 +138,9 @@ export function SortableMenuCategorySection({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => onAddItem(category)}>
-                <Plus />
-                Add item
+              <DropdownMenuItem onClick={() => onEditCategory(category)}>
+                <Edit />
+                Edit Category
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
@@ -171,40 +173,40 @@ export function SortableMenuCategorySection({
                   closed: { opacity: 0, y: -4 },
                 }}
               >
-                {category.items.length === 0 ? (
-                  <div className="flex items-center justify-between gap-3 bg-white p-3 text-xs">
-                    <p className="text-[#7d6b62]">No items in this category.</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onAddItem(category)}
-                    >
-                      Add Item
-                    </Button>
+                <SortableContext
+                  items={category.items.map((item) => `item-${item.id}`)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div>
+                    {category.items.map((item) => (
+                      <SortableMenuItemRow
+                        key={item.id}
+                        item={item}
+                        categoryId={category.id}
+                        onEditItem={(selectedItem) =>
+                          onEditItem(selectedItem, category)
+                        }
+                        onDeleteItem={(selectedItem) =>
+                          onDeleteItem(selectedItem, category)
+                        }
+                      />
+                    ))}
                   </div>
-                ) : (
-                  <SortableContext
-                    items={category.items.map((item) => `item-${item.id}`)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div>
-                      {category.items.map((item) => (
-                        <SortableMenuItemRow
-                          key={item.id}
-                          item={item}
-                          categoryId={category.id}
-                          onEditItem={(selectedItem) =>
-                            onEditItem(selectedItem, category)
-                          }
-                          onDeleteItem={(selectedItem) =>
-                            onDeleteItem(selectedItem, category)
-                          }
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                )}
+                </SortableContext>
               </motion.div>
+              <div className="flex items-center justify-between gap-3 bg-white p-3 pl-4 text-xs">
+                {category.items.length === 0 && (
+                  <p className="text-[#7d6b62]">No items in this category.</p>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto text-xs"
+                  onClick={() => onAddItem(category)}
+                >
+                  Add Item
+                </Button>
+              </div>
             </motion.div>
           </Accordion.Content>
         )}

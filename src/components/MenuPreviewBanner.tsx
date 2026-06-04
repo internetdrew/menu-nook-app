@@ -2,18 +2,17 @@ import { trpc } from "@/utils/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useState, type FC } from "react";
-import { Link } from "react-router";
 import { toast } from "sonner";
 
 interface MenuPreviewBannerProps {
   subscriptionIsActive: boolean;
-  liveSiteUrl: string;
-  menu: { id: string };
+  publicMenuDomain: string;
+  menu: { id: string; slug?: string | null };
 }
 
 const MenuPreviewBanner: FC<MenuPreviewBannerProps> = ({
   subscriptionIsActive,
-  liveSiteUrl,
+  publicMenuDomain,
   menu,
 }) => {
   const [connecting, setConnecting] = useState(false);
@@ -38,12 +37,15 @@ const MenuPreviewBanner: FC<MenuPreviewBannerProps> = ({
   };
 
   return (
-    <div className="sticky top-0 z-10 rounded-lg bg-neutral-500/5 py-4 text-center text-sm backdrop-blur-sm">
+    <div className="sticky top-0 z-10 bg-neutral-500/5 py-4 text-center text-xs backdrop-blur-sm">
       <div className="space-x-2 text-center">
         {subscriptionIsActive ? (
           <p>
             This is a preview of your{" "}
-            <Link to={`${liveSiteUrl}/menu/${menu.id}`}>live menu</Link>.
+            <a href={`${publicMenuDomain}/m/${menu.slug ?? menu.id}`}>
+              live menu
+            </a>
+            .
           </p>
         ) : (
           <AnimatePresence mode="popLayout" initial={false}>

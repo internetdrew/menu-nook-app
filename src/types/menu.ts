@@ -1,44 +1,36 @@
-import type { Database } from "../../shared/database.types";
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "../../server";
 
-export type BusinessRecord = Database["public"]["Tables"]["businesses"]["Row"];
-export type MenuRecord = Database["public"]["Tables"]["menus"]["Row"];
-export type MenuCategoryRecord =
-  Database["public"]["Tables"]["menu_categories"]["Row"];
-export type MenuCategorySortIndexRecord =
-  Database["public"]["Tables"]["menu_category_sort_indexes"]["Row"];
-export type MenuItemRecord =
-  Database["public"]["Tables"]["menu_category_items"]["Row"];
-export type MenuItemSortIndexRecord =
-  Database["public"]["Tables"]["menu_category_item_sort_indexes"]["Row"];
+type RouterOutput = inferRouterOutputs<AppRouter>;
 
-export type MenuItemWithCategory = MenuItemRecord & {
-  category: Pick<MenuCategoryRecord, "id" | "name">;
-};
+export type BusinessRecord = NonNullable<
+  RouterOutput["business"]["getForUser"]
+>;
 
-export type MenuPreviewItem = MenuItemRecord & {
-  order_index: number;
-  sort_index_id: number | null;
-};
+export type MenuRecord = RouterOutput["menu"]["getAllForBusiness"][number];
 
-export type MenuPreviewCategory = MenuCategoryRecord & {
-  order_index: number;
-  sort_index_id: number | null;
-  items: MenuPreviewItem[];
-};
+export type MenuPreviewData = NonNullable<RouterOutput["menu"]["getPreview"]>;
 
-export type MenuPreviewData = MenuRecord & {
-  business: BusinessRecord;
-  menu_categories: MenuPreviewCategory[];
-};
+export type MenuPreviewCategory = MenuPreviewData["menu_categories"][number];
 
-export type CategoryIndex = MenuCategorySortIndexRecord & {
-  category: MenuCategoryRecord;
-};
+export type MenuPreviewItem = MenuPreviewCategory["items"][number];
 
-export type ItemIndex = MenuItemSortIndexRecord & {
-  item: MenuItemWithCategory;
-};
+export type MenuCategoryRecord = NonNullable<
+  RouterOutput["menuCategory"]["getById"]
+>;
 
-export type ItemTableRow = MenuItemRecord & {
-  category: Pick<MenuCategoryRecord, "name"> | null;
-};
+export type MenuItemRecord = RouterOutput["menuCategoryItem"]["delete"];
+
+export type CategoryIndex =
+  RouterOutput["menuCategory"]["getAllSortedByIndex"][number];
+
+export type MenuCategorySortIndexRecord = Omit<CategoryIndex, "category">;
+
+export type ItemIndex =
+  RouterOutput["menuCategoryItem"]["getSortedForCategory"][number];
+
+export type MenuItemWithCategory = ItemIndex["item"];
+
+export type MenuItemSortIndexRecord = Omit<ItemIndex, "item">;
+
+export type ItemTableRow = MenuItemWithCategory;

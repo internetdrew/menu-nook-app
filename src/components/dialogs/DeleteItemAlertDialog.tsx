@@ -1,4 +1,4 @@
-import { queryClient, trpc } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -9,7 +9,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "../ui/alert-dialog";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import {
   Drawer,
@@ -27,7 +27,7 @@ interface DeleteItemAlertDialogProps {
   item: {
     id: number;
     name: string;
-  };
+  } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -38,9 +38,12 @@ const DeleteItemAlertDialog = ({
   onOpenChange,
 }: DeleteItemAlertDialogProps) => {
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const deleteItem = useMutation(
     trpc.menuCategoryItem.delete.mutationOptions(),
   );
+
+  if (!item) return null;
 
   const onDelete = async () => {
     await deleteItem.mutateAsync(
@@ -49,11 +52,14 @@ const DeleteItemAlertDialog = ({
       },
       {
         onSuccess: () => {
-          onOpenChange(false);
           toast.success(`${item.name} has been deleted.`);
           queryClient.invalidateQueries({
             queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
           });
+          queryClient.invalidateQueries({
+            queryKey: trpc.menu.getPreview.queryKey(),
+          });
+          onOpenChange(false);
         },
         onError: () => {
           toast.error(`Failed to delete ${item.name}. Please try again.`);

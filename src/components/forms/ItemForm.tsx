@@ -12,8 +12,8 @@ import {
 } from "../ui/form";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { queryClient, trpc } from "@/utils/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
@@ -27,12 +27,12 @@ import {
   ITEM_TAGLINE_LIMIT,
   menuItemFieldsSchema,
 } from "../../../shared/menuItem";
-import type { MenuCategoryRecord, MenuItemWithCategory } from "@/types/menu";
+import type { MenuPreviewCategory, MenuPreviewItem } from "@/types/menu";
 
 interface ItemFormProps {
   onSuccess: () => void;
-  item?: MenuItemWithCategory | null;
-  chosenCategory: MenuCategoryRecord;
+  item?: MenuPreviewItem | null;
+  chosenCategory: MenuPreviewCategory | null;
 }
 
 const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
@@ -42,34 +42,107 @@ const formSchema = menuItemFieldsSchema.extend({
   categoryId: z.number(),
 });
 
-const getDefaultValues = (
-  item: MenuItemWithCategory | null | undefined,
-  chosenCategory: MenuCategoryRecord,
-): z.infer<typeof formSchema> => ({
-  name: item?.name ?? "",
-  tagline: item?.tagline ?? "",
-  description: item?.description ?? "",
-  price: item?.price ?? 0,
-  categoryId: item?.category?.id ?? chosenCategory.id,
-});
-
 const MENU_ITEM_IMAGE_BUCKET = "menu_item_images";
+const MAX_RAW_IMAGE_BYTES = 25 * 1024 * 1024;
+const MAX_COMPRESSED_IMAGE_EDGE = 1600;
+const COMPRESSED_IMAGE_TYPE = "image/webp";
+const COMPRESSED_IMAGE_EXTENSION = "webp";
+const COMPRESSED_IMAGE_QUALITY = 0.82;
+const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ACCEPTED_IMAGE_INPUT_TYPES = "image/jpeg,image/png,image/webp";
+
+const formatBytesAsMb = (bytes: number) =>
+  `${Math.round((bytes / 1024 / 1024) * 10) / 10}MB`;
 
 const getMenuItemImageFilePath = (
   menuId: string,
   itemId: number,
   file: File,
 ) => {
-  const extension = file.name.split(".").pop()?.toLowerCase() || "png";
+  const extension =
+    file.type === COMPRESSED_IMAGE_TYPE
+      ? COMPRESSED_IMAGE_EXTENSION
+      : file.name.split(".").pop()?.toLowerCase() || "png";
   return `menu/${menuId}/item/${itemId}/image_${Date.now()}.${extension}`;
+};
+
+const loadImage = (file: File) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not read the selected image."));
+    };
+    image.src = objectUrl;
+  });
+
+const canvasToBlob = (
+  canvas: HTMLCanvasElement,
+  type: string,
+  quality: number,
+) =>
+  new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Could not compress the selected image."));
+          return;
+        }
+
+        resolve(blob);
+      },
+      type,
+      quality,
+    );
+  });
+
+const getCompressedImageName = (fileName: string) => {
+  const baseName = fileName.replace(/\.[^.]+$/, "") || "item-image";
+  return `${baseName}.${COMPRESSED_IMAGE_EXTENSION}`;
+};
+
+const compressImageFile = async (file: File) => {
+  const image = await loadImage(file);
+  const scale = Math.min(
+    1,
+    MAX_COMPRESSED_IMAGE_EDGE / Math.max(image.width, image.height),
+  );
+  const width = Math.max(1, Math.round(image.width * scale));
+  const height = Math.max(1, Math.round(image.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Could not prepare the selected image.");
+  }
+
+  context.drawImage(image, 0, 0, width, height);
+
+  const blob = await canvasToBlob(
+    canvas,
+    COMPRESSED_IMAGE_TYPE,
+    COMPRESSED_IMAGE_QUALITY,
+  );
+
+  return new File([blob], getCompressedImageName(file.name), {
+    type: COMPRESSED_IMAGE_TYPE,
+    lastModified: Date.now(),
+  });
 };
 
 const ItemForm = (props: ItemFormProps) => {
   const { onSuccess, item, chosenCategory } = props;
-  const createItem = useMutation(
-    trpc.menuCategoryItem.create.mutationOptions(),
-  );
   const { activeMenu } = useMenuContext();
+  const queryClient = useQueryClient();
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
@@ -77,9 +150,19 @@ const ItemForm = (props: ItemFormProps) => {
   const [removedImage, setRemovedImage] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
+  const createItem = useMutation(
+    trpc.menuCategoryItem.create.mutationOptions(),
+  );
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: getDefaultValues(item, chosenCategory),
+    defaultValues: {
+      name: item?.name ?? "",
+      tagline: item?.tagline ?? "",
+      description: item?.description ?? "",
+      price: item?.price ?? 0,
+      categoryId: chosenCategory?.id,
+    },
   });
   const nameValue = form.watch("name");
   const taglineValue = form.watch("tagline");
@@ -111,7 +194,7 @@ const ItemForm = (props: ItemFormProps) => {
     clearPreview();
     setSelectedImageFile(null);
     setRemovedImage(false);
-    form.reset(getDefaultValues(item, chosenCategory));
+    form.reset();
   }, [chosenCategory, form, item, clearPreview]);
 
   const displayedImageUrl =
@@ -129,6 +212,7 @@ const ItemForm = (props: ItemFormProps) => {
       .from(MENU_ITEM_IMAGE_BUCKET)
       .upload(filePath, file, {
         cacheControl: "3600",
+        contentType: file.type,
         upsert: false,
       });
 
@@ -156,24 +240,51 @@ const ItemForm = (props: ItemFormProps) => {
     fileInputRef.current?.click();
   };
 
-  const handleImageSelected = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelected = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
     if (!file) {
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please choose an image file.");
-      event.target.value = "";
+    if (!ACCEPTED_IMAGE_TYPES.has(file.type)) {
+      toast.error("Please choose a JPEG, PNG, or WebP image.");
       return;
     }
 
-    clearPreview();
-    setSelectedImageFile(file);
-    setRemovedImage(false);
-    setPreviewUrl(URL.createObjectURL(file));
-    event.target.value = "";
+    if (file.size > MAX_RAW_IMAGE_BYTES) {
+      toast.error(
+        `Please choose an image smaller than ${formatBytesAsMb(
+          MAX_RAW_IMAGE_BYTES,
+        )}.`,
+      );
+      return;
+    }
+
+    setIsProcessingImage(true);
+
+    try {
+      const compressedFile = await compressImageFile(file);
+
+      clearPreview();
+      setSelectedImageFile(compressedFile);
+      setRemovedImage(false);
+      setPreviewUrl(URL.createObjectURL(compressedFile));
+
+      if (compressedFile.size < file.size) {
+        toast.success(
+          `Image optimized from ${formatBytesAsMb(
+            file.size,
+          )} to ${formatBytesAsMb(compressedFile.size)}.`,
+        );
+      }
+    } catch (error) {
+      console.error("Failed to process selected image:", error);
+      toast.error("Failed to process that image. Please try another file.");
+    } finally {
+      setIsProcessingImage(false);
+    }
   };
 
   const handleRemoveImage = () => {
@@ -184,6 +295,11 @@ const ItemForm = (props: ItemFormProps) => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsProcessingImage(true);
+
+    if (!chosenCategory) {
+      setIsProcessingImage(false);
+      return;
+    }
 
     if (item) {
       try {
@@ -207,6 +323,9 @@ const ItemForm = (props: ItemFormProps) => {
             onSuccess: () => {
               queryClient.invalidateQueries({
                 queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
+              });
+              queryClient.invalidateQueries({
+                queryKey: trpc.menu.getPreview.queryKey(),
               });
               toast.success("Item updated successfully!");
               onSuccess();
@@ -254,6 +373,9 @@ const ItemForm = (props: ItemFormProps) => {
       queryClient.invalidateQueries({
         queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
       });
+      queryClient.invalidateQueries({
+        queryKey: trpc.menu.getPreview.queryKey(),
+      });
       toast.success("Item created successfully!");
       onSuccess();
     } catch (error) {
@@ -292,7 +414,7 @@ const ItemForm = (props: ItemFormProps) => {
                 id={fileInputId}
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept={ACCEPTED_IMAGE_INPUT_TYPES}
                 className="sr-only"
                 tabIndex={-1}
                 onChange={handleImageSelected}
