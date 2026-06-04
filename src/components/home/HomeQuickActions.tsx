@@ -236,7 +236,7 @@ const HomeQuickActions = () => {
 
       <FormDialog
         title="Search Appearance"
-        description="Help people understand what you sell when they find your menu on Google."
+        description="Tune how your business appears in search results."
         isDialogOpen={activeDialog === "search"}
         setIsDialogOpen={(open) => setActiveDialog(open ? "business" : null)}
         formComponent={

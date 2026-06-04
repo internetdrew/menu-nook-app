@@ -128,21 +128,25 @@ export const BusinessDiscoveryForm = ({
                   <Input
                     maxLength={SEO_TITLE_LIMIT}
                     className="placeholder:text-[13px]"
-                    placeholder="Example: Maria's Dominican Sweets | Cakes & Desserts in Chelsea, MA"
+                    placeholder="Maria's Dominican Sweets | Cakes & Desserts in Chelsea, MA"
                     {...field}
                   />
                 </FormControl>
-                <FormDescription
-                  className={getRemainingCharacterClassName(
-                    seoTitleValue,
-                    SEO_TITLE_LIMIT,
-                    SEO_TITLE_WARNING_THRESHOLD,
-                  )}
-                >
-                  This is the main link people may see in Google. Use your
-                  business name, what you sell, and where you're located.{" "}
-                  {getRemainingCharacterLabel(seoTitleValue, SEO_TITLE_LIMIT)}
-                </FormDescription>
+                <div className="space-y-1">
+                  <FormDescription>
+                    Use your business name, what you sell, and where you're
+                    located.
+                  </FormDescription>
+                  <p
+                    className={`text-xs text-muted-foreground ${getRemainingCharacterClassName(
+                      seoTitleValue,
+                      SEO_TITLE_LIMIT,
+                      SEO_TITLE_WARNING_THRESHOLD,
+                    )}`}
+                  >
+                    {getRemainingCharacterLabel(seoTitleValue, SEO_TITLE_LIMIT)}
+                  </p>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -158,24 +162,28 @@ export const BusinessDiscoveryForm = ({
                   <Textarea
                     maxLength={SEO_DESCRIPTION_LIMIT}
                     className="h-20 resize-none placeholder:text-[13px]"
-                    placeholder="Example: View Maria's Dominican Sweets' menu for Dominican cakes, flan, and party desserts in Chelsea, MA. Pickup and local delivery available."
+                    placeholder="View Maria's Dominican Sweets' menu for Dominican cakes, flan, and party desserts in Chelsea, MA. Pickup and local delivery available."
                     {...field}
                   />
                 </FormControl>
-                <FormDescription
-                  className={getRemainingCharacterClassName(
-                    seoDescriptionValue,
-                    SEO_DESCRIPTION_LIMIT,
-                    SEO_DESCRIPTION_WARNING_THRESHOLD,
-                  )}
-                >
-                  This short description helps customers know what they'll find
-                  on your menu before they click.
-                  {getRemainingCharacterLabel(
-                    seoDescriptionValue,
-                    SEO_DESCRIPTION_LIMIT,
-                  )}
-                </FormDescription>
+                <div className="space-y-1">
+                  <FormDescription>
+                    Keep it short and specific so it reads well in search
+                    results.
+                  </FormDescription>
+                  <p
+                    className={`text-xs text-muted-foreground ${getRemainingCharacterClassName(
+                      seoDescriptionValue,
+                      SEO_DESCRIPTION_LIMIT,
+                      SEO_DESCRIPTION_WARNING_THRESHOLD,
+                    )}`}
+                  >
+                    {getRemainingCharacterLabel(
+                      seoDescriptionValue,
+                      SEO_DESCRIPTION_LIMIT,
+                    )}
+                  </p>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
