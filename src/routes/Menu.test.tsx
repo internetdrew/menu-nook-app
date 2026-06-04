@@ -53,7 +53,7 @@ describe("Preview Route (/preview/:id)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it.only("renders a preview banner when user has no subscription", async () => {
+  it("renders a preview banner when user has no subscription", async () => {
     server.use(
       createTrpcQueryHandler({
         "subscription.getForMenu": () => ({ result: { data: null } }),
