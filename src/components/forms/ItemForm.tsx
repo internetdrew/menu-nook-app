@@ -477,7 +477,7 @@ const ItemForm = (props: ItemFormProps) => {
               <FormControl>
                 <Textarea
                   maxLength={ITEM_TAGLINE_LIMIT}
-                  className="field-sizing-content resize-none"
+                  className="field-sizing-content min-h-12 resize-none"
                   placeholder="A short line customers see in the menu before opening the item."
                   {...field}
                 />
@@ -499,7 +499,7 @@ const ItemForm = (props: ItemFormProps) => {
               <FormControl>
                 <Textarea
                   maxLength={ITEM_DESCRIPTION_LIMIT}
-                  className="min-h-28 resize-y"
+                  className="h-32 resize-none"
                   placeholder="A longer description customers see after they open the item."
                   {...field}
                 />

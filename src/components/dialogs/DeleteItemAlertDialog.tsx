@@ -79,11 +79,13 @@ const DeleteItemAlertDialog = ({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent>
-          <DrawerHeader className="px-6 pt-6 pb-2 text-left">
-            <DrawerTitle>{title}</DrawerTitle>
-            <DrawerDescription>{description}</DrawerDescription>
-          </DrawerHeader>
+        <DrawerContent className="overflow-hidden">
+          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
+            <DrawerHeader className="px-6 pt-6 pb-2 text-left">
+              <DrawerTitle>{title}</DrawerTitle>
+              <DrawerDescription>{description}</DrawerDescription>
+            </DrawerHeader>
+          </div>
           <DrawerFooter className="px-6 pt-2 pb-6">
             <Button onClick={onDelete}>Continue</Button>
             <DrawerClose asChild>
