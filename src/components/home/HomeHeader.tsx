@@ -20,19 +20,18 @@ const HomeHeader = ({
   showLaunchSuccess = false,
   onLaunchSuccessComplete,
 }: HomeHeaderProps) => {
-  const { activeMenu, loading: loadingMenu } = useMenuContext();
+  const { activeMenu, activeMenuId, loading: loadingMenu } = useMenuContext();
   const { data: subscription, isLoading: loadingSubscription } = useQuery(
     trpc.subscription.getForMenu.queryOptions(
-      { menuId: activeMenu?.id ?? "" },
+      { menuId: activeMenuId ?? "" },
       {
-        enabled: !!activeMenu?.id,
+        enabled: !!activeMenuId,
         refetchInterval: showLaunchSuccess ? 2000 : false,
       },
     ),
   );
   const subscriptionIsActive = isMenuSubscriptionActive(subscription);
-  const loadingHeaderAction =
-    loadingMenu || (!!activeMenu && loadingSubscription);
+  const loadingHeaderAction = loadingMenu || (!!activeMenuId && loadingSubscription);
 
   return (
     <div className="mx-auto max-w-xl bg-[#fff9ef]/95 pt-4 pb-3 backdrop-blur-sm after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-[90%] after:-translate-x-1/2 after:bg-neutral-200/60">
