@@ -2,49 +2,82 @@
 
 ![MenuNook Banner](./public/og.png)
 
-A simple menu platform for publishing clean, mobile-friendly menus that are easy to update and easy to browse by link or QR code.
+A simple live menu for local food sellers who need a clean, shareable menu page without building a full website or online checkout.
+
+MenuNook helps sellers create a mobile-friendly menu with items, prices, photos, categories, availability, ordering info, and QR sharing.
+
+Menus are easy to update, easy to share, and easy for customers to browse from a phone.
 
 ## Why MenuNook?
 
-Many menu tools feel heavier than they need to be. They either turn a simple menu into a bloated product experience, or they make basic updates harder than they should be.
+Many small food sellers do not need a full ecommerce store. They just need one reliable place where customers can see what they sell, what it costs, what is available, and how to order.
 
-MenuNook is built around a simpler idea:
+Without that, menus often end up scattered across PDFs, screenshots, social posts, DMs, or outdated links. That creates friction for both sellers and customers.
 
-- Menus should be easy to publish
-- Menus should be easy to update
-- Menus should be easy to open and browse on a phone
+MenuNook is built around a around the idea that a public menu page should be useful without becoming a full website or checkout system.
 
-The goal is not to turn menus into a complicated media product. The goal is to give businesses a clean menu they can manage without friction.
+So...
+
+- Sellers should be able to publish a clean menu in minutes
+- Customers should have one place to see what's current
+- Updates should be fast enough to make anytime
+- Sharing should work naturally by link or QR code
+
+The goal is not to turn a simple menu into a complicated product. The goal is to help local sellers look current, organized, and easy to buy from.
+
+## Product Focus
+
+MenuNook is designed for local food sellers who want a lightweight menu presence online, including home bakers, pop-ups, caterers, meal prep sellers, small cafes, delis, and other local sellers who do not need a full website.
+
+The product focuses on three core jobs:
+
+1. Create the menu
+   - Add categories, items, descriptions, prices, photos, and availability.
+
+2. Keep it current
+   - Update prices, reorder sections, change item details, and mark items sold out without rebuilding or resharing a new menu.
+3. Share and publish it
+   - Give customers one clean mobile page they can open by link or QR code, with searchable business and menu details.
 
 ## The Challenge
 
-Even simple menu software can get messy quickly. The challenge here is building something that stays fast, clear, and easy to maintain while still handling real business needs like categories, item updates, link sharing, and QR access.
+The main challenge is keeping the product simple while still supporting real business needs.
 
-Performance still matters. A menu should load quickly, feel obvious on a phone, and stay usable even in less-than-ideal network conditions.
+Menu software can get bloated quickly. MenuNook needs to stay focused: fast to set up, obvious to edit, and clear for customers. The editing experience should feel lightweight, while the public menu should feel polished and dependable.
 
-A few things I'm considering as I build:
+Key product considerations:
 
-- Keeping the public menu lightweight and mobile-friendly
-- Making updates feel immediate and low-friction for operators
-- Using caching and efficient fetching so menus stay responsive
-- Preserving a clear editing model as menus grow
-- Making link and QR sharing feel automatic, not bolted on
+- Keeping the public menu fast, mobile-friendly, and easy to browse
+- Making menu updates feel immediate and low-friction
+- Supporting real seller needs like categories, photos, prices, sold-out states, and ordering instructions
+- Giving each paid menu a searchable public page with useful metadata
+- Making QR and link sharing feel native to the product
+- Keeping the system flexible enough for different seller types without becoming a full website builder
 
-In all, the overall experience I want to build treats:
+The overall experience treats:
 
 - Text as primary
-- Optional visuals as an enhancement
-- Speed and clarity as core product features
+- Photos as helpful context
+- Speed as a product feature
+- Clarity as the main customer benefit
+- Searchability and shareability as part of the menu’s value
 
 ## Features
 
-- Build and manage menus with categories, item names, descriptions, and prices.
-- Publish clean public menu pages that work well on phones.
-- Share each menu by direct link or printable QR code.
-- Update menu content quickly from a phone or laptop.
-- Keep menus clear, fast, and easy to browse.
+- Create and manage menus with categories, items, descriptions, prices, and photos
+- Reorder categories and items with drag-and-drop
+- Mark items as available or sold out
+- Publish a clean mobile menu page for customers
+- Share menus by direct link or QR code
+- Download QR codes for print or in-person use
+- Add business details, ordering info, and location/service area context
+- Guide sellers through SEO-friendly title and description fields
+- Keep public menus simple, fast, and easy to browse
+- Support Stripe billing for paid menu publishing
 
-## Screenshots
+## Screenshots (Before the Redesign)
+
+These screenshots are from when I was thinking of this more as a utility than an experience:
 
 ![MenuNook dashboard](public/menu-nook-screenshot-0.png)
 ![MenuNook dashboard - Create menu](public/menu-nook-screenshot-1.png)
@@ -56,10 +89,19 @@ In all, the overall experience I want to build treats:
 ![MenuNook collapsing sidebar view ](public/menu-nook-screenshot-7.png)
 ![MenuNook category deletion dialog ](public/menu-nook-screenshot-8.png)
 
+## Screenshots (After the Redesign)
+
+![MenuNook new UI ](public/screenshot-9.png)
+![MenuNook new UI with dialog open ](public/screenshot-10.png)
+![MenuNook new UI with quick actions open ](public/screenshot-11.png)
+![MenuNook new UI with slug input ](public/screenshot-12.png)
+
 ## Tech Stack
 
-- Frontend: Vite + React 19 with TypeScript, React Router 7, shadcn/ui (Radix), Tailwind CSS, and dnd-kit for drag-and-drop ordering.
-- Data layer: tRPC (client + server) paired with TanStack Query for caching and mutations.
-- Backend: Express with tRPC handlers, Supabase for auth/database/storage, and Stripe for billing.
-- Testing: Vitest with Testing Library (React, DOM, user-event), jsdom test environment, and MSW for API mocking.
-- Tooling: ESLint, Prettier, tsx, nodemon, concurrently, and Tailwind merge utilities.
+- Frontend: Vite, React 19, TypeScript, React Router 7, shadcn/ui, Radix UI, Tailwind CSS
+- Interactions: dnd-kit for drag-and-drop menu ordering
+- Data layer: tRPC with TanStack Query for type-safe fetching, caching, and mutations
+- Backend: Express with tRPC handlers
+- Auth, database, and storage: Supabase
+- Billing: Stripe subscriptions and webhook handling
+- Testing: Vitest, Testing Library, jsdom, user-event, and MSW
