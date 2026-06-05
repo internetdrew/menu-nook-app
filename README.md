@@ -91,6 +91,11 @@ These screenshots are from when I was thinking of this more as a utility than an
 
 ## Screenshots (After the Redesign)
 
+![MenuNook new UI ](public/screenshot-9.png)
+![MenuNook new UI with dialog open ](public/screenshot-10.png)
+![MenuNook new UI with quick actions open ](public/screenshot-11.png)
+![MenuNook new UI with slug input ](public/screenshot-12.png)
+
 ## Tech Stack
 
 - Frontend: Vite, React 19, TypeScript, React Router 7, shadcn/ui, Radix UI, Tailwind CSS
