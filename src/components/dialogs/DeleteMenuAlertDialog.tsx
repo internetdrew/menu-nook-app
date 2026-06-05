@@ -92,11 +92,13 @@ const DeleteMenuAlertDialog = ({
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         {showTrigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
-        <DrawerContent>
-          <DrawerHeader className="px-6 pt-6 pb-2 text-left">
-            <DrawerTitle>{title}</DrawerTitle>
-            <DrawerDescription>{description}</DrawerDescription>
-          </DrawerHeader>
+        <DrawerContent className="overflow-hidden">
+          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
+            <DrawerHeader className="px-6 pt-6 pb-2 text-left">
+              <DrawerTitle>{title}</DrawerTitle>
+              <DrawerDescription>{description}</DrawerDescription>
+            </DrawerHeader>
+          </div>
           <DrawerFooter className="px-6 pt-2 pb-6">
             <Button onClick={deleteMenu}>Delete</Button>
             <DrawerClose asChild>
@@ -110,7 +112,9 @@ const DeleteMenuAlertDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      {showTrigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
+      {showTrigger && (
+        <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      )}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

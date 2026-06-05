@@ -30,19 +30,21 @@ const FormDialog = ({
   formComponent,
 }: DialogProps) => {
   const isMobile = useIsMobile();
-  const formContent = <div className="no-scrollbar p-6">{formComponent}</div>;
+  const formContent = <div className="no-scrollbar">{formComponent}</div>;
 
   if (isMobile) {
     return (
       <Drawer open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DrawerContent>
+        <DrawerContent className="overflow-hidden">
           <DrawerHeader className="px-6 pt-6 pb-2 text-left">
             <DrawerTitle>{title}</DrawerTitle>
             {description && (
               <DrawerDescription>{description}</DrawerDescription>
             )}
           </DrawerHeader>
-          <div>{formContent}</div>
+          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+            {formContent}
+          </div>
         </DrawerContent>
       </Drawer>
     );
@@ -50,12 +52,14 @@ const FormDialog = ({
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[80dvh] flex-col overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {formContent}
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+          {formContent}
+        </div>
       </DialogContent>
     </Dialog>
   );

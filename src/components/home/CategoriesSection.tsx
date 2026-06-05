@@ -67,7 +67,7 @@ const collisionDetection: CollisionDetection = (args) => {
 };
 
 const CategoriesSection = () => {
-  const { activeMenu, loading: loadingMenu } = useMenuContext();
+  const { activeMenu, activeMenuId, loading: loadingMenu } = useMenuContext();
   const queryClient = useQueryClient();
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState("");
@@ -86,8 +86,8 @@ const CategoriesSection = () => {
 
   const { data: menu, isLoading } = useQuery(
     trpc.menu.getPreview.queryOptions(
-      { menuId: activeMenu?.id ?? "" },
-      { enabled: !!activeMenu },
+      { menuId: activeMenuId ?? "" },
+      { enabled: !!activeMenuId },
     ),
   );
 
@@ -103,7 +103,8 @@ const CategoriesSection = () => {
     [menu?.menu_categories],
   );
 
-  const areMenuCategoriesLoading = loadingMenu || (!!activeMenu && isLoading);
+  const areMenuCategoriesLoading =
+    loadingMenu || (!!activeMenuId && isLoading);
   const displayedMenuCategories = menuCategories ?? fetchedMenuCategories;
 
   const sensors = useSensors(
