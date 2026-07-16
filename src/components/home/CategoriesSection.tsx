@@ -7,7 +7,13 @@ import { useEffect, useMemo, useState } from "react";
 import type { MenuPreviewCategory, MenuPreviewItem } from "@/types/menu";
 import FormDialog from "../dialogs/FormDialog";
 import CategoryForm from "../forms/CategoryForm";
-import { MotionConfig } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  MotionConfig,
+  useIsPresent,
+  useReducedMotion,
+} from "motion/react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   closestCenter,
@@ -39,6 +45,37 @@ type SortableDragData =
 
 const getCategorySortableId = (categoryId: number) => `category-${categoryId}`;
 const getItemSortableId = (itemId: number) => `item-${itemId}`;
+const categoriesLoadTransition = {
+  duration: 0.22,
+  ease: accordionEaseOut,
+} as const;
+
+type CategoryPanelMotionProps = {
+  initial: false | { opacity: number; y: number };
+  animate: { opacity: number; y?: number };
+  exit: { opacity: number; y?: number };
+  transition: { duration: number; ease?: typeof accordionEaseOut };
+};
+
+const LoadingCategoriesPanel = ({
+  className,
+  motionProps,
+}: {
+  className?: string;
+  motionProps: CategoryPanelMotionProps;
+}) => {
+  const isPresent = useIsPresent();
+
+  return (
+    <motion.div
+      aria-hidden={!isPresent}
+      className={className}
+      {...motionProps}
+    >
+      <MenuCategoriesSkeleton />
+    </motion.div>
+  );
+};
 
 const collisionDetection: CollisionDetection = (args) => {
   const activeData = args.active.data.current as SortableDragData | undefined;
@@ -69,6 +106,7 @@ const collisionDetection: CollisionDetection = (args) => {
 const CategoriesSection = () => {
   const { activeMenu, activeMenuId, loading: loadingMenu } = useMenuContext();
   const queryClient = useQueryClient();
+  const shouldReduceMotion = useReducedMotion();
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState("");
   const [menuCategories, setMenuCategories] = useState<
@@ -106,6 +144,19 @@ const CategoriesSection = () => {
   const areMenuCategoriesLoading =
     loadingMenu || (!!activeMenuId && isLoading);
   const displayedMenuCategories = menuCategories ?? fetchedMenuCategories;
+  const categoryPanelMotion = shouldReduceMotion
+    ? {
+        initial: false,
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0 },
+      }
+    : {
+        initial: { opacity: 0, y: 6 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -4 },
+        transition: categoriesLoadTransition,
+      };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -292,75 +343,85 @@ const CategoriesSection = () => {
 
   return (
     <>
-      <div className="mt-12">
-        {areMenuCategoriesLoading ? (
-          <MenuCategoriesSkeleton />
-        ) : (
-          <div className="pr-1 pl-3">
-            <MotionConfig
-              transition={{ duration: 0.24, ease: accordionEaseOut }}
+      <div className="mt-12 grid">
+        <AnimatePresence initial={false}>
+          {areMenuCategoriesLoading ? (
+            <LoadingCategoriesPanel
+              key="categories-loading"
+              className="col-start-1 row-start-1"
+              motionProps={categoryPanelMotion}
+            />
+          ) : (
+            <motion.div
+              key="categories-loaded"
+              className="col-start-1 row-start-1 pr-1 pl-3"
+              {...categoryPanelMotion}
             >
-              <DndContext
-                id="home-menu-preview"
-                sensors={sensors}
-                collisionDetection={collisionDetection}
-                onDragEnd={handleDragEnd}
+              <MotionConfig
+                transition={{ duration: 0.24, ease: accordionEaseOut }}
               >
-                <SortableContext
-                  items={displayedMenuCategories.map((category) =>
-                    getCategorySortableId(category.id),
-                  )}
-                  strategy={verticalListSortingStrategy}
+                <DndContext
+                  id="home-menu-preview"
+                  sensors={sensors}
+                  collisionDetection={collisionDetection}
+                  onDragEnd={handleDragEnd}
                 >
-                  <Accordion.Root
-                    type="single"
-                    collapsible
-                    value={openCategory}
-                    onValueChange={setOpenCategory}
-                    className="space-y-4"
+                  <SortableContext
+                    items={displayedMenuCategories.map((category) =>
+                      getCategorySortableId(category.id),
+                    )}
+                    strategy={verticalListSortingStrategy}
                   >
-                    {displayedMenuCategories.map((category) => (
-                      <SortableMenuCategorySection
-                        key={category.id}
-                        category={category}
-                        isOpen={openCategory === String(category.id)}
-                        onAddItem={handleAddItem}
-                        onEditCategory={handleEditCategory}
-                        onDeleteCategory={handleDeleteCategory}
-                        onEditItem={handleEditItem}
-                        onDeleteItem={handleDeleteItem}
-                      />
-                    ))}
-                  </Accordion.Root>
-                </SortableContext>
-              </DndContext>
-            </MotionConfig>
-            <button
-              type="button"
-              onClick={() => setIsCategoryDialogOpen(true)}
-              className="group relative mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-[#6f5a51] transition-colors hover:bg-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
-            >
-              <svg
-                className="pointer-events-none absolute inset-0 size-full overflow-visible"
-                aria-hidden="true"
+                    <Accordion.Root
+                      type="single"
+                      collapsible
+                      value={openCategory}
+                      onValueChange={setOpenCategory}
+                      className="space-y-4"
+                    >
+                      {displayedMenuCategories.map((category) => (
+                        <SortableMenuCategorySection
+                          key={category.id}
+                          category={category}
+                          isOpen={openCategory === String(category.id)}
+                          onAddItem={handleAddItem}
+                          onEditCategory={handleEditCategory}
+                          onDeleteCategory={handleDeleteCategory}
+                          onEditItem={handleEditItem}
+                          onDeleteItem={handleDeleteItem}
+                        />
+                      ))}
+                    </Accordion.Root>
+                  </SortableContext>
+                </DndContext>
+              </MotionConfig>
+              <button
+                type="button"
+                onClick={() => setIsCategoryDialogOpen(true)}
+                className="group relative mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-[#6f5a51] transition-colors hover:bg-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500"
               >
-                <rect
-                  x="0.5"
-                  y="0.5"
-                  width="calc(100% - 1px)"
-                  height="calc(100% - 1px)"
-                  rx="10"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeDasharray="6 5"
-                  className="text-[#d9cbbd] transition-colors group-hover:text-[#c7b4a3]"
-                />
-              </svg>
-              <Plus className="size-4" />
-              New category
-            </button>
-          </div>
-        )}
+                <svg
+                  className="pointer-events-none absolute inset-0 size-full overflow-visible"
+                  aria-hidden="true"
+                >
+                  <rect
+                    x="0.5"
+                    y="0.5"
+                    width="calc(100% - 1px)"
+                    height="calc(100% - 1px)"
+                    rx="10"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeDasharray="6 5"
+                    className="text-[#d9cbbd] transition-colors group-hover:text-[#c7b4a3]"
+                  />
+                </svg>
+                <Plus className="size-4" />
+                New category
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <FormDialog
