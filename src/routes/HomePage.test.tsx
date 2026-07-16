@@ -552,7 +552,7 @@ describe("Dashboard Home Page", () => {
     ).toBeEnabled();
   });
 
-  it("renders an error message when user tries to create a business without text entry", async () => {
+  it("disables business creation until the form is dirty", async () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({ result: { data: null } }),
@@ -589,6 +589,10 @@ describe("Dashboard Home Page", () => {
     const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
+    expect(submitButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/^Name$/i), "T");
+    expect(submitButton).toBeEnabled();
     await user.click(submitButton);
 
     expect(
@@ -895,7 +899,7 @@ describe("Dashboard Home Page", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders an error message when user tries to create a menu without text entry", async () => {
+  it("disables menu creation until the form is dirty", async () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({
@@ -940,6 +944,10 @@ describe("Dashboard Home Page", () => {
     const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
+    expect(submitButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/^Menu Name$/i), "D");
+    expect(submitButton).toBeEnabled();
     await user.click(submitButton);
 
     expect(

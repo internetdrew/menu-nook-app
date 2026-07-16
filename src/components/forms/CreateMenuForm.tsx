@@ -90,6 +90,7 @@ export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
         <div className="flex justify-end">
           <AnimatedSubmitButton
             isSubmitting={form.formState.isSubmitting}
+            disabled={!form.formState.isDirty}
             idleLabel="Create"
           />
         </div>

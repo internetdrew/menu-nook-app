@@ -39,6 +39,12 @@ const panelVariants = {
   },
 } as const;
 
+const onboardingHeaderTitles = {
+  checklist: "Get Started",
+  businessForm: "Name your business",
+  menuForm: "Name your first menu",
+} as const satisfies Record<Exclude<OnboardingPanel, "success">, string>;
+
 export function OnboardingChecklist({
   business,
   menus,
@@ -92,31 +98,22 @@ export function OnboardingChecklist({
               exit="exit"
               transition={panelTransition}
             >
-              <div className="flex items-center justify-between gap-4 border-b border-neutral-200/60 bg-white px-5 py-3 shadow-sm">
-                <div className="flex min-w-0 items-center gap-3">
-                  <OnboardingProgressRing
-                    completedSteps={completedSteps}
-                    progress={progress}
-                  />
-                  <h1 id="onboarding-title" className="text-sm font-medium">
-                    Get Started
-                  </h1>
-                </div>
-                <p className="shrink-0 text-xs text-neutral-500">
-                  {completedSteps} of {totalSteps} Completed
-                </p>
-              </div>
+              <OnboardingPanelHeader
+                title={onboardingHeaderTitles.checklist}
+                completedSteps={completedSteps}
+                progress={progress}
+              />
 
               <div className="divide-y divide-neutral-200/50">
                 <OnboardingStep
-                  title="Add your business' name"
+                  title={onboardingHeaderTitles.businessForm}
                   isComplete={hasBusiness}
                   isActive={activeStep === "business"}
                   onSelect={() => openPanel("businessForm")}
                 />
 
                 <OnboardingStep
-                  title="Name your first menu"
+                  title={onboardingHeaderTitles.menuForm}
                   isComplete={hasMenu}
                   isActive={activeStep === "menu"}
                   isLocked={!hasBusiness}
@@ -125,9 +122,9 @@ export function OnboardingChecklist({
 
                 <div className="py-3 text-center text-sm font-medium text-[#807d78] select-none">
                   {completedSteps === 0
-                    ? "Let's start with your business' name"
+                    ? "Exciting, right?"
                     : completedSteps === 1
-                      ? "Nice start, one step left"
+                      ? "Almost there!"
                       : "You're ready to build your menu"}
                 </div>
               </div>
@@ -153,11 +150,7 @@ export function OnboardingChecklist({
               transition={panelTransition}
             >
               <OnboardingFormPanel
-                title={
-                  panel === "businessForm"
-                    ? "Name your business"
-                    : "Name your first menu"
-                }
+                title={onboardingHeaderTitles[panel]}
                 onBack={returnToChecklist}
               >
                 {panel === "businessForm" ? (
@@ -171,6 +164,57 @@ export function OnboardingChecklist({
         </AnimatePresence>
       </div>
     </motion.section>
+  );
+}
+
+function OnboardingPanelHeader({
+  title,
+  completedSteps,
+  progress,
+  onBack,
+}: {
+  title: string;
+  completedSteps?: number;
+  progress?: number;
+  onBack?: () => void;
+}) {
+  const showProgress = completedSteps !== undefined && progress !== undefined;
+
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-neutral-200/60 bg-white px-5 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        {onBack ? (
+          <span className="relative size-5 shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#78665e]"
+              onClick={onBack}
+              aria-label="Back to onboarding checklist"
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+          </span>
+        ) : showProgress ? (
+          <OnboardingProgressRing
+            completedSteps={completedSteps}
+            progress={progress}
+          />
+        ) : null}
+        <h1
+          id="onboarding-title"
+          className="min-w-0 text-sm font-medium text-[#281513]"
+        >
+          {title}
+        </h1>
+      </div>
+      {showProgress && (
+        <p className="shrink-0 text-xs text-neutral-500">
+          {completedSteps} of {totalSteps} Completed
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -290,21 +334,7 @@ function OnboardingFormPanel({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-3 border-b border-neutral-200/70 bg-white px-4 py-3">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="shrink-0 text-[#78665e]"
-          onClick={onBack}
-          aria-label="Back to onboarding checklist"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
-        <h1 id="onboarding-title" className="min-w-0 text-base font-semibold">
-          {title}
-        </h1>
-      </div>
+      <OnboardingPanelHeader title={title} onBack={onBack} />
       <div className="px-5 py-5">{children}</div>
     </div>
   );
