@@ -1,4 +1,4 @@
-import { AnimatedButtonContent } from "@/components/ui/animated-button-content";
+import { AnimatedButtonContent } from "@/components/animated-button-content";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
