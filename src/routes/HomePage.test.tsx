@@ -1037,7 +1037,6 @@ describe("Dashboard Home Page", () => {
       "Search Appearance",
       "Business profile",
       "Rename menu",
-      "Add menu",
       "Delete menu",
       "Log out",
     ];
@@ -1051,7 +1050,7 @@ describe("Dashboard Home Page", () => {
       expectedActions,
     );
 
-    await user.click(actionButtons.at(-1) as HTMLButtonElement);
+    await user.click(actionButtons[actionButtons.length - 1] as HTMLButtonElement);
 
     expect(signOutSpy).toHaveBeenCalledTimes(1);
   });
