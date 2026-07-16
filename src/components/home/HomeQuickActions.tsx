@@ -19,11 +19,7 @@ import { BusinessDiscoveryForm } from "../forms/BusinessDiscoveryForm";
 import { signOut } from "@/lib/auth";
 import { toast } from "sonner";
 
-type QuickActionDialog =
-  | "business"
-  | "menu"
-  | "deleteMenu"
-  | "search";
+type QuickActionDialog = "business" | "menu" | "deleteMenu" | "search";
 
 const actionStagger = 0.035;
 
@@ -123,7 +119,6 @@ const HomeQuickActions = () => {
       label: "Log out",
       icon: LogOut,
       onSelect: handleLogOut,
-      destructive: true,
     },
   ];
 
