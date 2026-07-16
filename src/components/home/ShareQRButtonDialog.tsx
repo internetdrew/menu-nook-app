@@ -139,7 +139,7 @@ const ShareQRButtonDialog = ({
   const { data, isLoading } = useQuery(
     trpc.menuQRCode.getPublicUrlForMenu.queryOptions(
       { menuId: activeMenuId },
-      { enabled: !!activeMenuId },
+      { enabled: !!activeMenuId && (open || openOnMount) },
     ),
   );
   const publicUrl = data?.public_url;
@@ -246,7 +246,7 @@ const ShareQRButtonDialog = ({
   const trigger = (
     <Button
       variant="ghost"
-      className="hover:bg-[#eee7dc]/80 focus-visible:bg-[#eee7dc]/80"
+      className="hover:bg-stone-200 focus-visible:bg-stone-200"
     >
       <QrCode />
       Share

@@ -25,11 +25,11 @@ describe("Login Page", () => {
     vi.clearAllMocks();
   });
 
-  it("shows the sign in prompt to guests", () => {
+  it("shows the sign in prompt to guests", async () => {
     renderApp({ initialEntries: ["/login"], authMock: noUserState });
 
     expect(
-      screen.getByText(/let's get your menu online./i),
+      await screen.findByText(/let's get your menu online./i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /continue with google/i }),
@@ -86,7 +86,7 @@ describe("Login Page", () => {
     renderApp({ initialEntries: ["/login"], authMock: noUserState });
 
     await user.click(
-      screen.getByRole("button", { name: /continue with google/i }),
+      await screen.findByRole("button", { name: /continue with google/i }),
     );
 
     const button = await screen.findByRole("button", {

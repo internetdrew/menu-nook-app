@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, type AuthContextType } from "@/contexts/auth";
 import { routes } from "@/routes";
 import { createTestQueryClient } from "./createTestQueryClient";
+import { setLoaderAuthMockForTest } from "@/utils/loaderAuth";
 
 interface RenderAppOptions {
   initialEntries?: string[];
@@ -16,6 +17,8 @@ export function renderApp({
   authMock,
   queryClient: providedQueryClient,
 }: RenderAppOptions) {
+  setLoaderAuthMockForTest(authMock);
+
   const router = createMemoryRouter(routes, {
     initialEntries,
   });

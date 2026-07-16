@@ -12,10 +12,11 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { trpc } from "@/utils/trpc";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
 import type { MenuRecord } from "@/types/menu";
+import { useMenuContext } from "@/contexts/ActiveMenuContext";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -26,7 +27,7 @@ const formSchema = z.object({
 export const CreateMenuForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const createMenu = useMutation(trpc.menu.create.mutationOptions());
   const queryClient = useQueryClient();
-  const { data: business } = useQuery(trpc.business.getForUser.queryOptions());
+  const { business } = useMenuContext();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

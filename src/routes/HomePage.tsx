@@ -1,9 +1,15 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import type { MenuPreviewCategory } from "@/types/menu";
 import HomeHeader from "@/components/home/HomeHeader";
-import CategoriesSection from "@/components/home/CategoriesSection";
-import HomeQuickActions from "@/components/home/HomeQuickActions";
+import MenuCategoriesSkeleton from "@/components/skeletons/MenuCategoriesSkeleton";
+
+const CategoriesSection = lazy(
+  () => import("@/components/home/CategoriesSection"),
+);
+const HomeQuickActions = lazy(
+  () => import("@/components/home/HomeQuickActions"),
+);
 
 export type MenuCategory = MenuPreviewCategory;
 
@@ -29,8 +35,18 @@ export const HomePage = () => {
         showLaunchSuccess={showLaunchSuccess}
         onLaunchSuccessComplete={() => setShowLaunchSuccess(false)}
       />
-      <CategoriesSection />
-      <HomeQuickActions />
+      <Suspense
+        fallback={
+          <div className="mt-12">
+            <MenuCategoriesSkeleton />
+          </div>
+        }
+      >
+        <CategoriesSection />
+      </Suspense>
+      <Suspense fallback={null}>
+        <HomeQuickActions />
+      </Suspense>
     </div>
   );
 };

@@ -167,7 +167,7 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: noUserState });
 
     expect(
-      screen.getByText(/Let's get your menu online./i),
+      await screen.findByText(/Let's get your menu online./i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Continue with Google/i }),
@@ -183,7 +183,7 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/unknown-route"], authMock: noUserState });
 
     expect(
-      screen.getByRole("button", { name: /Continue with Google/i }),
+      await screen.findByRole("button", { name: /Continue with Google/i }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
   });
@@ -194,7 +194,7 @@ describe("Dashboard Home Page", () => {
       authMock: authedUserState,
     });
 
-    expect(screen.getByText(/Page Not Found/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Page Not Found/i)).toBeInTheDocument();
   });
 
   it("shows a route loading spinner while auth is resolving", async () => {
@@ -265,7 +265,7 @@ describe("Dashboard Home Page", () => {
 
     expect(screen.queryByText(/No menu selected/i)).not.toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: /loading menu setup/i }),
+      await screen.findByRole("status", { name: /loading menu setup/i }),
     ).toBeInTheDocument();
 
     await waitFor(() => {

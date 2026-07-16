@@ -1,16 +1,16 @@
-import { Menu } from "./routes/Menu.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
-import { MenuProvider } from "./contexts/ActiveMenuContext.tsx";
-import App from "./App.tsx";
-import { NotFound } from "./routes/NotFound.tsx";
-import { Navigate } from "react-router";
-import Login from "./routes/Login.tsx";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated.tsx";
+import { Navigate } from "react-router";
+import { RouteFallback } from "./components/RouteFallback.tsx";
 
 export const routes = [
   {
     path: "/menu/:menuId",
-    element: <Menu />,
+    HydrateFallback: RouteFallback,
+    lazy: async () => {
+      const { Menu } = await import("./routes/Menu.tsx");
+      return { Component: Menu };
+    },
   },
   {
     path: "/login",
@@ -18,7 +18,11 @@ export const routes = [
     children: [
       {
         index: true,
-        element: <Login />,
+        HydrateFallback: RouteFallback,
+        lazy: async () => {
+          const { default: Login } = await import("./routes/Login.tsx");
+          return { Component: Login };
+        },
       },
     ],
   },
@@ -26,36 +30,49 @@ export const routes = [
     element: <ProtectedRoute redirectTo="/login" />,
     children: [
       {
+        index: true,
+        HydrateFallback: RouteFallback,
+        loader: async () => {
+          const { homeLoader } = await import("./routes/homeLoader.ts");
+          return homeLoader();
+        },
+        lazy: async () => {
+          const { default: HomeRoute } = await import("./routes/HomeRoute.tsx");
+          return { Component: HomeRoute };
+        },
+      },
+      {
         path: "/preview",
         element: <Navigate to="/" replace />,
       },
       {
         path: "/preview/menu/:menuId",
-        element: <Menu />,
+        HydrateFallback: RouteFallback,
+        lazy: async () => {
+          const { Menu } = await import("./routes/Menu.tsx");
+          return { Component: Menu };
+        },
+      },
+      {
+        path: "*",
+        HydrateFallback: RouteFallback,
+        lazy: async () => {
+          const { NotFound } = await import("./routes/NotFound.tsx");
+
+          function NotFoundRoute() {
+            return (
+              <NotFound
+                title="Page Not Found"
+                message="The page you're looking for does not exist."
+                href="/"
+                hrefText="Go back to Home"
+              />
+            );
+          }
+
+          return { Component: NotFoundRoute };
+        },
       },
     ],
-  },
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute redirectTo="/login">
-        <MenuProvider>
-          <App />
-        </MenuProvider>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "*",
-    element: (
-      <ProtectedRoute redirectTo="/login">
-        <NotFound
-          title="Page Not Found"
-          message="The page you're looking for does not exist."
-          href="/"
-          hrefText="Go back to Home"
-        />
-      </ProtectedRoute>
-    ),
   },
 ];
