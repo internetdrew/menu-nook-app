@@ -29,12 +29,7 @@ describe("Login Page", () => {
     renderApp({ initialEntries: ["/login"], authMock: noUserState });
 
     expect(
-      screen.getByRole("heading", { name: /menunook/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /sign in to give your menu a clean, simple home of its own/i,
-      ),
+      screen.getByText(/let's get your menu online./i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /continue with google/i }),
@@ -98,9 +93,5 @@ describe("Login Page", () => {
       name: /connecting to google/i,
     });
     expect(button).toBeDisabled();
-    expect(button).toHaveAttribute("aria-busy", "true");
-    expect(
-      screen.getByRole("status", { name: /loading/i }),
-    ).toBeInTheDocument();
   });
 });

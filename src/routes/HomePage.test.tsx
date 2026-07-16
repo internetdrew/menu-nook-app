@@ -167,9 +167,7 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: noUserState });
 
     expect(
-      screen.getByText(
-        /Sign in to give your menu a clean, simple home of its own./i,
-      ),
+      screen.getByText(/Let's get your menu online./i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Continue with Google/i }),
@@ -1251,13 +1249,11 @@ describe("Dashboard Home Page", () => {
   });
 
   it("updates the public menu link from menu settings and uses the slug in share links", async () => {
-    let submittedUpdate:
-      | {
-          menuId: string;
-          name: string;
-          slug: string;
-        }
-      | null = null;
+    let submittedUpdate: {
+      menuId: string;
+      name: string;
+      slug: string;
+    } | null = null;
 
     server.use(
       createTrpcQueryHandler({
@@ -1365,7 +1361,9 @@ describe("Dashboard Home Page", () => {
 
     await waitFor(() => {
       expect(
-        within(dialog).getByText(/available: https:\/\/menunook.com\/m\/marysbakery/i),
+        within(dialog).getByText(
+          /available: https:\/\/menunook.com\/m\/marysbakery/i,
+        ),
       ).toBeInTheDocument();
     });
 
@@ -1389,7 +1387,9 @@ describe("Dashboard Home Page", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
-    expect(await screen.findByRole("button", { name: /^share$/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: /^share$/i }),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /^share$/i }));
     const shareDialog = await screen.findByRole("dialog");
