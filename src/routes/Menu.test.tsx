@@ -37,9 +37,7 @@ describe("Preview Route (/preview/:id)", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          /sign in to give your menu a clean, simple home of its own./i,
-        ),
+        screen.getByText(/let's get your menu online./i),
       ).toBeInTheDocument();
     });
 
