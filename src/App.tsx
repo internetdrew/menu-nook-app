@@ -1,5 +1,4 @@
 import { Toaster } from "@/components/ui/sonner";
-import loginBackground from "@/assets/login-bg.png";
 import { useAuth } from "./contexts/auth";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "./utils/trpc";
@@ -70,18 +69,9 @@ function App() {
 
   return (
     <div className="min-h-dvh">
-      <div
-        className="fixed inset-0 -z-10 bg-[#fff9ef] bg-cover bg-center"
-        style={{
-          backgroundImage: [
-            "radial-gradient(circle at 48% 40%, rgba(255, 250, 241, 0.96) 0, rgba(255, 250, 241, 0.62) 22rem, rgba(255, 250, 241, 0.12) 43rem)",
-            "linear-gradient(180deg, rgba(255, 249, 238, 0.16), rgba(255, 243, 222, 0.32))",
-            `url(${loginBackground})`,
-          ].join(", "),
-        }}
-      />
+      <div className="fixed inset-0 -z-10 bg-stone-100 bg-cover bg-center" />
       <nav className="fixed inset-x-0 top-0 z-40">
-        <p className="title mt-4 text-center font-bold">MenuNook</p>
+        <p className="title mt-4 text-center font-[560] sm:text-lg">MenuNook</p>
       </nav>
       <main className="mx-auto flex min-h-dvh max-w-xl items-start px-4 pb-8">
         <AnimatePresence mode="wait" initial={false}>

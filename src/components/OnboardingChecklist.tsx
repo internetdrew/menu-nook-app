@@ -92,24 +92,24 @@ export function OnboardingChecklist({
               exit="exit"
               transition={panelTransition}
             >
-              <div className="flex items-center justify-between gap-4 border-b border-neutral-200/70 bg-white px-5 py-3">
+              <div className="flex items-center justify-between gap-4 border-b border-neutral-200/60 bg-white px-5 py-3 shadow-sm">
                 <div className="flex min-w-0 items-center gap-3">
                   <OnboardingProgressRing
                     completedSteps={completedSteps}
                     progress={progress}
                   />
-                  <h1 id="onboarding-title" className="font-semibold">
+                  <h1 id="onboarding-title" className="text-sm font-medium">
                     Get Started
                   </h1>
                 </div>
-                <p className="shrink-0 text-sm text-[#807d78]">
+                <p className="shrink-0 text-xs text-neutral-500">
                   {completedSteps} of {totalSteps} Completed
                 </p>
               </div>
 
-              <div className="divide-y divide-neutral-200/60">
+              <div className="divide-y divide-neutral-200/50">
                 <OnboardingStep
-                  title="Name your business"
+                  title="Add your business' name"
                   isComplete={hasBusiness}
                   isActive={activeStep === "business"}
                   onSelect={() => openPanel("businessForm")}
@@ -123,9 +123,9 @@ export function OnboardingChecklist({
                   onSelect={() => openPanel("menuForm")}
                 />
 
-                <div className="py-2.5 text-center text-sm font-medium text-[#807d78] select-none">
+                <div className="py-3 text-center text-sm font-medium text-[#807d78] select-none">
                   {completedSteps === 0
-                    ? "Start with your business"
+                    ? "Let's start with your business' name"
                     : completedSteps === 1
                       ? "Nice start, one step left"
                       : "You're ready to build your menu"}
@@ -185,7 +185,7 @@ function OnboardingProgressRing({
 
   return (
     <div
-      className="relative grid size-7 shrink-0 place-items-center rounded-full"
+      className="relative grid size-5 shrink-0 place-items-center rounded-full"
       aria-label={`${completedSteps} of ${totalSteps} onboarding steps completed`}
     >
       <svg
@@ -244,19 +244,19 @@ function OnboardingStep({
       className={`w-full bg-white px-5 py-3 text-left transition-colors hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-neutral-900/15 focus-visible:outline-none disabled:cursor-default disabled:hover:bg-white ${isLocked ? "opacity-55" : ""} `}
     >
       <div className="flex items-center gap-3">
-        <div className="mt-0.5 grid size-7 shrink-0 place-items-center">
+        <div className="mt-0.5 grid size-5 shrink-0 place-items-center">
           {isComplete ? (
-            <span className="grid size-6 place-items-center rounded-full bg-pink-600 text-white">
+            <span className="grid size-5 place-items-center rounded-full bg-pink-600 text-white">
               <Check className="size-4" />
             </span>
           ) : (
-            <Circle className="size-6 text-neutral-300" />
+            <Circle className="size-5 text-neutral-300" />
           )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
             <h2
-              className={`text-base font-medium select-none ${
+              className={`text-sm font-medium select-none ${
                 isComplete
                   ? "text-[#9a8c85] line-through decoration-pink-600"
                   : "text-[#281513]"
