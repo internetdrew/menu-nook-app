@@ -1017,6 +1017,45 @@ describe("Dashboard Home Page", () => {
     expect(screen.queryByRole("link", { name: /categories/i })).toBeNull();
   });
 
+  it("renders log out as the last settings action and signs out", async () => {
+    server.use(
+      createTrpcQueryHandler(menuManagerBaseResolvers(() => [])),
+    );
+
+    const signOutSpy = vi
+      .spyOn(supabaseBrowserClient.auth, "signOut")
+      .mockResolvedValue({ error: null });
+    const user = userEvent.setup();
+
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await user.click(
+      await screen.findByRole("button", { name: /open quick actions/i }),
+    );
+
+    const expectedActions = [
+      "Search Appearance",
+      "Business profile",
+      "Rename menu",
+      "Add menu",
+      "Delete menu",
+      "Log out",
+    ];
+    const actionButtons = screen
+      .getAllByRole("button")
+      .filter((button) =>
+        expectedActions.includes(button.textContent?.trim() ?? ""),
+      );
+
+    expect(actionButtons.map((button) => button.textContent?.trim())).toEqual(
+      expectedActions,
+    );
+
+    await user.click(actionButtons.at(-1) as HTMLButtonElement);
+
+    expect(signOutSpy).toHaveBeenCalledTimes(1);
+  });
+
   describe("business profile logo", () => {
     beforeEach(() => {
       queryClient.clear();

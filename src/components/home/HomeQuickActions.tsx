@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   Globe,
+  LogOut,
   Plus,
   Settings,
   Store,
@@ -17,6 +18,8 @@ import { MenuSettingsForm } from "../forms/MenuSettingsForm";
 import DeleteMenuAlertDialog from "../dialogs/DeleteMenuAlertDialog";
 import { BusinessDetailsForm } from "../forms/BusinessDetailsForm";
 import { BusinessDiscoveryForm } from "../forms/BusinessDiscoveryForm";
+import { signOut } from "@/lib/auth";
+import { toast } from "sonner";
 
 type QuickActionDialog =
   | "business"
@@ -86,6 +89,17 @@ const HomeQuickActions = () => {
     setIsOpen(false);
   };
 
+  const handleLogOut = async () => {
+    setIsOpen(false);
+
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Failed to log out:", error);
+      toast.error("Failed to log out. Please try again.");
+    }
+  };
+
   const actions = [
     {
       label: "Search Appearance",
@@ -111,6 +125,12 @@ const HomeQuickActions = () => {
       label: "Delete menu",
       icon: Trash2,
       onSelect: () => openDialog("deleteMenu"),
+      destructive: true,
+    },
+    {
+      label: "Log out",
+      icon: LogOut,
+      onSelect: handleLogOut,
       destructive: true,
     },
   ];
