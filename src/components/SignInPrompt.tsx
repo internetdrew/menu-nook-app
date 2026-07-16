@@ -6,46 +6,46 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 export function SignInPrompt() {
-  const [isSigningIn, setIsSigningIn] = useState(false);
-  const buttonState = isSigningIn ? "loading" : "idle";
+  const [buttonState, setButtonState] = useState<"loading" | "idle" | "error">(
+    "idle",
+  );
   const buttonLabel =
     buttonState === "loading"
       ? "Connecting to Google..."
       : "Continue with Google";
 
   const handleSignIn = async () => {
-    setIsSigningIn(true);
+    setButtonState("loading");
 
     try {
       await signInWithGoogle();
     } catch (error) {
       console.error(error);
-      setIsSigningIn(false);
+      setButtonState("error");
     }
   };
 
   return (
     <section
       className={cn(
-        "mx-auto flex w-full max-w-lg flex-col items-center text-center",
+        "mx-auto mt-44 flex w-full max-w-lg flex-col items-center text-center",
       )}
     >
-      <h1 className="title mt-52 text-4xl leading-none font-bold text-stone-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.65)] md:mt-64 md:text-5xl">
-        MenuNook
-      </h1>
-      <p className="mt-5 text-base leading-7 font-medium text-stone-700 drop-shadow-[0_1px_0_rgba(255,255,255,0.7)]">
-        Sign in to give your menu a clean, <br />
-        simple home of its own.
+      <p className="text-xl font-semibold text-pretty sm:text-2xl">
+        Let's get your menu online.
+      </p>
+      <p className="mt-4 text-[15px] font-medium text-neutral-600">
+        You'll have something to share in just a few minutes.
       </p>
       <Button
-        className="relative mt-8 h-11 min-w-60 overflow-hidden bg-stone-950 text-white shadow-[0_14px_34px_rgba(61,45,29,0.24)] hover:bg-stone-800"
+        className="relative mt-6 rounded-full bg-neutral-950 px-4 py-2 text-white"
         onClick={handleSignIn}
-        disabled={isSigningIn}
-        aria-busy={isSigningIn}
+        disabled={buttonState === "loading"}
+        aria-busy={buttonState === "loading"}
       >
-        <AnimatePresence mode="popLayout" initial={false}>
+        <AnimatePresence mode="sync" initial={false}>
           <motion.span
-            className="inline-flex items-center justify-center gap-2"
+            className="inline-flex items-center justify-center gap-2 font-medium"
             transition={{ type: "spring", duration: 0.3, bounce: 0 }}
             initial={{ opacity: 0, y: -25 }}
             animate={{ opacity: 1, y: 0 }}

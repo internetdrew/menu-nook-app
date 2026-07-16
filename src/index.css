@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist/wght.css";
 @import "@fontsource-variable/eb-garamond/wght.css";
 @import "@fontsource-variable/playfair-display/wght.css";
 @import "@fontsource-variable/inter/wght.css";
@@ -160,11 +160,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply text-foreground;
-    font-family: "Inter Variable", sans-serif;
-  }
-
-  .title {
-    font-family: "Playfair Display Variable", serif;
+    @apply text-foreground bg-stone-100;
+    font-family: "Geist Variable", sans-serif;
   }
 }
