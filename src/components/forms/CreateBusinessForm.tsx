@@ -82,6 +82,7 @@ export const CreateBusinessForm = ({
         <div className="flex justify-end">
           <AnimatedSubmitButton
             isSubmitting={form.formState.isSubmitting}
+            disabled={!form.formState.isDirty}
             idleLabel="Create"
           />
         </div>

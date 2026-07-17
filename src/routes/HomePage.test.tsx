@@ -167,7 +167,7 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/"], authMock: noUserState });
 
     expect(
-      screen.getByText(/Let's get your menu online./i),
+      await screen.findByText(/Let's get your menu online./i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Continue with Google/i }),
@@ -183,7 +183,7 @@ describe("Dashboard Home Page", () => {
     renderApp({ initialEntries: ["/unknown-route"], authMock: noUserState });
 
     expect(
-      screen.getByRole("button", { name: /Continue with Google/i }),
+      await screen.findByRole("button", { name: /Continue with Google/i }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
   });
@@ -194,7 +194,7 @@ describe("Dashboard Home Page", () => {
       authMock: authedUserState,
     });
 
-    expect(screen.getByText(/Page Not Found/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Page Not Found/i)).toBeInTheDocument();
   });
 
   it("shows a route loading spinner while auth is resolving", async () => {
@@ -265,7 +265,7 @@ describe("Dashboard Home Page", () => {
 
     expect(screen.queryByText(/No menu selected/i)).not.toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: /loading menu setup/i }),
+      await screen.findByRole("status", { name: /loading menu setup/i }),
     ).toBeInTheDocument();
 
     await waitFor(() => {
@@ -552,7 +552,7 @@ describe("Dashboard Home Page", () => {
     ).toBeEnabled();
   });
 
-  it("renders an error message when user tries to create a business without text entry", async () => {
+  it("disables business creation until the form is dirty", async () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({ result: { data: null } }),
@@ -589,6 +589,10 @@ describe("Dashboard Home Page", () => {
     const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
+    expect(submitButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/^Name$/i), "T");
+    expect(submitButton).toBeEnabled();
     await user.click(submitButton);
 
     expect(
@@ -895,7 +899,7 @@ describe("Dashboard Home Page", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders an error message when user tries to create a menu without text entry", async () => {
+  it("disables menu creation until the form is dirty", async () => {
     server.use(
       createTrpcQueryHandler({
         "business.getForUser": () => ({
@@ -940,6 +944,10 @@ describe("Dashboard Home Page", () => {
     const submitButton = screen.getByRole("button", {
       name: /create/i,
     });
+    expect(submitButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/^Menu Name$/i), "D");
+    expect(submitButton).toBeEnabled();
     await user.click(submitButton);
 
     expect(
@@ -1007,6 +1015,44 @@ describe("Dashboard Home Page", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /settings/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /categories/i })).toBeNull();
+  });
+
+  it("renders log out as the last settings action and signs out", async () => {
+    server.use(
+      createTrpcQueryHandler(menuManagerBaseResolvers(() => [])),
+    );
+
+    const signOutSpy = vi
+      .spyOn(supabaseBrowserClient.auth, "signOut")
+      .mockResolvedValue({ error: null });
+    const user = userEvent.setup();
+
+    renderApp({ initialEntries: ["/"], authMock: authedUserState });
+
+    await user.click(
+      await screen.findByRole("button", { name: /open quick actions/i }),
+    );
+
+    const expectedActions = [
+      "Search Appearance",
+      "Business profile",
+      "Rename menu",
+      "Delete menu",
+      "Log out",
+    ];
+    const actionButtons = screen
+      .getAllByRole("button")
+      .filter((button) =>
+        expectedActions.includes(button.textContent?.trim() ?? ""),
+      );
+
+    expect(actionButtons.map((button) => button.textContent?.trim())).toEqual(
+      expectedActions,
+    );
+
+    await user.click(actionButtons[actionButtons.length - 1] as HTMLButtonElement);
+
+    expect(signOutSpy).toHaveBeenCalledTimes(1);
   });
 
   describe("business profile logo", () => {

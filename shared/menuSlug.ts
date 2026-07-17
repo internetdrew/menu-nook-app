@@ -69,6 +69,3 @@ export const createDefaultMenuSlug = (text: string) => {
 
   return reservedFallback || "menu";
 };
-
-export const isReservedMenuSlug = (slug: string) =>
-  RESERVED_MENU_SLUG_SET.has(slug);

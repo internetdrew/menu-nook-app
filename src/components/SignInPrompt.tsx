@@ -1,16 +1,14 @@
+import { AnimatedButtonContent } from "@/components/animated-button-content";
 import { Button } from "@/components/ui/button";
 import { signInWithGoogle } from "@/lib/auth";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
-  animate,
-  AnimatePresence,
   motion,
   type Transition,
   useReducedMotion,
   useTime,
   useTransform,
 } from "motion/react";
-import useMeasure from "react-use-measure";
 import { cn } from "@/lib/utils";
 
 const STATES = {
@@ -18,12 +16,6 @@ const STATES = {
   processing: "Connecting to Google...",
   error: "Something went wrong",
 } as const;
-
-const SPRING_CONFIG: Transition = {
-  type: "spring",
-  stiffness: 600,
-  damping: 30,
-};
 
 export function SignInPrompt() {
   const [buttonState, setButtonState] = useState<keyof typeof STATES>("idle");
@@ -57,86 +49,20 @@ export function SignInPrompt() {
         disabled={buttonState === "processing"}
         aria-busy={buttonState === "processing"}
       >
-        <Badge state={buttonState} />
+        <AnimatedButtonContent
+          state={buttonState}
+          labels={STATES}
+          shouldShake={buttonState === "error"}
+          renderIcon={(state) => {
+            if (state === "processing") return <Loader />;
+            if (state === "error") return <X />;
+            return null;
+          }}
+        />
       </Button>
     </section>
   );
 }
-
-const Badge = ({ state }: { state: keyof typeof STATES }) => {
-  const badgeRef = useRef<HTMLSpanElement>(null);
-  const shouldReduceMotion = useReducedMotion();
-
-  useEffect(() => {
-    if (!badgeRef.current || shouldReduceMotion) return;
-
-    if (state === "error") {
-      animate(
-        badgeRef.current,
-        { x: [0, -6, 6, -6, 0] },
-        {
-          duration: 0.3,
-          ease: "easeInOut",
-          times: [0, 0.25, 0.5, 0.75, 1],
-          repeat: 0,
-          delay: 0.1,
-        },
-      );
-    }
-  }, [state, shouldReduceMotion]);
-
-  return (
-    <motion.span
-      ref={badgeRef}
-      className="inline-flex items-center justify-center overflow-hidden rounded-full font-medium"
-      animate={{
-        gap: state === "idle" ? 0 : 8,
-      }}
-      transition={SPRING_CONFIG}
-      style={{ willChange: "transform" }}
-    >
-      <Icon state={state} />
-      <Label state={state} />
-    </motion.span>
-  );
-};
-
-const Icon = ({ state }: { state: keyof typeof STATES }) => {
-  const shouldReduceMotion = useReducedMotion();
-  const isIdle = state === "idle";
-
-  return (
-    <motion.span
-      className="relative flex h-5 items-center justify-center overflow-hidden"
-      animate={{ width: isIdle ? 0 : 20 }}
-      transition={SPRING_CONFIG}
-    >
-      <AnimatePresence initial={false}>
-        {!isIdle ? (
-          <motion.span
-            key={state}
-            className="absolute top-0 left-0 flex size-5 items-center justify-center"
-            initial={
-              shouldReduceMotion
-                ? false
-                : { y: -40, scale: 0.5, filter: "blur(6px)" }
-            }
-            animate={{ y: 0, scale: 1, filter: "blur(0px)" }}
-            exit={
-              shouldReduceMotion
-                ? { opacity: 0 }
-                : { y: 40, scale: 0.5, filter: "blur(6px)" }
-            }
-            transition={{ duration: 0.15, ease: "easeInOut" }}
-          >
-            {state === "processing" ? <Loader /> : null}
-            {state === "error" ? <X /> : null}
-          </motion.span>
-        ) : null}
-      </AnimatePresence>
-    </motion.span>
-  );
-};
 
 const ICON_SIZE = 20;
 const STROKE_WIDTH = 1.8;
@@ -197,65 +123,3 @@ function X() {
     </motion.svg>
   );
 }
-
-const Label = ({ state }: { state: keyof typeof STATES }) => {
-  const [measureRef, bounds] = useMeasure();
-  const shouldReduceMotion = useReducedMotion();
-  const measuredWidth = Math.ceil(bounds.width);
-
-  return (
-    <motion.span
-      layout
-      style={{
-        position: "relative",
-        display: "inline-block",
-        width: measuredWidth || "auto",
-      }}
-      animate={measuredWidth ? { width: measuredWidth } : undefined}
-      transition={SPRING_CONFIG}
-    >
-      <AnimatePresence mode="sync" initial={false}>
-        <motion.span
-          ref={measureRef}
-          key={state}
-          style={{
-            display: "inline-block",
-            whiteSpace: "nowrap",
-          }}
-          initial={
-            shouldReduceMotion
-              ? false
-              : {
-                  y: -20,
-                  opacity: 0,
-                  filter: "blur(10px)",
-                  position: "absolute",
-                }
-          }
-          animate={{
-            y: 0,
-            opacity: 1,
-            filter: "blur(0px)",
-            position: "relative",
-          }}
-          exit={
-            shouldReduceMotion
-              ? { opacity: 0, position: "absolute" }
-              : {
-                  y: 20,
-                  opacity: 0,
-                  filter: "blur(10px)",
-                  position: "absolute",
-                }
-          }
-          transition={{
-            duration: 0.2,
-            ease: "easeInOut",
-          }}
-        >
-          {STATES[state]}
-        </motion.span>
-      </AnimatePresence>
-    </motion.span>
-  );
-};

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   Globe,
-  Plus,
+  LogOut,
   Settings,
   Store,
   Trash2,
@@ -12,18 +12,14 @@ import { useEffect, useRef, useState } from "react";
 import { useMenuContext } from "@/contexts/ActiveMenuContext";
 import { Button } from "../ui/button";
 import FormDialog from "../dialogs/FormDialog";
-import { CreateMenuForm } from "../forms/CreateMenuForm";
 import { MenuSettingsForm } from "../forms/MenuSettingsForm";
 import DeleteMenuAlertDialog from "../dialogs/DeleteMenuAlertDialog";
 import { BusinessDetailsForm } from "../forms/BusinessDetailsForm";
 import { BusinessDiscoveryForm } from "../forms/BusinessDiscoveryForm";
+import { signOut } from "@/lib/auth";
+import { toast } from "sonner";
 
-type QuickActionDialog =
-  | "business"
-  | "menu"
-  | "createMenu"
-  | "deleteMenu"
-  | "search";
+type QuickActionDialog = "business" | "menu" | "deleteMenu" | "search";
 
 const actionStagger = 0.035;
 
@@ -86,6 +82,17 @@ const HomeQuickActions = () => {
     setIsOpen(false);
   };
 
+  const handleLogOut = async () => {
+    setIsOpen(false);
+
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Failed to log out:", error);
+      toast.error("Failed to log out. Please try again.");
+    }
+  };
+
   const actions = [
     {
       label: "Search Appearance",
@@ -103,15 +110,15 @@ const HomeQuickActions = () => {
       onSelect: () => openDialog("menu"),
     },
     {
-      label: "Add menu",
-      icon: Plus,
-      onSelect: () => openDialog("createMenu"),
-    },
-    {
       label: "Delete menu",
       icon: Trash2,
       onSelect: () => openDialog("deleteMenu"),
       destructive: true,
+    },
+    {
+      label: "Log out",
+      icon: LogOut,
+      onSelect: handleLogOut,
     },
   ];
 
@@ -256,16 +263,6 @@ const HomeQuickActions = () => {
               setActiveDialog(null);
             }}
           />
-        }
-      />
-
-      <FormDialog
-        title="Create a new menu"
-        description="Add another menu for this business."
-        isDialogOpen={activeDialog === "createMenu"}
-        setIsDialogOpen={(open) => setActiveDialog(open ? "createMenu" : null)}
-        formComponent={
-          <CreateMenuForm onSuccess={() => setActiveDialog(null)} />
         }
       />
 

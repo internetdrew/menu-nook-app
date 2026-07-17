@@ -3,12 +3,16 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
-import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./auth";
 import type { BusinessRecord, MenuRecord } from "@/types/menu";
+import {
+  businessForUserQueryOptions,
+  menusForBusinessQueryOptions,
+} from "@/utils/setupQueries";
 
 interface MenuContextValue {
   business: BusinessRecord | null;
@@ -21,6 +25,7 @@ interface MenuContextValue {
 
 const MenuContext = createContext<MenuContextValue | undefined>(undefined);
 const ACTIVE_MENU_STORAGE_KEY = "activeMenuId";
+const EMPTY_MENUS: MenuRecord[] = [];
 
 const getStoredActiveMenuId = () => {
   if (typeof window === "undefined") {
@@ -34,37 +39,46 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
   children,
 }) => {
   const { user, isLoading: authLoading } = useAuth();
-  const { data: business, isLoading: businessLoading } = useQuery(
-    trpc.business.getForUser.queryOptions(undefined, {
-      enabled: !!user && !authLoading,
-    }),
-  );
+  const { data: business, isLoading: businessLoading } = useQuery({
+    ...businessForUserQueryOptions(),
+    enabled: !!user && !authLoading,
+  });
   const [activeMenuId, setActiveMenuId] = useState<string | null>(
     getStoredActiveMenuId,
   );
+  const [activeMenuOverride, setActiveMenuOverride] =
+    useState<MenuRecord | null>(null);
 
-  const { data, isLoading } = useQuery(
-    trpc.menu.getAllForBusiness.queryOptions(
-      {
-        businessId: business?.id ?? "",
-      },
-      {
-        enabled: !!user && !authLoading && !businessLoading && !!business,
-      },
-    ),
-  );
-  const [activeMenu, setActiveMenuState] = useState<MenuRecord | null>(null);
-  const [activeMenuResolved, setActiveMenuResolved] = useState(false);
+  const { data, isLoading } = useQuery({
+    ...menusForBusinessQueryOptions(business?.id ?? ""),
+    enabled: !!user && !authLoading && !businessLoading && !!business,
+  });
 
-  useEffect(() => {
-    if (authLoading || businessLoading || isLoading) {
-      setActiveMenuResolved(false);
-      return;
+  const menus = data ?? EMPTY_MENUS;
+  const activeMenu = useMemo(() => {
+    if (!business || menus.length === 0) {
+      return null;
     }
 
+    if (
+      activeMenuOverride &&
+      activeMenuId !== null &&
+      String(activeMenuOverride.id) === activeMenuId &&
+      menus.some((menu) => String(menu.id) === activeMenuId)
+    ) {
+      return activeMenuOverride;
+    }
+
+    return (
+      menus.find(
+        (menu) => activeMenuId !== null && String(menu.id) === activeMenuId,
+      ) ?? menus[0]
+    );
+  }, [activeMenuId, activeMenuOverride, business, menus]);
+
+  useEffect(() => {
     if (!user) {
-      setActiveMenuState(null);
-      setActiveMenuResolved(true);
+      setActiveMenuOverride(null);
       setActiveMenuId(null);
       if (typeof window !== "undefined") {
         localStorage.removeItem(ACTIVE_MENU_STORAGE_KEY);
@@ -72,29 +86,22 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
       return;
     }
 
-    if (!business || !data || data.length === 0) {
-      setActiveMenuState(null);
-      setActiveMenuResolved(true);
+    if (!business || menus.length === 0) {
+      setActiveMenuOverride(null);
       return;
     }
 
-    const savedId =
-      activeMenuId ?? getStoredActiveMenuId();
+    if (!activeMenu) return;
 
-    const found =
-      data.find((m) => savedId !== null && String(m.id) === savedId) ?? data[0];
-
-    setActiveMenuState(found);
-    setActiveMenuResolved(true);
-    setActiveMenuId(String(found.id));
+    const nextActiveMenuId = String(activeMenu.id);
+    setActiveMenuId(nextActiveMenuId);
     if (typeof window !== "undefined") {
-      localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, String(found.id));
+      localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, nextActiveMenuId);
     }
-  }, [activeMenuId, authLoading, business, businessLoading, data, isLoading, user]);
+  }, [activeMenu, business, menus.length, user]);
 
   const setActiveMenu = useCallback((m: MenuRecord) => {
-    setActiveMenuState(m);
-    setActiveMenuResolved(true);
+    setActiveMenuOverride(m);
     setActiveMenuId(String(m.id));
     localStorage.setItem(ACTIVE_MENU_STORAGE_KEY, String(m.id));
   }, []);
@@ -102,12 +109,11 @@ export const MenuProvider: React.FC<React.PropsWithChildren> = ({
   const loading =
     authLoading ||
     (!!user && businessLoading) ||
-    (!!user && !!business && isLoading) ||
-    !activeMenuResolved;
+    (!!user && !!business && isLoading);
 
   const value: MenuContextValue = {
     business: business ?? null,
-    menus: data ?? [],
+    menus,
     activeMenu,
     activeMenuId,
     setActiveMenu,

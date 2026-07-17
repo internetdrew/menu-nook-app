@@ -8,3 +8,11 @@ export async function signInWithGoogle() {
     },
   });
 }
+
+export async function signOut() {
+  const { error } = await supabaseBrowserClient.auth.signOut();
+
+  if (error) {
+    throw error;
+  }
+}

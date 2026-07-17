@@ -1,46 +1,47 @@
 import { Toaster } from "@/components/ui/sonner";
-import loginBackground from "@/assets/login-bg.png";
-import { useAuth } from "./contexts/auth";
-import { useQuery } from "@tanstack/react-query";
-import { trpc } from "./utils/trpc";
-import { OnboardingChecklist } from "./components/OnboardingChecklist";
-import { HomePage } from "./routes/HomePage";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useMenuContext } from "./contexts/ActiveMenuContext";
+import { Skeleton } from "./components/ui/skeleton";
+import MenuCategoriesSkeleton from "./components/skeletons/MenuCategoriesSkeleton";
+
+const loadOnboardingChecklist = () =>
+  import("./components/OnboardingChecklist").then((module) => ({
+    default: module.OnboardingChecklist,
+  }));
+const loadHomePage = () =>
+  import("./routes/HomePage").then((module) => ({ default: module.HomePage }));
+
+const OnboardingChecklist = lazy(loadOnboardingChecklist);
+const HomePage = lazy(loadHomePage);
 
 const appViewTransition = {
   duration: 0.22,
   ease: [0.215, 0.61, 0.355, 1],
 } as const;
 
+const HomeShellSkeleton = () => (
+  <div className="pb-10">
+    <div className="mx-auto max-w-xl pt-4 pb-3 backdrop-blur-sm after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-[90%] after:-translate-x-1/2 after:bg-neutral-200/60">
+      <div className="mt-12 flex items-center justify-between">
+        <Skeleton className="h-9 w-40 rounded-md" />
+        <Skeleton className="h-9 w-24 rounded-md" />
+      </div>
+    </div>
+    <div className="mt-12">
+      <MenuCategoriesSkeleton />
+    </div>
+  </div>
+);
+
 function App() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { business, menus, loading: menuSetupLoading } = useMenuContext();
   const wasOnboardingVisible = useRef(false);
   const [hasAcceptedOnboardingSuccess, setHasAcceptedOnboardingSuccess] =
     useState(false);
 
-  const { data: business, isLoading: businessLoading } = useQuery(
-    trpc.business.getForUser.queryOptions(undefined, {
-      enabled: !!user && !authLoading,
-    }),
-  );
-
-  const { data: menus, isLoading: menusLoading } = useQuery(
-    trpc.menu.getAllForBusiness.queryOptions(
-      {
-        businessId: business?.id || "",
-      },
-      { enabled: !!business && !!user && !authLoading },
-    ),
-  );
-
-  const isInitialMenusLoading =
-    !!business &&
-    menusLoading &&
-    menus === undefined &&
-    !wasOnboardingVisible.current;
-  const isAppLoading = authLoading || businessLoading || isInitialMenusLoading;
+  const isAppLoading = menuSetupLoading && !wasOnboardingVisible.current;
   const isSetupComplete = !!business && !!menus?.length;
   const shouldShowOnboardingSuccess =
     isSetupComplete &&
@@ -51,6 +52,12 @@ function App() {
     : !isSetupComplete || shouldShowOnboardingSuccess
       ? "onboarding"
       : "home";
+
+  useEffect(() => {
+    if (business) {
+      void loadHomePage();
+    }
+  }, [business]);
 
   useEffect(() => {
     if (appView === "onboarding") {
@@ -70,18 +77,9 @@ function App() {
 
   return (
     <div className="min-h-dvh">
-      <div
-        className="fixed inset-0 -z-10 bg-[#fff9ef] bg-cover bg-center"
-        style={{
-          backgroundImage: [
-            "radial-gradient(circle at 48% 40%, rgba(255, 250, 241, 0.96) 0, rgba(255, 250, 241, 0.62) 22rem, rgba(255, 250, 241, 0.12) 43rem)",
-            "linear-gradient(180deg, rgba(255, 249, 238, 0.16), rgba(255, 243, 222, 0.32))",
-            `url(${loginBackground})`,
-          ].join(", "),
-        }}
-      />
+      <div className="fixed inset-0 -z-10 bg-stone-100 bg-cover bg-center" />
       <nav className="fixed inset-x-0 top-0 z-40">
-        <p className="title mt-4 text-center font-bold">MenuNook</p>
+        <p className="title mt-4 text-center font-[560] sm:text-lg">MenuNook</p>
       </nav>
       <main className="mx-auto flex min-h-dvh max-w-xl items-start px-4 pb-8">
         <AnimatePresence mode="wait" initial={false}>
@@ -107,11 +105,13 @@ function App() {
               exit={{ opacity: 0, y: -4 }}
               transition={appViewTransition}
             >
-              <OnboardingChecklist
-                business={business}
-                menus={menus}
-                onContinue={() => setHasAcceptedOnboardingSuccess(true)}
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <OnboardingChecklist
+                  business={business}
+                  menus={menus}
+                  onContinue={() => setHasAcceptedOnboardingSuccess(true)}
+                />
+              </Suspense>
             </motion.div>
           ) : (
             <motion.div
@@ -122,7 +122,9 @@ function App() {
               exit={{ opacity: 0, y: -4 }}
               transition={appViewTransition}
             >
-              <HomePage />
+              <Suspense fallback={<HomeShellSkeleton />}>
+                <HomePage />
+              </Suspense>
             </motion.div>
           )}
         </AnimatePresence>

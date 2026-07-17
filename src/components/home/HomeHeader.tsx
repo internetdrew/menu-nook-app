@@ -31,10 +31,11 @@ const HomeHeader = ({
     ),
   );
   const subscriptionIsActive = isMenuSubscriptionActive(subscription);
-  const loadingHeaderAction = loadingMenu || (!!activeMenuId && loadingSubscription);
+  const loadingHeaderAction =
+    loadingMenu || (!!activeMenuId && loadingSubscription);
 
   return (
-    <div className="mx-auto max-w-xl bg-[#fff9ef]/95 pt-4 pb-3 backdrop-blur-sm after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-[90%] after:-translate-x-1/2 after:bg-neutral-200/60">
+    <div className="mx-auto max-w-xl pt-4 pb-3 backdrop-blur-sm after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-[95%] after:-translate-x-1/2 after:bg-neutral-200/60">
       <div className="mt-12 flex items-center justify-between">
         <MenuSwitcher />
         <div className="flex w-24 items-center justify-end">
@@ -63,7 +64,7 @@ const HomeHeader = ({
                     <Button
                       asChild
                       variant="ghost"
-                      className="hover:bg-[#eee7dc]/80 focus-visible:bg-[#eee7dc]/80"
+                      className="hover:bg-stone-200 focus-visible:bg-stone-200"
                     >
                       <Link to={`/preview/menu/${activeMenu.id}`}>
                         <ScrollText />
