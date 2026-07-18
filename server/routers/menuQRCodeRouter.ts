@@ -3,12 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc.js";
 import QRCode from "qrcode";
 import type { MenuRow } from "../utils/menuTypes.js";
-
-const PUBLIC_MENU_DOMAIN =
-  process.env.VITE_PUBLIC_MENU_DOMAIN || "https://menunook.com";
-
-const buildMenuPublicUrl = (menu: Pick<MenuRow, "id" | "slug">) =>
-  `${PUBLIC_MENU_DOMAIN}/m/${menu.slug ?? menu.id}`;
+import { buildStableMenuPublicUrl } from "../utils/menuPublicUrl.js";
 
 export const menuQRCodeRouter = router({
   getPublicUrlForMenu: protectedProcedure
@@ -60,15 +55,13 @@ export const menuQRCodeRouter = router({
         });
       }
 
-      const publicUrl = await QRCode.toDataURL(
-        buildMenuPublicUrl(menu as unknown as MenuRow),
-        {
-          width: 400,
-          margin: 2,
-          color: { dark: "#000000", light: "#FFFFFF" },
-        },
-      );
+      const encodedUrl = buildStableMenuPublicUrl(menu as unknown as MenuRow);
+      const publicUrl = await QRCode.toDataURL(encodedUrl, {
+        width: 400,
+        margin: 2,
+        color: { dark: "#000000", light: "#FFFFFF" },
+      });
 
-      return { public_url: publicUrl };
+      return { public_url: publicUrl, encoded_url: encodedUrl };
     }),
 });

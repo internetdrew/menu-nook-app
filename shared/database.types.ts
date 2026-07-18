@@ -237,18 +237,21 @@ export type Database = {
       menu_qr_codes: {
         Row: {
           created_at: string
+          encoded_url: string | null
           id: number
           menu_id: string
           public_url: string
         }
         Insert: {
           created_at?: string
+          encoded_url?: string | null
           id?: number
           menu_id: string
           public_url: string
         }
         Update: {
           created_at?: string
+          encoded_url?: string | null
           id?: number
           menu_id?: string
           public_url?: string
@@ -263,24 +266,59 @@ export type Database = {
           },
         ]
       }
+      menu_slug_redirects: {
+        Row: {
+          created_at: string
+          id: number
+          menu_id: string
+          slug: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          menu_id: string
+          slug: string
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          menu_id?: string
+          slug?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_slug_redirects_menu_id_fkey"
+            columns: ["menu_id"]
+            isOneToOne: false
+            referencedRelation: "menus"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menus: {
         Row: {
           business_id: string
           created_at: string
           id: string
           name: string
+          slug: string | null
         }
         Insert: {
           business_id: string
           created_at?: string
           id?: string
           name: string
+          slug?: string | null
         }
         Update: {
           business_id?: string
           created_at?: string
           id?: string
           name?: string
+          slug?: string | null
         }
         Relationships: [
           {
@@ -365,7 +403,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_menu_settings: {
+        Args: {
+          p_menu_id: string
+          p_name: string
+          p_slug: string
+        }
+        Returns: Database["public"]["Tables"]["menus"]["Row"]
+      }
     }
     Enums: {
       SUBSCRIPTION_STATUS:

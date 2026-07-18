@@ -16,12 +16,7 @@ import {
   resolveUniqueMenuSlug,
 } from "../utils/menuSlug.js";
 import { menuSlugSchema } from "../../shared/menuSlug.js";
-
-const PUBLIC_MENU_DOMAIN =
-  process.env.VITE_PUBLIC_MENU_DOMAIN || "https://menunook.com";
-
-const buildMenuPublicUrl = (menu: Pick<MenuRow, "id" | "slug">) =>
-  `${PUBLIC_MENU_DOMAIN}/m/${menu.slug ?? menu.id}`;
+import { buildStableMenuPublicUrl } from "../utils/menuPublicUrl.js";
 
 const getOwnedBusiness = async (
   supabase: SupabaseClient<Database>,
@@ -97,7 +92,7 @@ export const menuRouter = router({
       await getOwnedBusiness(ctx.supabase, businessId, ctx.user.id);
 
       const slugBase = name;
-      let slug = await resolveUniqueMenuSlug(ctx.supabase, slugBase);
+      let slug = await resolveUniqueMenuSlug(supabaseAdminClient, slugBase);
       let insertedMenu: MenuRow | null = null;
 
       for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -123,7 +118,7 @@ export const menuRouter = router({
           });
         }
 
-        slug = await resolveUniqueMenuSlug(ctx.supabase, slugBase);
+        slug = await resolveUniqueMenuSlug(supabaseAdminClient, slugBase);
       }
 
       if (!insertedMenu) {
@@ -133,14 +128,12 @@ export const menuRouter = router({
         });
       }
 
-      const qrCodeDataUrl = await QRCode.toDataURL(
-        buildMenuPublicUrl(insertedMenu),
-        {
-          width: 400,
-          margin: 2,
-          color: { dark: "#000000", light: "#FFFFFF" },
-        },
-      );
+      const encodedUrl = buildStableMenuPublicUrl(insertedMenu);
+      const qrCodeDataUrl = await QRCode.toDataURL(encodedUrl, {
+        width: 400,
+        margin: 2,
+        color: { dark: "#000000", light: "#FFFFFF" },
+      });
 
       const base64Data = qrCodeDataUrl.split(",")[1];
       const buffer = Buffer.from(base64Data, "base64");
@@ -170,7 +163,11 @@ export const menuRouter = router({
 
       const { error: insertError } = await ctx.supabase
         .from("menu_qr_codes")
-        .insert({ menu_id: insertedMenu.id, public_url: publicUrl });
+        .insert({
+          menu_id: insertedMenu.id,
+          public_url: publicUrl,
+          encoded_url: encodedUrl,
+        });
 
       if (insertError) {
         throw new TRPCError({
@@ -214,11 +211,15 @@ export const menuRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { menuId, name, slug } = input;
-      const ownedMenu = await getOwnedMenu(ctx.supabase, menuId, ctx.user.id);
+      await getOwnedMenu(ctx.supabase, menuId, ctx.user.id);
 
-      const availability = await checkMenuSlugAvailability(ctx.supabase, slug, {
-        excludeMenuId: menuId,
-      });
+      const availability = await checkMenuSlugAvailability(
+        supabaseAdminClient,
+        slug,
+        {
+          excludeMenuId: menuId,
+        },
+      );
 
       if (!availability.available) {
         throw new TRPCError({
@@ -227,16 +228,17 @@ export const menuRouter = router({
         });
       }
 
-      const { data, error } = await ctx.supabase
-        .from("menus")
-        .update({ name, slug })
-        .eq("id", menuId)
-        .eq("business_id", ownedMenu.business_id)
-        .select()
-        .single();
+      const { data, error } = await ctx.supabase.rpc("update_menu_settings", {
+        p_menu_id: menuId,
+        p_name: name,
+        p_slug: slug,
+      });
 
       if (error) {
-        if (isMenuSlugUniqueViolation(error)) {
+        if (
+          isMenuSlugUniqueViolation(error) ||
+          error.message === "That link is already taken."
+        ) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "That link is already taken.",
@@ -287,7 +289,7 @@ export const menuRouter = router({
     .query(async ({ input, ctx }) => {
       await getOwnedMenu(ctx.supabase, input.menuId, ctx.user.id);
 
-      return checkMenuSlugAvailability(ctx.supabase, input.slug, {
+      return checkMenuSlugAvailability(supabaseAdminClient, input.slug, {
         excludeMenuId: input.menuId,
       });
     }),
