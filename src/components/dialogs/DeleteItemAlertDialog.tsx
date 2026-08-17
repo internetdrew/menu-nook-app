@@ -40,7 +40,7 @@ const DeleteItemAlertDialog = ({
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const deleteItem = useMutation(
-    trpc.menuCategoryItem.delete.mutationOptions(),
+    trpc.storeCategoryItem.delete.mutationOptions(),
   );
 
   if (!item) return null;
@@ -54,10 +54,10 @@ const DeleteItemAlertDialog = ({
         onSuccess: () => {
           toast.success(`${item.name} has been deleted.`);
           queryClient.invalidateQueries({
-            queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
+            queryKey: trpc.storeCategoryItem.getSortedForCategory.queryKey(),
           });
           queryClient.invalidateQueries({
-            queryKey: trpc.menu.getPreview.queryKey(),
+            queryKey: trpc.store.getPreview.queryKey(),
           });
           onOpenChange(false);
         },
@@ -72,7 +72,7 @@ const DeleteItemAlertDialog = ({
   const description = (
     <>
       This action cannot be undone. This will permanently delete{" "}
-      <span className="font-semibold">{item.name}</span> from your menu.
+      <span className="font-semibold">{item.name}</span> from your food page.
     </>
   );
 

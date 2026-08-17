@@ -1,10 +1,10 @@
 import App from "@/App";
-import { MenuProvider } from "@/contexts/ActiveMenuContext";
+import { StoreProvider } from "@/contexts/StoreContext";
 
 export default function HomeRoute() {
   return (
-    <MenuProvider>
+    <StoreProvider>
       <App />
-    </MenuProvider>
+    </StoreProvider>
   );
 }

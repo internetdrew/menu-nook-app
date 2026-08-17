@@ -16,12 +16,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-import { useMenuContext } from "@/contexts/ActiveMenuContext";
-import type { MenuCategoryRecord } from "@/types/menu";
+import { useStoreContext } from "@/contexts/StoreContext";
+import type { StoreCategoryRecord } from "@/types/store";
 
 interface CategoryFormProps {
   onSuccess: () => void;
-  category?: MenuCategoryRecord | null;
+  category?: StoreCategoryRecord | null;
 }
 
 const formSchema = z.object({
@@ -43,13 +43,13 @@ const formSchema = z.object({
 
 const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
   const createCategory = useMutation(
-    trpc.menuCategory.create.mutationOptions(),
+    trpc.storeCategory.create.mutationOptions(),
   );
   const updateCategory = useMutation(
-    trpc.menuCategory.update.mutationOptions(),
+    trpc.storeCategory.update.mutationOptions(),
   );
   const queryClient = useQueryClient();
-  const { activeMenu } = useMenuContext();
+  const { storeId } = useStoreContext();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,12 +66,12 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
         {
           onSuccess: () => {
             queryClient.invalidateQueries({
-              queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
+              queryKey: trpc.storeCategory.getAllSortedByIndex.queryKey(),
             });
-            if (activeMenu) {
+            if (storeId) {
               queryClient.invalidateQueries({
-                queryKey: trpc.menu.getPreview.queryKey({
-                  menuId: activeMenu.id,
+                queryKey: trpc.store.getPreview.queryKey({
+                  storeId,
                 }),
               });
             }
@@ -86,16 +86,16 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
       );
     } else {
       await createCategory.mutateAsync(
-        { menuId: activeMenu?.id ?? "", ...values },
+        { storeId: storeId ?? "", ...values },
         {
           onSuccess: () => {
             queryClient.invalidateQueries({
-              queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
+              queryKey: trpc.storeCategory.getAllSortedByIndex.queryKey(),
             });
-            if (activeMenu) {
+            if (storeId) {
               queryClient.invalidateQueries({
-                queryKey: trpc.menu.getPreview.queryKey({
-                  menuId: activeMenu.id,
+                queryKey: trpc.store.getPreview.queryKey({
+                  storeId,
                 }),
               });
             }
@@ -129,7 +129,7 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
               <FormDescription>
                 {category
                   ? "Update the name of this category."
-                  : "Once created, you can add menu items to this category."}
+                  : "Once created, you can add items to this category."}
               </FormDescription>
               <FormMessage />
             </FormItem>

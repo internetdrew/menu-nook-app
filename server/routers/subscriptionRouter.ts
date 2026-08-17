@@ -4,13 +4,13 @@ import { publicProcedure, router } from "../trpc.js";
 import { supabaseAdminClient } from "../supabase.js";
 
 export const subscriptionRouter = router({
-  getForMenu: publicProcedure
-    .input(z.object({ menuId: z.uuid() }))
+  getForStore: publicProcedure
+    .input(z.object({ storeId: z.uuid() }))
     .query(async ({ input }) => {
       const { data: subscription, error } = await supabaseAdminClient
         .from("subscriptions")
         .select("*")
-        .eq("menu_id", input.menuId)
+        .eq("store_id", input.storeId)
         .maybeSingle();
 
       if (error) {

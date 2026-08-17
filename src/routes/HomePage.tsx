@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
-import type { MenuPreviewCategory } from "@/types/menu";
+import type { StorePreviewCategory } from "@/types/store";
 import HomeHeader from "@/components/home/HomeHeader";
-import MenuCategoriesSkeleton from "@/components/skeletons/MenuCategoriesSkeleton";
+import StoreCategoriesSkeleton from "@/components/skeletons/StoreCategoriesSkeleton";
 
 const CategoriesSection = lazy(
   () => import("@/components/home/CategoriesSection"),
@@ -11,7 +11,7 @@ const HomeQuickActions = lazy(
   () => import("@/components/home/HomeQuickActions"),
 );
 
-export type MenuCategory = MenuPreviewCategory;
+export type StoreCategory = StorePreviewCategory;
 
 export const HomePage = () => {
   const [params, setSearchParams] = useSearchParams();
@@ -38,7 +38,7 @@ export const HomePage = () => {
       <Suspense
         fallback={
           <div className="mt-12">
-            <MenuCategoriesSkeleton />
+            <StoreCategoriesSkeleton />
           </div>
         }
       >

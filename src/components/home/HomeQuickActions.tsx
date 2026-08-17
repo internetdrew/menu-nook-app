@@ -1,25 +1,15 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import {
-  Globe,
-  LogOut,
-  Settings,
-  Store,
-  Trash2,
-  Utensils,
-  X,
-} from "lucide-react";
+import { Globe, LogOut, Settings, Store, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useMenuContext } from "@/contexts/ActiveMenuContext";
+import { useStoreContext } from "@/contexts/StoreContext";
 import { Button } from "../ui/button";
 import FormDialog from "../dialogs/FormDialog";
-import { MenuSettingsForm } from "../forms/MenuSettingsForm";
-import DeleteMenuAlertDialog from "../dialogs/DeleteMenuAlertDialog";
-import { BusinessDetailsForm } from "../forms/BusinessDetailsForm";
-import { BusinessDiscoveryForm } from "../forms/BusinessDiscoveryForm";
+import { StoreDetailsForm } from "../forms/StoreDetailsForm";
+import { StoreDiscoveryForm } from "../forms/StoreDiscoveryForm";
 import { signOut } from "@/lib/auth";
 import { toast } from "sonner";
 
-type QuickActionDialog = "business" | "menu" | "deleteMenu" | "search";
+type QuickActionDialog = "store" | "search";
 
 const actionStagger = 0.035;
 
@@ -31,7 +21,7 @@ const itemTransition = {
 
 const HomeQuickActions = () => {
   const prefersReducedMotion = useReducedMotion();
-  const { business, activeMenu, setActiveMenu } = useMenuContext();
+  const { store } = useStoreContext();
   const [isOpen, setIsOpen] = useState(false);
   const [activeDialog, setActiveDialog] = useState<QuickActionDialog | null>(
     null,
@@ -73,7 +63,7 @@ const HomeQuickActions = () => {
     };
   }, [isOpen]);
 
-  if (!business || !activeMenu) {
+  if (!store) {
     return null;
   }
 
@@ -100,20 +90,9 @@ const HomeQuickActions = () => {
       onSelect: () => openDialog("search"),
     },
     {
-      label: "Business profile",
+      label: "Store profile",
       icon: Store,
-      onSelect: () => openDialog("business"),
-    },
-    {
-      label: "Rename menu",
-      icon: Utensils,
-      onSelect: () => openDialog("menu"),
-    },
-    {
-      label: "Delete menu",
-      icon: Trash2,
-      onSelect: () => openDialog("deleteMenu"),
-      destructive: true,
+      onSelect: () => openDialog("store"),
     },
     {
       label: "Log out",
@@ -140,11 +119,7 @@ const HomeQuickActions = () => {
                   <motion.button
                     key={action.label}
                     type="button"
-                    className={`flex h-10 items-center gap-2 rounded-full border bg-white px-3 text-sm font-medium shadow-sm backdrop-blur-sm transition-colors focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2 focus-visible:outline-none ${
-                      action.destructive
-                        ? "text-destructive hover:bg-destructive/10"
-                        : "text-neutral-900 hover:bg-neutral-50"
-                    }`}
+                    className="flex h-10 items-center gap-2 rounded-full border bg-white px-3 text-sm font-medium text-neutral-900 shadow-sm backdrop-blur-sm transition-colors hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2 focus-visible:outline-none"
                     initial={
                       prefersReducedMotion
                         ? false
@@ -227,51 +202,27 @@ const HomeQuickActions = () => {
 
       <FormDialog
         title="Search Appearance"
-        description="Tune how your business appears in search results."
+        description="Tune how your store appears in search results."
         isDialogOpen={activeDialog === "search"}
-        setIsDialogOpen={(open) => setActiveDialog(open ? "business" : null)}
+        setIsDialogOpen={(open) => setActiveDialog(open ? "search" : null)}
         formComponent={
-          <BusinessDiscoveryForm
-            business={business}
+          <StoreDiscoveryForm
+            store={store}
             onSuccess={() => setActiveDialog(null)}
           />
         }
       />
       <FormDialog
-        title="Business profile"
-        description="Update the business name and logo customers see on your menu."
-        isDialogOpen={activeDialog === "business"}
-        setIsDialogOpen={(open) => setActiveDialog(open ? "business" : null)}
+        title="Store profile"
+        description="Update the store name, link, and logo customers see."
+        isDialogOpen={activeDialog === "store"}
+        setIsDialogOpen={(open) => setActiveDialog(open ? "store" : null)}
         formComponent={
-          <BusinessDetailsForm
-            business={business}
+          <StoreDetailsForm
+            store={store}
             onSuccess={() => setActiveDialog(null)}
           />
         }
-      />
-
-      <FormDialog
-        title="Menu settings"
-        description="Rename the current menu and edit its public link."
-        isDialogOpen={activeDialog === "menu"}
-        setIsDialogOpen={(open) => setActiveDialog(open ? "menu" : null)}
-        formComponent={
-          <MenuSettingsForm
-            menu={activeMenu}
-            onSuccess={(updatedMenu) => {
-              setActiveMenu(updatedMenu);
-              setActiveDialog(null);
-            }}
-          />
-        }
-      />
-
-      <DeleteMenuAlertDialog
-        menu={activeMenu}
-        open={activeDialog === "deleteMenu"}
-        onOpenChange={(open) => setActiveDialog(open ? "deleteMenu" : null)}
-        onDeleted={() => setActiveDialog(null)}
-        showTrigger={false}
       />
     </>
   );

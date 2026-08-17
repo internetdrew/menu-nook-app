@@ -34,121 +34,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      businesses: {
-        Row: {
-          created_at: string
-          id: string
-          image_path: string | null
-          image_url: string | null
-          name: string
-          seo_description: string | null
-          seo_title: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          image_path?: string | null
-          image_url?: string | null
-          name: string
-          seo_description?: string | null
-          seo_title?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          image_path?: string | null
-          image_url?: string | null
-          name?: string
-          seo_description?: string | null
-          seo_title?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      menu_categories: {
+      store_menu_categories: {
         Row: {
           created_at: string
           description: string | null
           id: number
-          menu_id: string
           name: string
+          store_id: string
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: number
-          menu_id: string
           name: string
+          store_id: string
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: number
-          menu_id?: string
           name?: string
+          store_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "menu_categories_menu_id_fkey"
-            columns: ["menu_id"]
+            foreignKeyName: "store_menu_categories_store_id_fkey"
+            columns: ["store_id"]
             isOneToOne: false
-            referencedRelation: "menus"
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
       }
-      menu_category_item_sort_indexes: {
+      store_menu_category_item_sort_indexes: {
         Row: {
           created_at: string
           id: number
-          menu_category_id: number
-          menu_category_item_id: number
           order_index: number
+          store_menu_category_id: number
+          store_menu_category_item_id: number
         }
         Insert: {
           created_at?: string
           id?: number
-          menu_category_id: number
-          menu_category_item_id: number
           order_index: number
+          store_menu_category_id: number
+          store_menu_category_item_id: number
         }
         Update: {
           created_at?: string
           id?: number
-          menu_category_id?: number
-          menu_category_item_id?: number
           order_index?: number
+          store_menu_category_id?: number
+          store_menu_category_item_id?: number
         }
         Relationships: [
           {
             foreignKeyName: "category_items_indexes_category_id_fkey"
-            columns: ["menu_category_id"]
+            columns: ["store_menu_category_id"]
             isOneToOne: false
-            referencedRelation: "menu_categories"
+            referencedRelation: "store_menu_categories"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "item_sort_indexes_item_id_fkey"
-            columns: ["menu_category_item_id"]
+            columns: ["store_menu_category_item_id"]
             isOneToOne: false
-            referencedRelation: "menu_category_items"
+            referencedRelation: "store_menu_category_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smcis_category_id_fkey"
+            columns: ["store_menu_category_id"]
+            isOneToOne: false
+            referencedRelation: "store_menu_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smcis_item_id_fkey"
+            columns: ["store_menu_category_item_id"]
+            isOneToOne: false
+            referencedRelation: "store_menu_category_items"
             referencedColumns: ["id"]
           },
         ]
       }
-      menu_category_items: {
+      store_menu_category_items: {
         Row: {
           created_at: string
           description: string | null
           id: number
           image_path: string | null
           image_url: string | null
-          menu_category_id: number
-          menu_id: string
           name: string
           price: number
+          store_id: string
+          store_menu_category_id: number
           tagline: string | null
           updated_at: string
         }
@@ -158,10 +139,10 @@ export type Database = {
           id?: number
           image_path?: string | null
           image_url?: string | null
-          menu_category_id: number
-          menu_id: string
           name: string
           price: number
+          store_id: string
+          store_menu_category_id: number
           tagline?: string | null
           updated_at?: string
         }
@@ -171,164 +152,136 @@ export type Database = {
           id?: number
           image_path?: string | null
           image_url?: string | null
-          menu_category_id?: number
-          menu_id?: string
           name?: string
           price?: number
+          store_id?: string
+          store_menu_category_id?: number
           tagline?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "menu_category_items_menu_category_id_fkey"
-            columns: ["menu_category_id"]
+            foreignKeyName: "store_menu_category_items_store_id_fkey"
+            columns: ["store_id"]
             isOneToOne: false
-            referencedRelation: "menu_categories"
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "menu_category_items_menu_id_fkey"
-            columns: ["menu_id"]
+            foreignKeyName: "store_menu_category_items_store_menu_category_id_fkey"
+            columns: ["store_menu_category_id"]
             isOneToOne: false
-            referencedRelation: "menus"
+            referencedRelation: "store_menu_categories"
             referencedColumns: ["id"]
           },
         ]
       }
-      menu_category_sort_indexes: {
+      store_menu_category_sort_indexes: {
         Row: {
           category_id: number
           created_at: string
           id: number
-          menu_id: string
           order_index: number
+          store_id: string
         }
         Insert: {
           category_id: number
           created_at?: string
           id?: number
-          menu_id: string
           order_index: number
+          store_id: string
         }
         Update: {
           category_id?: number
           created_at?: string
           id?: number
-          menu_id?: string
           order_index?: number
+          store_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "menu_category_sort_indexes_category_id_fkey"
+            foreignKeyName: "store_menu_category_sort_indexes_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: "menu_categories"
+            referencedRelation: "store_menu_categories"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "menu_category_sort_indexes_menu_id_fkey"
-            columns: ["menu_id"]
+            foreignKeyName: "store_menu_category_sort_indexes_store_id_fkey"
+            columns: ["store_id"]
             isOneToOne: false
-            referencedRelation: "menus"
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
       }
-      menu_qr_codes: {
+      store_menu_qr_codes: {
         Row: {
           created_at: string
           encoded_url: string | null
           id: number
-          menu_id: string
           public_url: string
+          store_id: string
         }
         Insert: {
           created_at?: string
           encoded_url?: string | null
           id?: number
-          menu_id: string
           public_url: string
+          store_id: string
         }
         Update: {
           created_at?: string
           encoded_url?: string | null
           id?: number
-          menu_id?: string
           public_url?: string
+          store_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "menu_qr_codes_menu_id_fkey"
-            columns: ["menu_id"]
+            foreignKeyName: "store_menu_qr_codes_store_id_fkey"
+            columns: ["store_id"]
             isOneToOne: false
-            referencedRelation: "menus"
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
       }
-      menu_slug_redirects: {
+      stores: {
         Row: {
-          created_at: string
-          id: number
-          menu_id: string
-          slug: string
-          source: string
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          menu_id: string
-          slug: string
-          source?: string
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          menu_id?: string
-          slug?: string
-          source?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "menu_slug_redirects_menu_id_fkey"
-            columns: ["menu_id"]
-            isOneToOne: false
-            referencedRelation: "menus"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      menus: {
-        Row: {
-          business_id: string
           created_at: string
           id: string
+          image_path: string | null
+          image_url: string | null
+          menu_seo_description: string | null
+          menu_seo_title: string | null
+          menu_slug: string
           name: string
-          slug: string | null
+          user_id: string
         }
         Insert: {
-          business_id: string
           created_at?: string
           id?: string
+          image_path?: string | null
+          image_url?: string | null
+          menu_seo_description?: string | null
+          menu_seo_title?: string | null
+          menu_slug: string
           name: string
-          slug?: string | null
+          user_id: string
         }
         Update: {
-          business_id?: string
           created_at?: string
           id?: string
+          image_path?: string | null
+          image_url?: string | null
+          menu_seo_description?: string | null
+          menu_seo_title?: string | null
+          menu_slug?: string
           name?: string
-          slug?: string | null
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "menus_2_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -336,8 +289,8 @@ export type Database = {
           current_period_end: string
           current_period_start: string
           id: string
-          menu_id: string
           status: Database["public"]["Enums"]["SUBSCRIPTION_STATUS"]
+          store_id: string
           stripe_customer_id: string
           stripe_price_id: string
           stripe_subscription_id: string
@@ -348,8 +301,8 @@ export type Database = {
           current_period_end: string
           current_period_start: string
           id?: string
-          menu_id: string
           status: Database["public"]["Enums"]["SUBSCRIPTION_STATUS"]
+          store_id: string
           stripe_customer_id: string
           stripe_price_id: string
           stripe_subscription_id: string
@@ -360,8 +313,8 @@ export type Database = {
           current_period_end?: string
           current_period_start?: string
           id?: string
-          menu_id?: string
           status?: Database["public"]["Enums"]["SUBSCRIPTION_STATUS"]
+          store_id?: string
           stripe_customer_id?: string
           stripe_price_id?: string
           stripe_subscription_id?: string
@@ -369,10 +322,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "subscriptions_menu_id_fkey"
-            columns: ["menu_id"]
+            foreignKeyName: "subscriptions_store_id_fkey"
+            columns: ["store_id"]
             isOneToOne: true
-            referencedRelation: "menus"
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -403,14 +356,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      update_menu_settings: {
-        Args: {
-          p_menu_id: string
-          p_name: string
-          p_slug: string
-        }
-        Returns: Database["public"]["Tables"]["menus"]["Row"]
-      }
+      [_ in never]: never
     }
     Enums: {
       SUBSCRIPTION_STATUS:
@@ -565,3 +511,4 @@ export const Constants = {
     },
   },
 } as const
+

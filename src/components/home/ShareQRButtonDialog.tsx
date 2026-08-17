@@ -26,17 +26,17 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface ShareQRButtonDialogProps {
-  activeMenuId: string;
-  activeMenuSlug?: string | null;
-  activeMenuName: string;
+  storeId: string;
+  storeSlug: string;
+  storeName: string;
   mode?: "share" | "launch-success";
   openOnMount?: boolean;
   onLaunchSuccessComplete?: () => void;
 }
 
-const SHARE_TITLE = "Share menu";
-const SHARE_DESCRIPTION = "Scan the QR code or copy the menu link.";
-const LAUNCH_SUCCESS_TITLE = "Your menu is live";
+const SHARE_TITLE = "Share food page";
+const SHARE_DESCRIPTION = "Scan the QR code or copy the food page link.";
+const LAUNCH_SUCCESS_TITLE = "Your food page is live";
 const LAUNCH_SUCCESS_DESCRIPTION =
   "Customers can now view it from this link or scan the QR code.";
 const TEXT_SWAP_DURATION_MS = 120;
@@ -49,13 +49,15 @@ const QR_CONTENT_TRANSITION = {
   ease: [0.26, 0.08, 0.25, 1],
 } as const;
 const QR_REVEAL_DELAY_MS = 180;
-const PUBLIC_MENU_DOMAIN =
-  import.meta.env.VITE_PUBLIC_MENU_DOMAIN || "https://menunook.com";
+const PUBLIC_STORE_DOMAIN =
+  import.meta.env.VITE_PUBLIC_STORE_DOMAIN ||
+  import.meta.env.VITE_PUBLIC_MENU_DOMAIN ||
+  "https://menunook.com";
 
 const ShareQRButtonDialog = ({
-  activeMenuId,
-  activeMenuSlug,
-  activeMenuName,
+  storeId,
+  storeSlug,
+  storeName,
   mode = "share",
   openOnMount = false,
   onLaunchSuccessComplete,
@@ -73,11 +75,11 @@ const ShareQRButtonDialog = ({
   const copyTimeoutRef = useRef<number | undefined>(undefined);
   const textSwapTimeoutRef = useRef<number | undefined>(undefined);
   const qrRevealTimeoutRef = useRef<number | undefined>(undefined);
-  const autoOpenedMenuIdRef = useRef<string | null>(null);
+  const autoOpenedStoreIdRef = useRef<string | null>(null);
   const title = mode === "launch-success" ? LAUNCH_SUCCESS_TITLE : SHARE_TITLE;
   const description =
     mode === "launch-success" ? LAUNCH_SUCCESS_DESCRIPTION : SHARE_DESCRIPTION;
-  const menuUrl = `${PUBLIC_MENU_DOMAIN}/m/${activeMenuSlug ?? activeMenuId}`;
+  const storeUrl = `${PUBLIC_STORE_DOMAIN}/m/${storeSlug}`;
 
   useEffect(() => {
     return () => {
@@ -128,18 +130,18 @@ const ShareQRButtonDialog = ({
   }, [open, prefersReducedMotion]);
 
   useEffect(() => {
-    if (!openOnMount || autoOpenedMenuIdRef.current === activeMenuId) {
+    if (!openOnMount || autoOpenedStoreIdRef.current === storeId) {
       return;
     }
 
-    autoOpenedMenuIdRef.current = activeMenuId;
+    autoOpenedStoreIdRef.current = storeId;
     openShareSurface();
-  }, [activeMenuId, openOnMount]);
+  }, [openOnMount, storeId]);
 
   const { data, isLoading } = useQuery(
-    trpc.menuQRCode.getPublicUrlForMenu.queryOptions(
-      { menuId: activeMenuId },
-      { enabled: !!activeMenuId && (open || openOnMount) },
+    trpc.storeQRCode.getPublicUrlForStore.queryOptions(
+      { storeId },
+      { enabled: !!storeId && (open || openOnMount) },
     ),
   );
   const publicUrl = data?.public_url;
@@ -178,7 +180,7 @@ const ShareQRButtonDialog = ({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${activeMenuName || "menu"}-qr-code.png`;
+      link.download = `${storeName || "store"}-qr-code.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -223,7 +225,7 @@ const ShareQRButtonDialog = ({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(menuUrl);
+      await navigator.clipboard.writeText(storeUrl);
 
       setCopied(true);
       swapCopyLabel("Link copied!");
@@ -293,7 +295,7 @@ const ShareQRButtonDialog = ({
             <div className="bg-muted/40 rounded-md p-3">
               <motion.img
                 src={publicUrl}
-                alt="Menu QR Code"
+                alt="Store QR Code"
                 initial={
                   prefersReducedMotion ? false : { opacity: 0, scale: 0.96 }
                 }
@@ -339,10 +341,10 @@ const ShareQRButtonDialog = ({
       <>
         {description}{" "}
         <a
-          href={menuUrl}
+          href={storeUrl}
           className="inline-flex items-center gap-1 font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-4 transition-colors hover:decoration-neutral-600"
         >
-          View live menu.
+          View live food page.
           <ExternalLink className="size-3.5" />
         </a>
       </>

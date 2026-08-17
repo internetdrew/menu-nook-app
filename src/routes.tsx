@@ -1,17 +1,8 @@
-import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated.tsx";
-import { Navigate } from "react-router";
+import { Navigate, Outlet } from "react-router";
 import { RouteFallback } from "./components/RouteFallback.tsx";
 
 export const routes = [
-  {
-    path: "/menu/:menuId",
-    HydrateFallback: RouteFallback,
-    lazy: async () => {
-      const { Menu } = await import("./routes/Menu.tsx");
-      return { Component: Menu };
-    },
-  },
   {
     path: "/login",
     element: <RedirectIfAuthenticated />,
@@ -27,7 +18,12 @@ export const routes = [
     ],
   },
   {
-    element: <ProtectedRoute redirectTo="/login" />,
+    HydrateFallback: RouteFallback,
+    loader: async () => {
+      const { protectedLoader } = await import("./routes/protectedLoader.ts");
+      return protectedLoader();
+    },
+    element: <Outlet />,
     children: [
       {
         index: true,
@@ -42,15 +38,15 @@ export const routes = [
         },
       },
       {
-        path: "/preview",
-        element: <Navigate to="/" replace />,
+        path: "preview",
+        element: <Navigate to="/preview/store" replace />,
       },
       {
-        path: "/preview/menu/:menuId",
+        path: "preview/store",
         HydrateFallback: RouteFallback,
         lazy: async () => {
-          const { Menu } = await import("./routes/Menu.tsx");
-          return { Component: Menu };
+          const { Store } = await import("./routes/Store.tsx");
+          return { Component: Store };
         },
       },
       {

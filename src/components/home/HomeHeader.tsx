@@ -1,12 +1,11 @@
-import { useMenuContext } from "@/contexts/ActiveMenuContext";
-import { MenuSwitcher } from "../MenuSwitcher";
+import { useStoreContext } from "@/contexts/StoreContext";
 import { Skeleton } from "../ui/skeleton";
 import { AnimatePresence, motion } from "motion/react";
 import { MENU_SWITCHER_ENTER_TRANSITION } from "@/constants";
 import ShareQRButtonDialog from "./ShareQRButtonDialog";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
-import { isMenuSubscriptionActive } from "@/utils/subscription";
+import { isStoreSubscriptionActive } from "@/utils/subscription";
 import { Button } from "../ui/button";
 import { Link } from "react-router";
 import { ScrollText } from "lucide-react";
@@ -20,30 +19,29 @@ const HomeHeader = ({
   showLaunchSuccess = false,
   onLaunchSuccessComplete,
 }: HomeHeaderProps) => {
-  const { activeMenu, activeMenuId, loading: loadingMenu } = useMenuContext();
+  const { store, storeId, loading: loadingStore } = useStoreContext();
   const { data: subscription, isLoading: loadingSubscription } = useQuery(
-    trpc.subscription.getForMenu.queryOptions(
-      { menuId: activeMenuId ?? "" },
+    trpc.subscription.getForStore.queryOptions(
+      { storeId: storeId ?? "" },
       {
-        enabled: !!activeMenuId,
+        enabled: !!storeId,
         refetchInterval: showLaunchSuccess ? 2000 : false,
       },
     ),
   );
-  const subscriptionIsActive = isMenuSubscriptionActive(subscription);
+  const subscriptionIsActive = isStoreSubscriptionActive(subscription);
   const loadingHeaderAction =
-    loadingMenu || (!!activeMenuId && loadingSubscription);
+    loadingStore || (!!storeId && loadingSubscription);
 
   return (
     <div className="mx-auto max-w-xl pt-4 pb-3 backdrop-blur-sm after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-[95%] after:-translate-x-1/2 after:bg-neutral-200/60">
-      <div className="mt-12 flex items-center justify-between">
-        <MenuSwitcher />
+      <div className="mt-16 flex items-center justify-end">
         <div className="flex w-24 items-center justify-end">
           {loadingHeaderAction ? (
             <Skeleton className="h-9 w-full rounded-md" />
           ) : (
             <AnimatePresence mode="wait" initial={false}>
-              {activeMenu ? (
+              {store ? (
                 <motion.div
                   key={subscriptionIsActive ? "share-button" : "preview-link"}
                   initial={{ opacity: 0, scale: 0.98 }}
@@ -53,9 +51,9 @@ const HomeHeader = ({
                 >
                   {subscriptionIsActive ? (
                     <ShareQRButtonDialog
-                      activeMenuId={activeMenu.id}
-                      activeMenuSlug={activeMenu.slug}
-                      activeMenuName={activeMenu.name}
+                      storeId={store.id}
+                      storeSlug={store.menu_slug}
+                      storeName={store.name}
                       mode={showLaunchSuccess ? "launch-success" : "share"}
                       openOnMount={showLaunchSuccess}
                       onLaunchSuccessComplete={onLaunchSuccessComplete}
@@ -66,7 +64,7 @@ const HomeHeader = ({
                       variant="ghost"
                       className="hover:bg-stone-200 focus-visible:bg-stone-200"
                     >
-                      <Link to={`/preview/menu/${activeMenu.id}`}>
+                      <Link to="/preview/store">
                         <ScrollText />
                         Preview
                       </Link>
