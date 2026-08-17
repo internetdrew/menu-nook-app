@@ -59,7 +59,23 @@ export const resolveUniqueStoreSlug = async (
       throw error;
     }
 
-    if (!data) {
+    let redirectQuery = supabase
+      .from("menu_slug_redirects")
+      .select("menu_id")
+      .eq("slug", candidateSlug);
+
+    if (options.excludeMenuId) {
+      redirectQuery = redirectQuery.neq("menu_id", options.excludeMenuId);
+    }
+
+    const { data: redirect, error: redirectError } =
+      await redirectQuery.maybeSingle();
+
+    if (redirectError) {
+      throw redirectError;
+    }
+
+    if (!data && !redirect) {
       return candidateSlug;
     }
   }
@@ -94,7 +110,23 @@ export const checkStoreSlugAvailability = async (
     throw error;
   }
 
-  if (data) {
+  let redirectQuery = supabase
+    .from("menu_slug_redirects")
+    .select("menu_id")
+    .eq("slug", parsed.data);
+
+  if (options.excludeMenuId) {
+    redirectQuery = redirectQuery.neq("menu_id", options.excludeMenuId);
+  }
+
+  const { data: redirect, error: redirectError } =
+    await redirectQuery.maybeSingle();
+
+  if (redirectError) {
+    throw redirectError;
+  }
+
+  if (data || redirect) {
     return {
       available: false,
       slug: parsed.data,
