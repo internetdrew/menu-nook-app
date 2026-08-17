@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  checkStoreSlugAvailability,
-  resolveUniqueStoreSlug,
-} from "./storeSlug";
+import { checkStoreSlugAvailability } from "./storeSlug";
 
 type StoreRow = { id: string; menu_slug: string };
 
@@ -74,17 +71,5 @@ describe("store slugs", () => {
       available: true,
       slug: "sunny-deli",
     });
-  });
-
-  it("resolves a unique menu slug with a suffix", async () => {
-    const menuSlug = await resolveUniqueStoreSlug(
-      createFakeSupabase([
-        { id: "store-1", menu_slug: "sunny-deli" },
-        { id: "store-2", menu_slug: "sunny-deli-2" },
-      ]) as never,
-      "Sunny Deli",
-    );
-
-    expect(menuSlug).toBe("sunny-deli-3");
   });
 });

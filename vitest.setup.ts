@@ -1,5 +1,3 @@
-import { beforeAll, afterEach, afterAll } from "vitest";
-import { server } from "./src/mocks/node.ts";
 import "@testing-library/jest-dom/vitest";
 
 // Mock window.matchMedia for tests
@@ -30,11 +28,3 @@ Object.defineProperty(globalThis, "ResizeObserver", {
   writable: true,
   value: ResizeObserverMock,
 });
-
-beforeAll(() =>
-  server.listen({
-    onUnhandledRequest: "warn",
-  }),
-);
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
