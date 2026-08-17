@@ -4,6 +4,7 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState } from "@/utils/test/userStates";
+import "./storePreview";
 
 const store = {
   id: "11111111-1111-4111-8111-111111111111",

@@ -5,6 +5,8 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
+import "./home";
+import "./Login";
 
 describe("home route", () => {
   it("redirects signed-out visitors to login", async () => {
