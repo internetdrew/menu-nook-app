@@ -7,6 +7,7 @@ import path from "path";
 export default defineConfig({
   test: {
     exclude: [...configDefaults.exclude, "dist/**"],
+    fileParallelism: false,
     setupFiles: ["./vitest.setup.ts"],
     environment: "jsdom",
     globals: true,

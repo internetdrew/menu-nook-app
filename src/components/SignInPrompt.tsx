@@ -38,7 +38,7 @@ export function SignInPrompt() {
       )}
     >
       <p className="text-xl font-semibold text-pretty sm:text-2xl">
-        Let's get your food page online.
+        Let's get your menu online.
       </p>
       <p className="mt-4 text-[15px] font-medium text-neutral-600">
         You'll have something to share in just a few minutes.
