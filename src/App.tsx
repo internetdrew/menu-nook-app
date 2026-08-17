@@ -11,7 +11,7 @@ const loadOnboardingChecklist = () =>
     default: module.OnboardingChecklist,
   }));
 const loadHomePage = () =>
-  import("./routes/HomePage").then((module) => ({ default: module.HomePage }));
+  import("./pages/HomePage").then((module) => ({ default: module.HomePage }));
 
 const OnboardingChecklist = lazy(loadOnboardingChecklist);
 const HomePage = lazy(loadHomePage);

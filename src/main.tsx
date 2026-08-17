@@ -5,7 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import { queryClient } from "./utils/trpc.ts";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./contexts/auth.tsx";
-import { routes } from "./routes.tsx";
+import { routes } from "./routes";
 import { RouteFallback } from "./components/RouteFallback.tsx";
 
 const router = createBrowserRouter(routes);

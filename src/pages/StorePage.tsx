@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUp, ChevronRight, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { NotFound } from "./NotFound";
+import { NotFound } from "./NotFoundPage";
 import StoreUnavailable from "../components/StoreUnavailable";
 import { toast } from "sonner";
 import { Dialog } from "radix-ui";
