@@ -106,7 +106,7 @@ function App() {
 
   return (
     <div className="min-h-dvh">
-      <div className="fixed inset-0 -z-10 bg-stone-100 bg-cover bg-center" />
+      <div className="fixed inset-0 -z-10" />
       <nav className="fixed inset-x-0 top-0 z-40">
         <div className="mx-auto mt-4 flex max-w-xl items-center justify-between px-4">
           <div>

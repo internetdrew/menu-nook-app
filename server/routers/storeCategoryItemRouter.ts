@@ -24,7 +24,6 @@ export const storeCategoryItemRouter = router({
     .mutation(async ({ input, ctx }) => {
       const {
         name,
-        tagline,
         description,
         price,
         imagePath,
@@ -39,7 +38,6 @@ export const storeCategoryItemRouter = router({
           store_id: storeId,
           store_menu_category_id: storeCategoryId,
           name,
-          tagline,
           description,
           price,
           image_path: imagePath,
@@ -110,7 +108,6 @@ export const storeCategoryItemRouter = router({
       const {
         id,
         name,
-        tagline,
         storeCategoryId,
         description,
         price,
@@ -136,7 +133,6 @@ export const storeCategoryItemRouter = router({
         .from("store_menu_category_items")
         .update({
           name,
-          tagline,
           description,
           store_menu_category_id: storeCategoryId,
           price,

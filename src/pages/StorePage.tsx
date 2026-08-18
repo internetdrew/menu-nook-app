@@ -1,25 +1,28 @@
 import { Button } from "@/components/ui/button";
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUp, ChevronRight, X } from "lucide-react";
+import { ArrowUp, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { NotFound } from "./NotFoundPage";
 import StoreUnavailable from "../components/StoreUnavailable";
 import { toast } from "sonner";
 import { Dialog } from "radix-ui";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import {
+  AnimatePresence,
+  LayoutGroup,
+  motion,
+  useReducedMotion,
+} from "motion/react";
 import StorePreviewBanner from "@/components/StorePreviewBanner";
 import StoreLogo from "@/components/StoreLogo";
 import type { Database } from "../../shared/database.types";
@@ -35,6 +38,7 @@ const priceFormatter = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 const dialogEaseOut = [0.215, 0.61, 0.355, 1] as const;
+const getItemImageLayoutId = (itemId: number) => `store-item-image-${itemId}`;
 
 type StoreRecord = Database["public"]["Tables"]["stores"]["Row"];
 export type StoreItem =
@@ -53,10 +57,10 @@ export const Store = () => {
   const { storeSlug } = useParams<{ storeSlug: string }>();
   const { hash, pathname, search } = useLocation();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const prefersReducedMotion = useReducedMotion();
   const { user, isLoading: authLoading } = useAuth();
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
 
   const isPreview = pathname.startsWith("/preview/");
   const successfulSubscription =
@@ -215,7 +219,8 @@ export const Store = () => {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col">
+    <LayoutGroup id="store-item-images">
+      <div className="relative flex min-h-dvh flex-col">
       <StorePreviewBanner
         subscriptionIsActive={subscriptionIsActive}
         publicStoreDomain={publicStoreDomain}
@@ -223,122 +228,134 @@ export const Store = () => {
       />
 
       <div className="mx-auto mt-6 w-full max-w-xl flex-1 px-4">
+        <nav
+          ref={navRef}
+          className="mb-6 flex items-center justify-between gap-4 text-neutral-950"
+        >
+          <h1 className="min-w-0 flex-1 truncate text-left font-semibold">
+            {store.name}
+          </h1>
+          <DropdownMenu
+            open={categoryMenuOpen}
+            onOpenChange={setCategoryMenuOpen}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-neutral-700"
+                aria-label={
+                  categoryMenuOpen
+                    ? "Close category menu"
+                    : "Open category menu"
+                }
+              >
+                {categoryMenuOpen ? (
+                  <X className="size-5" />
+                ) : (
+                  <Menu className="size-5" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="min-w-48 rounded-xl border-0 bg-white p-1.5 shadow-[0_0_0_1px_rgba(17,24,39,0.06),0_14px_34px_rgba(17,24,39,0.12),0_4px_10px_rgba(17,24,39,0.06)]"
+            >
+              <DropdownMenuGroup>
+                {categoriesWithItems?.map((category) => (
+                  <DropdownMenuItem
+                    key={category.id}
+                    className="rounded-md text-sm font-medium"
+                    asChild
+                  >
+                    <Link
+                      replace
+                      to={{ hash: `#${createSlug(category.name)}` }}
+                      className="text-xs font-medium"
+                    >
+                      {category.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </nav>
         {store.image_url && (
           <StoreLogo imageUrl={store.image_url} storeName={store.name} />
         )}
-        <h1 className="text-center text-lg font-semibold">{store.name}</h1>
-        <nav
-          ref={navRef}
-          className="my-6 flex flex-wrap items-center justify-center gap-4 text-neutral-700"
-        >
-          <ul className="flex flex-wrap items-center justify-center gap-6 text-xs">
-            {categoriesWithItems?.map((category) => {
-              return (
-                <li key={category.id}>
-                  <Link
-                    replace
-                    to={{ hash: `#${createSlug(category.name)}` }}
-                    className="decoration-neutral-300 underline-offset-4 transition duration-300 hover:decoration-neutral-600"
-                  >
-                    {category.name}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
 
         {/* Categories and Items */}
         {categoriesWithItems?.length === 0 ? (
           <p className="mt-16 text-center">No categories available.</p>
         ) : (
-          categoriesWithItems?.map((category) => (
+          categoriesWithItems?.map((category, index) => (
             <section key={category.id} className="mt-16">
+              {index > 0 && (
+                <div
+                  aria-hidden="true"
+                  className="mx-auto mb-14 h-px w-36 bg-neutral-100"
+                />
+              )}
               <h3
                 id={createSlug(category.name)}
                 className="scroll-mt-20 text-sm font-medium"
               >
                 {category.name}
               </h3>
-              <p className="mb-4 border-b pb-3 text-xs text-neutral-700">
+              <p className="text-xs font-[460] text-neutral-500">
                 {category.description}
               </p>
 
-              <motion.ul layout className="space-y-6">
+              <motion.ul layout className="mt-6 space-y-6">
                 {category.items?.map((item) => {
-                  const shouldShowDetails = item.description || item.image_url;
-
                   return (
                     <motion.li layout key={item.id}>
-                      <motion.div
-                        onClick={() => {
-                          if (shouldShowDetails) setSelectedItem(item);
-                        }}
-                        onKeyDown={(event) => {
-                          if (
-                            !shouldShowDetails ||
-                            (event.key !== "Enter" && event.key !== " ")
-                          ) {
-                            return;
-                          }
-
-                          event.preventDefault();
-                          setSelectedItem(item);
-                        }}
-                        role={shouldShowDetails ? "button" : undefined}
-                        tabIndex={shouldShowDetails ? 0 : undefined}
-                        aria-label={
-                          shouldShowDetails
-                            ? `View details for ${item.name}`
-                            : undefined
-                        }
-                        className={`block w-full rounded-md text-left ${
-                          shouldShowDetails
-                            ? "group cursor-pointer transition-colors hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-4 focus-visible:outline-none"
-                            : "cursor-default"
-                        }`}
-                      >
-                        <div className="flex gap-4">
+                      <motion.div className="block w-full rounded-md text-left">
+                        <div className="flex gap-2">
                           {item.image_url && (
-                            <motion.img
-                              src={item.image_url}
-                              alt={item.name}
-                              loading="lazy"
-                              decoding="async"
-                              className="size-16 shrink-0 object-cover"
-                              style={{ borderRadius: "12px" }}
-                            />
+                            <button
+                              type="button"
+                              onClick={() => setSelectedItem(item)}
+                              className="group/image size-14 shrink-0 overflow-hidden rounded-xl focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-4 focus-visible:outline-none"
+                              aria-label={`View image for ${item.name}`}
+                            >
+                              <motion.img
+                                layoutId={getItemImageLayoutId(item.id)}
+                                src={item.image_url}
+                                alt={item.name}
+                                loading="lazy"
+                                decoding="async"
+                                className="size-full object-cover"
+                                style={{
+                                  borderRadius: 12,
+                                  willChange: "transform, opacity",
+                                }}
+                                transition={{
+                                  layout: {
+                                    duration: prefersReducedMotion
+                                      ? 0.01
+                                      : 0.28,
+                                    ease: dialogEaseOut,
+                                  },
+                                }}
+                              />
+                            </button>
                           )}
                           <div className="flex-1">
-                            <div className="flex justify-between gap-4 text-sm">
+                            <div className="flex justify-between gap-2 text-sm">
                               <motion.h4 className="font-medium wrap-break-word">
                                 {item.name}
                               </motion.h4>
-                              <div className="flex shrink-0 items-center gap-1">
-                                <motion.span className="text-xs text-neutral-700 tabular-nums">
-                                  {priceFormatter.format(item.price)}
-                                </motion.span>
-                                {shouldShowDetails && (
-                                  <ChevronRight
-                                    aria-hidden="true"
-                                    className="size-4 text-neutral-400 transition-colors group-hover:text-neutral-700"
-                                  />
-                                )}
-                              </div>
+                              <motion.span className="shrink-0 text-xs font-medium text-neutral-700 tabular-nums">
+                                {priceFormatter.format(item.price)}
+                              </motion.span>
                             </div>
-                            {(item.tagline || shouldShowDetails) && (
-                              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                                {item.tagline && (
-                                  <motion.p className="text-muted-foreground line-clamp-2 max-w-md text-xs wrap-break-word">
-                                    {item.tagline}
-                                  </motion.p>
-                                )}
-                                {shouldShowDetails && (
-                                  <span className="text-xs font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-4 transition-colors group-hover:text-neutral-950 group-hover:decoration-neutral-500">
-                                    View details
-                                  </span>
-                                )}
-                              </div>
+                            {item.description && (
+                              <motion.p className="text-muted-foreground mt-1 line-clamp-3 max-w-sm text-xs wrap-break-word">
+                                {item.description}
+                              </motion.p>
                             )}
                           </div>
                         </div>
@@ -351,192 +368,94 @@ export const Store = () => {
           ))
         )}
 
-        {/* Item Dialog */}
-        {isMobile ? (
-          <Drawer
-            open={!!selectedItem}
-            onOpenChange={(open) => {
-              if (!open) {
-                setSelectedItem(null);
-              }
-            }}
-          >
+        {/* Item Image Dialog */}
+        <Dialog.Root
+          open={!!selectedItem}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedItem(null);
+            }
+          }}
+        >
+          <AnimatePresence>
             {selectedItem && (
-              <DrawerContent className="overflow-hidden">
-                <div className="no-scrollbar max-h-[80vh] overflow-y-auto">
-                  {selectedItem.image_url && (
-                    <div className="bg-muted relative aspect-[4/3] max-h-[55dvh] w-full shrink-0 overflow-hidden">
-                      <img
-                        src={selectedItem.image_url}
-                        alt={selectedItem.name}
-                        decoding="async"
-                        className="size-full object-cover"
-                      />
-                      <DrawerClose asChild>
-                        <button
+              <Dialog.Portal forceMount>
+                <Dialog.Overlay asChild>
+                  <motion.div
+                    className="fixed inset-0 z-50 bg-black/20"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{
+                      duration: prefersReducedMotion ? 0.01 : 0.16,
+                    }}
+                  />
+                </Dialog.Overlay>
+                <motion.div
+                  layoutRoot
+                  className="fixed inset-0 z-50 grid place-items-center overflow-y-auto p-4"
+                >
+                  <Dialog.Content forceMount asChild>
+                    <motion.div className="relative my-auto aspect-[4/3] w-full max-w-lg overflow-visible bg-transparent shadow-none outline-none">
+                      <Dialog.Title className="sr-only">
+                        {selectedItem.name} image
+                      </Dialog.Title>
+                      <Dialog.Description className="sr-only">
+                        Full-size item image.
+                      </Dialog.Description>
+                      {selectedItem.image_url && (
+                        <motion.img
+                          layoutId={getItemImageLayoutId(selectedItem.id)}
+                          src={selectedItem.image_url}
+                          alt={selectedItem.name}
+                          decoding="async"
+                          className="size-full object-cover shadow-xl"
+                          style={{
+                            borderRadius: 12,
+                            willChange: "transform, opacity",
+                          }}
+                          transition={{
+                            layout: {
+                              duration: prefersReducedMotion ? 0.01 : 0.28,
+                              ease: dialogEaseOut,
+                            },
+                          }}
+                        />
+                      )}
+                      <Dialog.Close asChild>
+                        <motion.button
                           type="button"
-                          className="absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-white/75 text-neutral-700 shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 focus-visible:outline-none"
-                          aria-label="Close item details"
+                          className="absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-white/70 text-neutral-700 shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 focus-visible:outline-none"
+                          aria-label="Close image"
+                          initial="hidden"
+                          animate="visible"
+                          exit="hidden"
+                          variants={{
+                            hidden: {
+                              opacity: 0,
+                              transition: {
+                                duration: prefersReducedMotion ? 0.01 : 0,
+                              },
+                            },
+                            visible: {
+                              opacity: 1,
+                              transition: {
+                                duration: prefersReducedMotion ? 0.01 : 0.12,
+                                delay: prefersReducedMotion ? 0 : 0.28,
+                              },
+                            },
+                          }}
                         >
                           <X className="size-4" />
-                        </button>
-                      </DrawerClose>
-                    </div>
-                  )}
-                  <DrawerHeader className="px-6 pt-6 pb-2 text-left">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <DrawerTitle>{selectedItem.name}</DrawerTitle>
-                        <p className="text-muted-foreground mt-1 text-sm wrap-break-word">
-                          {selectedItem.tagline}
-                        </p>
-                      </div>
-                      <span className="text-sm text-neutral-700 tabular-nums">
-                        {priceFormatter.format(selectedItem.price)}
-                      </span>
-                    </div>
-                  </DrawerHeader>
-                  {selectedItem.description ? (
-                    <>
-                      <div className="via-border my-4 h-px bg-gradient-to-r from-transparent to-transparent" />
-                      <DrawerDescription className="px-6 pb-6 text-sm wrap-break-word text-neutral-950">
-                        {selectedItem.description}
-                      </DrawerDescription>
-                    </>
-                  ) : (
-                    <DrawerDescription className="sr-only">
-                      Item details.
-                    </DrawerDescription>
-                  )}
-                </div>
-              </DrawerContent>
+                        </motion.button>
+                      </Dialog.Close>
+                    </motion.div>
+                  </Dialog.Content>
+                </motion.div>
+              </Dialog.Portal>
             )}
-          </Drawer>
-        ) : (
-          <Dialog.Root
-            open={!!selectedItem}
-            onOpenChange={(open) => {
-              if (!open) {
-                setSelectedItem(null);
-              }
-            }}
-          >
-            <AnimatePresence>
-              {selectedItem && (
-                <Dialog.Portal forceMount>
-                  <Dialog.Overlay asChild>
-                    <motion.div
-                      className="fixed inset-0 z-50 bg-black/20"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{
-                        duration: prefersReducedMotion ? 0.01 : 0.16,
-                      }}
-                    />
-                  </Dialog.Overlay>
-                  <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto p-4">
-                    <Dialog.Content forceMount asChild>
-                      <motion.div
-                        key={selectedItem.id}
-                        initial={
-                          prefersReducedMotion
-                            ? { opacity: 0 }
-                            : { opacity: 0, y: 8, scale: 0.98 }
-                        }
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{
-                          opacity: 0,
-                          ...(prefersReducedMotion
-                            ? {}
-                            : { y: 6, scale: 0.99 }),
-                        }}
-                        transition={
-                          prefersReducedMotion
-                            ? { duration: 0.01 }
-                            : { duration: 0.22, ease: dialogEaseOut }
-                        }
-                        style={{
-                          borderRadius: 12,
-                          willChange: "transform, opacity",
-                        }}
-                        className="my-auto h-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto bg-white pb-6 shadow-xl outline-none"
-                      >
-                        {selectedItem.image_url && (
-                          <div
-                            className="bg-muted relative aspect-[4/3] max-h-[55dvh] w-full shrink-0 overflow-hidden"
-                            style={{ borderRadius: "12px 12px 0 0" }}
-                          >
-                            <img
-                              src={selectedItem.image_url}
-                              alt={selectedItem.name}
-                              decoding="async"
-                              className="size-full object-cover"
-                            />
-                            <Dialog.Close asChild>
-                              <button
-                                type="button"
-                                className="absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-white/70 text-neutral-700 shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 focus-visible:outline-none"
-                                aria-label="Close item details"
-                              >
-                                <X className="size-4" />
-                              </button>
-                            </Dialog.Close>
-                          </div>
-                        )}
-                        <div className="relative flex gap-4 px-6 pt-6">
-                          {!selectedItem.image_url && (
-                            <Dialog.Close asChild>
-                              <button
-                                type="button"
-                                className="absolute top-4 right-4 grid size-8 place-items-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2 focus-visible:outline-none"
-                                aria-label="Close item details"
-                              >
-                                <X className="size-4" />
-                              </button>
-                            </Dialog.Close>
-                          )}
-                          <div className="min-w-0 flex-1 pr-10">
-                            <div className="flex justify-between gap-4">
-                              <Dialog.Title asChild>
-                                <h4 className="font-medium wrap-break-word">
-                                  {selectedItem.name}
-                                </h4>
-                              </Dialog.Title>
-                              <span className="shrink-0 text-sm text-neutral-700 tabular-nums">
-                                {priceFormatter.format(selectedItem.price)}
-                              </span>
-                            </div>
-                            {selectedItem.tagline && (
-                              <p className="text-muted-foreground mt-1 text-sm wrap-break-word">
-                                {selectedItem.tagline}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        {selectedItem.description ? (
-                          <div className="pb-6">
-                            <div className="via-border my-6 h-px bg-gradient-to-r from-transparent to-transparent" />
-                            <Dialog.Description asChild>
-                              <p className="px-6 text-sm wrap-break-word">
-                                {selectedItem.description}
-                              </p>
-                            </Dialog.Description>
-                          </div>
-                        ) : (
-                          <Dialog.Description className="sr-only">
-                            Item details.
-                          </Dialog.Description>
-                        )}
-                      </motion.div>
-                    </Dialog.Content>
-                  </div>
-                </Dialog.Portal>
-              )}
-            </AnimatePresence>
-          </Dialog.Root>
-        )}
+          </AnimatePresence>
+        </Dialog.Root>
       </div>
       <footer className="mt-auto pt-12">
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-xs">
@@ -562,6 +481,7 @@ export const Store = () => {
       >
         <ArrowUp className="h-5 w-5" />
       </Button>
-    </div>
+      </div>
+    </LayoutGroup>
   );
 };

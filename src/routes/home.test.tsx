@@ -45,7 +45,6 @@ const sandwichCategory = {
       sort_index_id: 1001,
       store_id: store.id,
       store_menu_category_id: 1,
-      tagline: "A classic stacked high.",
     },
   ],
 };
@@ -89,7 +88,6 @@ const useStoreHandlers = ({
       "storeCategoryItem.create": (input) => {
         const values = input as {
           name: string;
-          tagline?: string;
           description?: string;
           price: number;
           storeCategoryId: number;
@@ -107,7 +105,6 @@ const useStoreHandlers = ({
           sort_index_id: 2002,
           store_id: store.id,
           store_menu_category_id: values.storeCategoryId,
-          tagline: values.tagline ?? "",
         };
 
         currentCategories = currentCategories.map((category) =>
@@ -278,7 +275,7 @@ describe("home route", () => {
     });
 
     expect(
-      await screen.findByRole("button", { name: /expand sandwiches/i }),
+      await screen.findByRole("button", { name: /collapse sandwiches/i }),
     ).toBeInTheDocument();
     expect(screen.queryByText("No categories created")).not.toBeInTheDocument();
   });
@@ -336,7 +333,7 @@ describe("home route", () => {
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     expect(
-      await screen.findByRole("button", { name: /expand breakfast/i }),
+      await screen.findByRole("button", { name: /collapse breakfast/i }),
     ).toBeInTheDocument();
   });
 
@@ -349,9 +346,7 @@ describe("home route", () => {
       authMock: authedUserState,
     });
 
-    await user.click(
-      await screen.findByRole("button", { name: /expand sandwiches/i }),
-    );
+    await screen.findByRole("button", { name: /collapse sandwiches/i });
     await user.click(screen.getByRole("button", { name: "Add Item" }));
 
     expect(
@@ -360,12 +355,8 @@ describe("home route", () => {
 
     await user.type(screen.getByLabelText("Item Name"), "Breakfast Burrito");
     await user.type(
-      screen.getByLabelText("Item Tagline"),
-      "Eggs, cheddar, and salsa.",
-    );
-    await user.type(
       screen.getByLabelText("Item Description"),
-      "Wrapped warm and ready to go.",
+      "Eggs, cheddar, salsa, wrapped warm and ready to go.",
     );
     await user.clear(screen.getByLabelText("Price"));
     await user.type(screen.getByLabelText("Price"), "9.75");
