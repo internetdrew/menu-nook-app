@@ -160,7 +160,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply text-foreground bg-stone-100;
+    @apply text-foreground;
     font-family: "Geist Variable", sans-serif;
   }
 }

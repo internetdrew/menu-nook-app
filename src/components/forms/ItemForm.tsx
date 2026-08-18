@@ -24,7 +24,6 @@ import { Field, FieldDescription, FieldLabel } from "../ui/field";
 import {
   ITEM_DESCRIPTION_LIMIT,
   ITEM_NAME_LIMIT,
-  ITEM_TAGLINE_LIMIT,
   storeItemFieldsSchema,
 } from "../../../shared/storeItem";
 import type { StorePreviewCategory, StorePreviewItem } from "@/types/store";
@@ -44,6 +43,7 @@ const formSchema = storeItemFieldsSchema.extend({
 
 const STORE_ITEM_IMAGE_BUCKET = "store_item_images";
 const MAX_RAW_IMAGE_BYTES = 25 * 1024 * 1024;
+const MAX_UPLOAD_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_COMPRESSED_IMAGE_EDGE = 1600;
 const COMPRESSED_IMAGE_TYPE = "image/webp";
 const COMPRESSED_IMAGE_EXTENSION = "webp";
@@ -158,14 +158,12 @@ const ItemForm = (props: ItemFormProps) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: item?.name ?? "",
-      tagline: item?.tagline ?? "",
       description: item?.description ?? "",
       price: item?.price ?? 0,
       categoryId: chosenCategory?.id,
     },
   });
   const nameValue = form.watch("name");
-  const taglineValue = form.watch("tagline");
   const descriptionValue = form.watch("description");
 
   const updateItem = useMutation(
@@ -267,6 +265,15 @@ const ItemForm = (props: ItemFormProps) => {
     try {
       const compressedFile = await compressImageFile(file);
 
+      if (compressedFile.size > MAX_UPLOAD_IMAGE_BYTES) {
+        toast.error(
+          `Please choose a smaller image. The optimized image must be under ${formatBytesAsMb(
+            MAX_UPLOAD_IMAGE_BYTES,
+          )}.`,
+        );
+        return;
+      }
+
       clearPreview();
       setSelectedImageFile(compressedFile);
       setRemovedImage(false);
@@ -313,7 +320,6 @@ const ItemForm = (props: ItemFormProps) => {
           {
             id: item.id,
             name: values.name,
-            tagline: values.tagline,
             description: values.description,
             price: values.price,
             storeCategoryId: chosenCategory?.id,
@@ -346,7 +352,6 @@ const ItemForm = (props: ItemFormProps) => {
     try {
       const createdItem = await createItem.mutateAsync({
         name: values.name,
-        tagline: values.tagline,
         description: values.description,
         price: values.price,
         storeCategoryId: chosenCategory.id,
@@ -362,7 +367,6 @@ const ItemForm = (props: ItemFormProps) => {
         await updateItem.mutateAsync({
           id: createdItem.id,
           name: values.name,
-          tagline: values.tagline,
           description: values.description,
           price: values.price,
           storeCategoryId: chosenCategory.id,
@@ -470,28 +474,6 @@ const ItemForm = (props: ItemFormProps) => {
         />
         <FormField
           control={form.control}
-          name="tagline"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Item Tagline</FormLabel>
-              <FormControl>
-                <Textarea
-                  maxLength={ITEM_TAGLINE_LIMIT}
-                  className="field-sizing-content min-h-12 resize-none"
-                  placeholder="A short line customers see before opening the item."
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                A short optional teaser shown on the food page.{" "}
-                {getRemainingCharacterLabel(taglineValue, ITEM_TAGLINE_LIMIT)}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
@@ -500,12 +482,12 @@ const ItemForm = (props: ItemFormProps) => {
                 <Textarea
                   maxLength={ITEM_DESCRIPTION_LIMIT}
                   className="h-32 resize-none"
-                  placeholder="A longer description customers see after they open the item."
+                  placeholder="A short description customers see under the item name."
                   {...field}
                 />
               </FormControl>
               <FormDescription>
-                A longer optional description revealed inside the item dialog.{" "}
+                Keep it short: ingredients, style, or what makes it special.{" "}
                 {getRemainingCharacterLabel(
                   descriptionValue,
                   ITEM_DESCRIPTION_LIMIT,

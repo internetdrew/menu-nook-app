@@ -1,8 +1,7 @@
 import { z } from "zod";
 
 export const ITEM_NAME_LIMIT = 40;
-export const ITEM_TAGLINE_LIMIT = 60;
-export const ITEM_DESCRIPTION_LIMIT = 250;
+export const ITEM_DESCRIPTION_LIMIT = 160;
 
 export const storeItemFieldsSchema = z.object({
   name: z
@@ -13,13 +12,6 @@ export const storeItemFieldsSchema = z.object({
     .max(ITEM_NAME_LIMIT, {
       message: `Item name must be ${ITEM_NAME_LIMIT} characters or fewer.`,
     }),
-  tagline: z
-    .string()
-    .trim()
-    .max(ITEM_TAGLINE_LIMIT, {
-      message: `Tagline must be ${ITEM_TAGLINE_LIMIT} characters or fewer.`,
-    })
-    .optional(),
   description: z
     .string()
     .trim()

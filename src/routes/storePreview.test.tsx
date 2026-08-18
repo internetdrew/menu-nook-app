@@ -35,8 +35,8 @@ const previewStore = {
           id: 101,
           created_at: "2026-01-01T00:00:00Z",
           description: "Turkey, lettuce, tomato, and house aioli.",
-          image_path: null,
-          image_url: null,
+          image_path: "store/11111111-1111-4111-8111-111111111111/item/101/image.webp",
+          image_url: "https://example.com/turkey-club.webp",
           is_available: true,
           name: "Turkey Club",
           order_index: 0,
@@ -44,7 +44,6 @@ const previewStore = {
           sort_index_id: 1001,
           store_id: store.id,
           store_menu_category_id: 1,
-          tagline: "A classic stacked high.",
         },
       ],
     },
@@ -82,7 +81,7 @@ describe("store preview route", () => {
     ).toBeInTheDocument();
   });
 
-  it("lets an owner inspect item details from the preview", async () => {
+  it("lets an owner inspect an item image from the preview", async () => {
     const user = userEvent.setup();
     usePreviewHandlers();
 
@@ -93,23 +92,17 @@ describe("store preview route", () => {
 
     await user.click(
       await screen.findByRole("button", {
-        name: "View details for Turkey Club",
+        name: "View image for Turkey Club",
       }),
     );
 
-    const detailsDialog = await screen.findByRole("dialog", {
-      name: "Turkey Club",
+    const imageDialog = await screen.findByRole("dialog", {
+      name: "Turkey Club image",
     });
 
     expect(
-      within(detailsDialog).getByRole("heading", { name: "Turkey Club" }),
+      within(imageDialog).getByRole("img", { name: "Turkey Club" }),
     ).toBeInTheDocument();
-    expect(
-      within(detailsDialog).getByText(
-        "Turkey, lettuce, tomato, and house aioli.",
-      ),
-    ).toBeInTheDocument();
-    expect(within(detailsDialog).getByText("$12.50")).toBeInTheDocument();
   });
 
   it("redirects the old preview path to the store preview", async () => {

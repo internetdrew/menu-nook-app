@@ -2,7 +2,13 @@ import { useStoreContext } from "@/contexts/StoreContext";
 import StoreCategoriesSkeleton from "../skeletons/StoreCategoriesSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+} from "react";
 import type { StorePreviewCategory, StorePreviewItem } from "@/types/store";
 import FormDialog from "../dialogs/FormDialog";
 import CategoryForm from "../forms/CategoryForm";
@@ -21,17 +27,26 @@ import CategoryDragAndDrop from "./CategoryDragAndDrop";
 import { Button } from "@/components/ui/button";
 import EmptyCategoriesState from "./EmptyCategoriesState";
 
-const categoriesLoadTransition = {
+const categoriesPanelTransition = {
   duration: 0.22,
   ease: accordionEaseOut,
 } as const;
 
-type CategoryPanelMotionProps = {
-  initial: false | { opacity: number; y: number };
-  animate: { opacity: number; y?: number };
-  exit: { opacity: number; y?: number };
-  transition: { duration: number; ease?: typeof accordionEaseOut };
-};
+const categoriesPanelVariants = {
+  initial: { opacity: 0, y: 8, filter: "blur(3px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  exit: {
+    opacity: 0,
+    y: -4,
+    filter: "blur(3px)",
+    transition: { duration: 0.14, ease: "easeIn" },
+  },
+} as const;
+
+type CategoryPanelMotionProps = Pick<
+  ComponentProps<typeof motion.div>,
+  "initial" | "animate" | "exit" | "transition" | "variants"
+>;
 
 const LoadingCategoriesPanel = ({
   className,
@@ -54,6 +69,7 @@ const CategoriesSection = () => {
   const shouldReduceMotion = useReducedMotion();
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState("");
+  const initializedOpenCategoryStoreIdRef = useRef<string | null>(null);
   const [selectedCategory, setSelectedCategory] =
     useState<StorePreviewCategory | null>(null);
   const [selectedItem, setSelectedItem] = useState<StorePreviewItem | null>(
@@ -78,19 +94,40 @@ const CategoriesSection = () => {
     [storePreview?.store_menu_categories],
   );
 
+  useEffect(() => {
+    if (!storeId) {
+      initializedOpenCategoryStoreIdRef.current = null;
+      setOpenCategory("");
+      return;
+    }
+
+    if (initializedOpenCategoryStoreIdRef.current === storeId) return;
+
+    const firstCategory = fetchedStoreCategories[0];
+    if (!firstCategory) return;
+
+    setOpenCategory(String(firstCategory.id));
+    initializedOpenCategoryStoreIdRef.current = storeId;
+  }, [fetchedStoreCategories, storeId]);
+
   const areStoreCategoriesLoading = loadingStore || (!!storeId && isLoading);
   const categoryPanelMotion: CategoryPanelMotionProps = shouldReduceMotion
     ? {
         initial: false,
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
+        animate: "animate",
+        exit: "exit",
+        variants: {
+          animate: { opacity: 1 },
+          exit: { opacity: 0 },
+        },
         transition: { duration: 0 },
       }
     : {
-        initial: { opacity: 0, y: 6 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -4 },
-        transition: categoriesLoadTransition,
+        initial: "initial",
+        animate: "animate",
+        exit: "exit",
+        variants: categoriesPanelVariants,
+        transition: categoriesPanelTransition,
       };
 
   const handleAddItem = (category: StorePreviewCategory) => {
@@ -137,18 +174,18 @@ const CategoriesSection = () => {
 
   return (
     <>
-      <div className="">
-        <AnimatePresence initial={false}>
+      <motion.div aria-busy={areStoreCategoriesLoading} layout>
+        <AnimatePresence mode="wait" initial={false}>
           {areStoreCategoriesLoading ? (
             <LoadingCategoriesPanel
               key="categories-loading"
-              className="col-start-1 row-start-1"
               motionProps={categoryPanelMotion}
             />
           ) : (
             <motion.div
               key="categories-loaded"
-              className="col-start-1 row-start-1 pr-1 pl-3"
+              className="pr-1 pl-3"
+              layout
               {...categoryPanelMotion}
             >
               <MotionConfig
@@ -187,7 +224,7 @@ const CategoriesSection = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       <FormDialog
         title={

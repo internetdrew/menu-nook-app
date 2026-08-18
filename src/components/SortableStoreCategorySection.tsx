@@ -199,7 +199,6 @@ export function SortableStoreCategorySection({
                   <p className="text-[#7d6b62]">No items in this category.</p>
                 )}
                 <Button
-                  variant="outline"
                   size="sm"
                   className="ml-auto text-xs"
                   onClick={() => onAddItem(category)}
