@@ -1,19 +1,21 @@
-export const noUserState = {
+import type { AuthContextType } from "@/contexts/auth";
+
+export const noUserState: AuthContextType = {
   user: null,
   isLoading: false,
   error: null,
 };
 
-export const authedUserState = {
+export const authedUserState: AuthContextType = {
   user: {
-    id: "123",
-    email: "test@example.com",
+    id: "user-1",
+    email: "owner@example.com",
     app_metadata: {},
     user_metadata: {
-      name: "Mock User",
+      name: "Test Owner",
     },
-    aud: "public",
-    created_at: "2024-01-01T00:00:00Z",
+    aud: "authenticated",
+    created_at: "2026-01-01T00:00:00Z",
   },
   isLoading: false,
   error: null,

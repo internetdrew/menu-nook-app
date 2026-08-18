@@ -1,5 +1,4 @@
-/// <reference types="vitest/config" />
-import { defineConfig } from "vite";
+import { configDefaults, defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
@@ -7,6 +6,7 @@ import path from "path";
 // https://vite.dev/config/
 export default defineConfig({
   test: {
+    exclude: [...configDefaults.exclude, "dist/**"],
     setupFiles: ["./vitest.setup.ts"],
     environment: "jsdom",
     globals: true,

@@ -2,16 +2,16 @@ import { Toaster } from "@/components/ui/sonner";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { AnimatePresence, motion } from "motion/react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { useMenuContext } from "./contexts/ActiveMenuContext";
+import { useStoreContext } from "./contexts/StoreContext";
 import { Skeleton } from "./components/ui/skeleton";
-import MenuCategoriesSkeleton from "./components/skeletons/MenuCategoriesSkeleton";
+import StoreCategoriesSkeleton from "./components/skeletons/StoreCategoriesSkeleton";
 
 const loadOnboardingChecklist = () =>
   import("./components/OnboardingChecklist").then((module) => ({
     default: module.OnboardingChecklist,
   }));
 const loadHomePage = () =>
-  import("./routes/HomePage").then((module) => ({ default: module.HomePage }));
+  import("./pages/HomePage").then((module) => ({ default: module.HomePage }));
 
 const OnboardingChecklist = lazy(loadOnboardingChecklist);
 const HomePage = lazy(loadHomePage);
@@ -24,25 +24,24 @@ const appViewTransition = {
 const HomeShellSkeleton = () => (
   <div className="pb-10">
     <div className="mx-auto max-w-xl pt-4 pb-3 backdrop-blur-sm after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-[90%] after:-translate-x-1/2 after:bg-neutral-200/60">
-      <div className="mt-12 flex items-center justify-between">
-        <Skeleton className="h-9 w-40 rounded-md" />
+      <div className="mt-16 flex items-center justify-end">
         <Skeleton className="h-9 w-24 rounded-md" />
       </div>
     </div>
     <div className="mt-12">
-      <MenuCategoriesSkeleton />
+      <StoreCategoriesSkeleton />
     </div>
   </div>
 );
 
 function App() {
-  const { business, menus, loading: menuSetupLoading } = useMenuContext();
+  const { store, loading: storeSetupLoading } = useStoreContext();
   const wasOnboardingVisible = useRef(false);
   const [hasAcceptedOnboardingSuccess, setHasAcceptedOnboardingSuccess] =
     useState(false);
 
-  const isAppLoading = menuSetupLoading && !wasOnboardingVisible.current;
-  const isSetupComplete = !!business && !!menus?.length;
+  const isAppLoading = storeSetupLoading && !wasOnboardingVisible.current;
+  const isSetupComplete = !!store;
   const shouldShowOnboardingSuccess =
     isSetupComplete &&
     wasOnboardingVisible.current &&
@@ -54,10 +53,10 @@ function App() {
       : "home";
 
   useEffect(() => {
-    if (business) {
+    if (store) {
       void loadHomePage();
     }
-  }, [business]);
+  }, [store]);
 
   useEffect(() => {
     if (appView === "onboarding") {
@@ -79,7 +78,22 @@ function App() {
     <div className="min-h-dvh">
       <div className="fixed inset-0 -z-10 bg-stone-100 bg-cover bg-center" />
       <nav className="fixed inset-x-0 top-0 z-40">
-        <p className="title mt-4 text-center font-[560] sm:text-lg">MenuNook</p>
+        <div className="mx-auto mt-4 max-w-xl px-4 text-center">
+          <p className="title truncate font-[560] sm:text-lg">
+            {store?.name ?? "MenuNook"}
+          </p>
+          {store ? (
+            <p className="text-muted-foreground mt-1 text-xs">
+              Powered by{" "}
+              <a
+                href="https://menunook.com"
+                className="text-neutral-700 underline decoration-neutral-400 underline-offset-4 transition duration-200 hover:decoration-neutral-600"
+              >
+                MenuNook
+              </a>
+            </p>
+          ) : null}
+        </div>
       </nav>
       <main className="mx-auto flex min-h-dvh max-w-xl items-start px-4 pb-8">
         <AnimatePresence mode="wait" initial={false}>
@@ -87,7 +101,7 @@ function App() {
             <motion.div
               key="loading"
               role="status"
-              aria-label="Loading menu setup"
+              aria-label="Loading store setup"
               className="flex w-full justify-center"
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -107,8 +121,7 @@ function App() {
             >
               <Suspense fallback={<LoadingSpinner />}>
                 <OnboardingChecklist
-                  business={business}
-                  menus={menus}
+                  store={store}
                   onContinue={() => setHasAcceptedOnboardingSuccess(true)}
                 />
               </Suspense>

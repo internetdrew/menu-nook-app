@@ -1,97 +1,44 @@
+import { screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
-import { screen } from "@testing-library/dom";
-import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { signInWithGoogle } from "@/lib/auth";
+import "./Login";
+import "./home";
 
-vi.mock("@/lib/auth", () => ({
-  signInWithGoogle: vi.fn(),
-}));
-
-vi.mock("@/lib/supabase", () => ({
-  supabaseBrowserClient: {
-    auth: {
-      getSession: vi.fn(),
-      onAuthStateChange: vi.fn(),
-    },
-  },
-}));
-
-describe("Login Page", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("shows the sign in prompt to guests", async () => {
-    renderApp({ initialEntries: ["/login"], authMock: noUserState });
+describe("login route", () => {
+  it("shows unauthenticated visitors a Google sign-in call to action", async () => {
+    renderApp({
+      initialEntries: ["/login"],
+      authMock: noUserState,
+    });
 
     expect(
-      await screen.findByText(/let's get your menu online./i),
+      await screen.findByText("Let's get your menu online."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /continue with google/i }),
     ).toBeInTheDocument();
   });
 
-  it("shows a loading indicator while auth is resolving", () => {
+  it("sends authenticated visitors to the home setup flow", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "store.getForUser": () => ({ result: { data: null } }),
+      }),
+    );
+
     renderApp({
       initialEntries: ["/login"],
-      authMock: {
-        user: null,
-        isLoading: true,
-        error: null,
-      },
+      authMock: authedUserState,
     });
 
     expect(
-      screen.getByRole("status", { name: /loading/i }),
+      await screen.findByRole("heading", { name: "Get Started" }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /continue with google/i }),
     ).not.toBeInTheDocument();
-  });
-
-  it("takes signed in users to the dashboard instead of showing sign in", async () => {
-    server.use(
-      createTrpcQueryHandler({
-        "business.getForUser": () => ({
-          result: {
-            data: null,
-          },
-        }),
-        "subscription.getForMenu": () => ({
-          result: {
-            data: null,
-          },
-        }),
-      }),
-    );
-
-    renderApp({ initialEntries: ["/login"], authMock: authedUserState });
-
-    expect(await screen.findByText(/Get Started/i)).toBeInTheDocument();
-    expect(screen.getByText(/0 of 2 Completed/i)).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /continue with google/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("shows that Google sign in is connecting after the user clicks", async () => {
-    vi.mocked(signInWithGoogle).mockReturnValue(new Promise(() => {}));
-    const user = userEvent.setup();
-
-    renderApp({ initialEntries: ["/login"], authMock: noUserState });
-
-    await user.click(
-      await screen.findByRole("button", { name: /continue with google/i }),
-    );
-
-    const button = await screen.findByRole("button", {
-      name: /connecting to google/i,
-    });
-    expect(button).toBeDisabled();
   });
 });

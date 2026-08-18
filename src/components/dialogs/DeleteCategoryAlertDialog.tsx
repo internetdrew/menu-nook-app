@@ -22,21 +22,21 @@ import {
   DrawerTitle,
 } from "../ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { MenuCategoryRecord } from "@/types/menu";
+import type { StoreCategoryRecord } from "@/types/store";
 
 const DeleteCategoryAlertDialog = ({
   category,
   open,
   onOpenChange,
 }: {
-  category: Pick<MenuCategoryRecord, "id" | "name"> | null;
+  category: Pick<StoreCategoryRecord, "id" | "name"> | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const deleteCategoryMutation = useMutation(
-    trpc.menuCategory.delete.mutationOptions(),
+    trpc.storeCategory.delete.mutationOptions(),
   );
 
   const deleteCategory = async () => {
@@ -46,13 +46,13 @@ const DeleteCategoryAlertDialog = ({
         {
           onSuccess: () => {
             toast.success(
-              `The ${category.name} category has been deleted from your menu.`,
+              `The ${category.name} category has been deleted from your food page.`,
             );
             queryClient.invalidateQueries({
-              queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
+              queryKey: trpc.storeCategory.getAllSortedByIndex.queryKey(),
             });
             queryClient.invalidateQueries({
-              queryKey: trpc.menu.getPreview.queryKey(),
+              queryKey: trpc.store.getPreview.queryKey(),
             });
             onOpenChange(false);
           },
@@ -77,7 +77,7 @@ const DeleteCategoryAlertDialog = ({
     <>
       This will permanently delete{" "}
       <span className="font-semibold">{category?.name}</span> and all of its
-      associated items from your menu. If you just want to change the name,
+      associated items from your food page. If you just want to change the name,
       cancel this operation use the <span className="font-semibold">Edit</span>{" "}
       option instead.
     </>

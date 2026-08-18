@@ -4,18 +4,16 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { Button } from "@/components/ui/button";
-import { CreateBusinessForm } from "./forms/CreateBusinessForm";
-import { CreateMenuForm } from "./forms/CreateMenuForm";
-import type { BusinessRecord, MenuRecord } from "@/types/menu";
+import { CreateStoreForm } from "./forms/CreateStoreForm";
+import type { StoreRecord } from "@/types/store";
 
 interface OnboardingChecklistProps {
-  business: BusinessRecord | null | undefined;
-  menus: MenuRecord[] | null | undefined;
+  store: StoreRecord | null | undefined;
   onContinue: () => void;
 }
 
-const totalSteps = 2;
-type OnboardingPanel = "checklist" | "businessForm" | "menuForm" | "success";
+const totalSteps = 1;
+type OnboardingPanel = "checklist" | "storeForm" | "success";
 
 const cardTransition = {
   type: "spring",
@@ -41,36 +39,29 @@ const panelVariants = {
 
 const onboardingHeaderTitles = {
   checklist: "Get Started",
-  businessForm: "Name your business",
-  menuForm: "Name your first menu",
+  storeForm: "Set up your store",
 } as const satisfies Record<Exclude<OnboardingPanel, "success">, string>;
 
 export function OnboardingChecklist({
-  business,
-  menus,
+  store,
   onContinue,
 }: OnboardingChecklistProps) {
   const [panel, setPanel] = useState<OnboardingPanel>("checklist");
   const [measureRef, bounds] = useMeasure();
-  const hasBusiness = !!business;
-  const hasMenu = !!menus?.length;
-  const completedSteps = Number(hasBusiness) + Number(hasMenu);
+  const hasStore = !!store;
+  const completedSteps = Number(hasStore);
   const progress = completedSteps / totalSteps;
-  const activeStep = hasBusiness ? "menu" : "business";
 
   useEffect(() => {
-    if (hasBusiness && hasMenu) {
+    if (hasStore) {
       setPanel("success");
       return;
     }
 
-    if (
-      (panel === "businessForm" && hasBusiness) ||
-      (panel === "menuForm" && hasMenu)
-    ) {
+    if (panel === "storeForm" && hasStore) {
       setPanel("checklist");
     }
-  }, [hasBusiness, hasMenu, panel]);
+  }, [hasStore, panel]);
 
   const openPanel = (nextPanel: Exclude<OnboardingPanel, "checklist">) => {
     setPanel(nextPanel);
@@ -106,26 +97,16 @@ export function OnboardingChecklist({
 
               <div className="divide-y divide-neutral-200/50">
                 <OnboardingStep
-                  title={onboardingHeaderTitles.businessForm}
-                  isComplete={hasBusiness}
-                  isActive={activeStep === "business"}
-                  onSelect={() => openPanel("businessForm")}
-                />
-
-                <OnboardingStep
-                  title={onboardingHeaderTitles.menuForm}
-                  isComplete={hasMenu}
-                  isActive={activeStep === "menu"}
-                  isLocked={!hasBusiness}
-                  onSelect={() => openPanel("menuForm")}
+                  title={onboardingHeaderTitles.storeForm}
+                  isComplete={hasStore}
+                  isActive={!hasStore}
+                  onSelect={() => openPanel("storeForm")}
                 />
 
                 <div className="py-3 text-center text-sm font-medium text-[#807d78] select-none">
                   {completedSteps === 0
-                    ? "Exciting, right?"
-                    : completedSteps === 1
-                      ? "Almost there!"
-                      : "You're ready to build your menu"}
+                    ? "Give customers one clear food page."
+                    : "You're ready to build your food page"}
                 </div>
               </div>
             </motion.div>
@@ -153,11 +134,7 @@ export function OnboardingChecklist({
                 title={onboardingHeaderTitles[panel]}
                 onBack={returnToChecklist}
               >
-                {panel === "businessForm" ? (
-                  <CreateBusinessForm onSuccess={returnToChecklist} />
-                ) : (
-                  <CreateMenuForm onSuccess={returnToChecklist} />
-                )}
+                <CreateStoreForm onSuccess={returnToChecklist} />
               </OnboardingFormPanel>
             </motion.div>
           )}
@@ -359,7 +336,7 @@ function OnboardingSuccessPanel({ onContinue }: { onContinue: () => void }) {
         <p className="text-sm leading-6 text-[#807d78]">
           Everything is set up and ready.
           <br />
-          You're good to go!
+          You're ready to build your food page.
         </p>
       </div>
 

@@ -1,10 +1,10 @@
 import { Plus } from "lucide-react";
-import { useMenuContext } from "@/contexts/ActiveMenuContext";
-import MenuCategoriesSkeleton from "../skeletons/MenuCategoriesSkeleton";
+import { useStoreContext } from "@/contexts/StoreContext";
+import StoreCategoriesSkeleton from "../skeletons/StoreCategoriesSkeleton";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { useEffect, useMemo, useState } from "react";
-import type { MenuPreviewCategory, MenuPreviewItem } from "@/types/menu";
+import type { StorePreviewCategory, StorePreviewItem } from "@/types/store";
 import FormDialog from "../dialogs/FormDialog";
 import CategoryForm from "../forms/CategoryForm";
 import {
@@ -34,7 +34,7 @@ import {
 import { accordionEaseOut } from "@/constants";
 import { Accordion } from "radix-ui";
 import { toast } from "sonner";
-import { SortableMenuCategorySection } from "../SortableMenuCategorySection";
+import { SortableStoreCategorySection } from "../SortableStoreCategorySection";
 import DeleteCategoryAlertDialog from "../dialogs/DeleteCategoryAlertDialog";
 import DeleteItemAlertDialog from "../dialogs/DeleteItemAlertDialog";
 import ItemForm from "../forms/ItemForm";
@@ -72,7 +72,7 @@ const LoadingCategoriesPanel = ({
       className={className}
       {...motionProps}
     >
-      <MenuCategoriesSkeleton />
+      <StoreCategoriesSkeleton />
     </motion.div>
   );
 };
@@ -104,17 +104,17 @@ const collisionDetection: CollisionDetection = (args) => {
 };
 
 const CategoriesSection = () => {
-  const { activeMenu, activeMenuId, loading: loadingMenu } = useMenuContext();
+  const { store, storeId, loading: loadingStore } = useStoreContext();
   const queryClient = useQueryClient();
   const shouldReduceMotion = useReducedMotion();
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState("");
-  const [menuCategories, setMenuCategories] = useState<
-    MenuPreviewCategory[] | null
+  const [storeCategories, setStoreCategories] = useState<
+    StorePreviewCategory[] | null
   >(null);
   const [selectedCategory, setSelectedCategory] =
-    useState<MenuPreviewCategory | null>(null);
-  const [selectedItem, setSelectedItem] = useState<MenuPreviewItem | null>(
+    useState<StorePreviewCategory | null>(null);
+  const [selectedItem, setSelectedItem] = useState<StorePreviewItem | null>(
     null,
   );
   const [renderDeleteDialog, setRenderDeleteDialog] = useState(false);
@@ -122,28 +122,28 @@ const CategoriesSection = () => {
   const [isDeleteCategoryDialogOpen, setIsDeleteCategoryDialogOpen] =
     useState(false);
 
-  const { data: menu, isLoading } = useQuery(
-    trpc.menu.getPreview.queryOptions(
-      { menuId: activeMenuId ?? "" },
-      { enabled: !!activeMenuId },
+  const { data: storePreview, isLoading } = useQuery(
+    trpc.store.getPreview.queryOptions(
+      { storeId: storeId ?? "" },
+      { enabled: !!storeId },
     ),
   );
 
   const updateCategoryOrderMutation = useMutation(
-    trpc.menuCategory.updateOrder.mutationOptions(),
+    trpc.storeCategory.updateOrder.mutationOptions(),
   );
   const updateItemOrderMutation = useMutation(
-    trpc.menuCategoryItem.updateSortOrder.mutationOptions(),
+    trpc.storeCategoryItem.updateSortOrder.mutationOptions(),
   );
 
-  const fetchedMenuCategories = useMemo(
-    () => menu?.menu_categories ?? [],
-    [menu?.menu_categories],
+  const fetchedStoreCategories = useMemo(
+    () => storePreview?.store_menu_categories ?? [],
+    [storePreview?.store_menu_categories],
   );
 
-  const areMenuCategoriesLoading =
-    loadingMenu || (!!activeMenuId && isLoading);
-  const displayedMenuCategories = menuCategories ?? fetchedMenuCategories;
+  const areStoreCategoriesLoading =
+    loadingStore || (!!storeId && isLoading);
+  const displayedStoreCategories = storeCategories ?? fetchedStoreCategories;
   const categoryPanelMotion = shouldReduceMotion
     ? {
         initial: false,
@@ -168,13 +168,13 @@ const CategoriesSection = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!over || active.id === over.id || !activeMenu) return;
+    if (!over || active.id === over.id || !store) return;
 
     const activeData = active.data.current as SortableDragData | undefined;
 
     if (activeData?.type === "category") {
-      setMenuCategories((currentCategories) => {
-        const categories = currentCategories ?? fetchedMenuCategories;
+      setStoreCategories((currentCategories) => {
+        const categories = currentCategories ?? fetchedStoreCategories;
         const oldIndex = categories.findIndex(
           (category) => getCategorySortableId(category.id) === active.id,
         );
@@ -203,23 +203,23 @@ const CategoriesSection = () => {
 
         updateCategoryOrderMutation.mutate(
           {
-            menuId: activeMenu.id,
+            storeId: store.id,
             newCategoryOrder,
           },
           {
             onSuccess: () => {
               queryClient.invalidateQueries({
-                queryKey: trpc.menu.getPreview.queryKey(),
+                queryKey: trpc.store.getPreview.queryKey(),
               });
               queryClient.invalidateQueries({
-                queryKey: trpc.menuCategory.getAllSortedByIndex.queryKey(),
+                queryKey: trpc.storeCategory.getAllSortedByIndex.queryKey(),
               });
               toast.success("Category order updated.");
             },
             onError: (error) => {
               console.error("Failed to update category order:", error);
               queryClient.invalidateQueries({
-                queryKey: trpc.menu.getPreview.queryKey(),
+                queryKey: trpc.store.getPreview.queryKey(),
               });
               toast.error("Failed to update category order. Please try again.");
             },
@@ -233,8 +233,8 @@ const CategoriesSection = () => {
     }
 
     if (activeData?.type === "item") {
-      setMenuCategories((currentCategories) => {
-        const categories = currentCategories ?? fetchedMenuCategories;
+      setStoreCategories((currentCategories) => {
+        const categories = currentCategories ?? fetchedStoreCategories;
 
         return categories.map((category) => {
           if (category.id !== activeData.categoryId) return category;
@@ -273,10 +273,10 @@ const CategoriesSection = () => {
             {
               onSuccess: () => {
                 queryClient.invalidateQueries({
-                  queryKey: trpc.menu.getPreview.queryKey(),
+                  queryKey: trpc.store.getPreview.queryKey(),
                 });
                 queryClient.invalidateQueries({
-                  queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(
+                  queryKey: trpc.storeCategoryItem.getSortedForCategory.queryKey(
                     {
                       categoryId: category.id,
                     },
@@ -287,7 +287,7 @@ const CategoriesSection = () => {
               onError: (error) => {
                 console.error("Failed to update item order:", error);
                 queryClient.invalidateQueries({
-                  queryKey: trpc.menu.getPreview.queryKey(),
+                  queryKey: trpc.store.getPreview.queryKey(),
                 });
                 toast.error("Failed to update item order. Please try again.");
               },
@@ -303,25 +303,25 @@ const CategoriesSection = () => {
     }
   };
 
-  const handleAddItem = (category: MenuPreviewCategory) => {
+  const handleAddItem = (category: StorePreviewCategory) => {
     setSelectedCategory(category);
     setSelectedItem(null);
     setIsItemDialogOpen(true);
   };
 
-  const handleEditCategory = (category: MenuPreviewCategory) => {
+  const handleEditCategory = (category: StorePreviewCategory) => {
     setSelectedCategory(category);
     setIsCategoryDialogOpen(true);
   };
 
-  const handleDeleteCategory = (category: MenuPreviewCategory) => {
+  const handleDeleteCategory = (category: StorePreviewCategory) => {
     setSelectedCategory(category);
     setIsDeleteCategoryDialogOpen(true);
   };
 
   const handleEditItem = (
-    item: MenuPreviewItem,
-    category: MenuPreviewCategory,
+    item: StorePreviewItem,
+    category: StorePreviewCategory,
   ) => {
     setSelectedCategory(category);
     setSelectedItem(item);
@@ -329,8 +329,8 @@ const CategoriesSection = () => {
   };
 
   const handleDeleteItem = (
-    item: MenuPreviewItem,
-    category: MenuPreviewCategory,
+    item: StorePreviewItem,
+    category: StorePreviewCategory,
   ) => {
     setSelectedCategory(category);
     setSelectedItem(item);
@@ -338,14 +338,14 @@ const CategoriesSection = () => {
   };
 
   useEffect(() => {
-    setMenuCategories(fetchedMenuCategories);
-  }, [fetchedMenuCategories]);
+    setStoreCategories(fetchedStoreCategories);
+  }, [fetchedStoreCategories]);
 
   return (
     <>
       <div className="mt-12 grid">
         <AnimatePresence initial={false}>
-          {areMenuCategoriesLoading ? (
+          {areStoreCategoriesLoading ? (
             <LoadingCategoriesPanel
               key="categories-loading"
               className="col-start-1 row-start-1"
@@ -361,13 +361,13 @@ const CategoriesSection = () => {
                 transition={{ duration: 0.24, ease: accordionEaseOut }}
               >
                 <DndContext
-                  id="home-menu-preview"
+                  id="home-store-preview"
                   sensors={sensors}
                   collisionDetection={collisionDetection}
                   onDragEnd={handleDragEnd}
                 >
                   <SortableContext
-                    items={displayedMenuCategories.map((category) =>
+                    items={displayedStoreCategories.map((category) =>
                       getCategorySortableId(category.id),
                     )}
                     strategy={verticalListSortingStrategy}
@@ -379,8 +379,8 @@ const CategoriesSection = () => {
                       onValueChange={setOpenCategory}
                       className="space-y-4"
                     >
-                      {displayedMenuCategories.map((category) => (
-                        <SortableMenuCategorySection
+                      {displayedStoreCategories.map((category) => (
+                        <SortableStoreCategorySection
                           key={category.id}
                           category={category}
                           isOpen={openCategory === String(category.id)}

@@ -16,7 +16,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-import { useMenuContext } from "@/contexts/ActiveMenuContext";
+import { useStoreContext } from "@/contexts/StoreContext";
 import { supabaseBrowserClient } from "@/lib/supabase";
 import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -25,24 +25,24 @@ import {
   ITEM_DESCRIPTION_LIMIT,
   ITEM_NAME_LIMIT,
   ITEM_TAGLINE_LIMIT,
-  menuItemFieldsSchema,
-} from "../../../shared/menuItem";
-import type { MenuPreviewCategory, MenuPreviewItem } from "@/types/menu";
+  storeItemFieldsSchema,
+} from "../../../shared/storeItem";
+import type { StorePreviewCategory, StorePreviewItem } from "@/types/store";
 
 interface ItemFormProps {
   onSuccess: () => void;
-  item?: MenuPreviewItem | null;
-  chosenCategory: MenuPreviewCategory | null;
+  item?: StorePreviewItem | null;
+  chosenCategory: StorePreviewCategory | null;
 }
 
 const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
   `${Math.max(limit - (value?.length ?? 0), 0)} characters left`;
 
-const formSchema = menuItemFieldsSchema.extend({
+const formSchema = storeItemFieldsSchema.extend({
   categoryId: z.number(),
 });
 
-const MENU_ITEM_IMAGE_BUCKET = "menu_item_images";
+const STORE_ITEM_IMAGE_BUCKET = "store_item_images";
 const MAX_RAW_IMAGE_BYTES = 25 * 1024 * 1024;
 const MAX_COMPRESSED_IMAGE_EDGE = 1600;
 const COMPRESSED_IMAGE_TYPE = "image/webp";
@@ -54,8 +54,8 @@ const ACCEPTED_IMAGE_INPUT_TYPES = "image/jpeg,image/png,image/webp";
 const formatBytesAsMb = (bytes: number) =>
   `${Math.round((bytes / 1024 / 1024) * 10) / 10}MB`;
 
-const getMenuItemImageFilePath = (
-  menuId: string,
+const getStoreItemImageFilePath = (
+  storeId: string,
   itemId: number,
   file: File,
 ) => {
@@ -63,7 +63,7 @@ const getMenuItemImageFilePath = (
     file.type === COMPRESSED_IMAGE_TYPE
       ? COMPRESSED_IMAGE_EXTENSION
       : file.name.split(".").pop()?.toLowerCase() || "png";
-  return `menu/${menuId}/item/${itemId}/image_${Date.now()}.${extension}`;
+  return `store/${storeId}/item/${itemId}/image_${Date.now()}.${extension}`;
 };
 
 const loadImage = (file: File) =>
@@ -141,7 +141,7 @@ const compressImageFile = async (file: File) => {
 
 const ItemForm = (props: ItemFormProps) => {
   const { onSuccess, item, chosenCategory } = props;
-  const { activeMenu } = useMenuContext();
+  const { store } = useStoreContext();
   const queryClient = useQueryClient();
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -151,7 +151,7 @@ const ItemForm = (props: ItemFormProps) => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
   const createItem = useMutation(
-    trpc.menuCategoryItem.create.mutationOptions(),
+    trpc.storeCategoryItem.create.mutationOptions(),
   );
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -169,7 +169,7 @@ const ItemForm = (props: ItemFormProps) => {
   const descriptionValue = form.watch("description");
 
   const updateItem = useMutation(
-    trpc.menuCategoryItem.update.mutationOptions(),
+    trpc.storeCategoryItem.update.mutationOptions(),
   );
 
   useEffect(() => {
@@ -201,15 +201,15 @@ const ItemForm = (props: ItemFormProps) => {
     previewUrl || (removedImage ? null : item?.image_url);
 
   const uploadItemImage = async (targetItemId: number, file: File) => {
-    const menuId = activeMenu?.id;
+    const storeId = store?.id;
 
-    if (!menuId) {
-      throw new Error("No active menu found for this upload.");
+    if (!storeId) {
+      throw new Error("No active store found for this upload.");
     }
 
-    const filePath = getMenuItemImageFilePath(menuId, targetItemId, file);
+    const filePath = getStoreItemImageFilePath(storeId, targetItemId, file);
     const { error: uploadError } = await supabaseBrowserClient.storage
-      .from(MENU_ITEM_IMAGE_BUCKET)
+      .from(STORE_ITEM_IMAGE_BUCKET)
       .upload(filePath, file, {
         cacheControl: "3600",
         contentType: file.type,
@@ -223,7 +223,7 @@ const ItemForm = (props: ItemFormProps) => {
     const {
       data: { publicUrl },
     } = supabaseBrowserClient.storage
-      .from(MENU_ITEM_IMAGE_BUCKET)
+      .from(STORE_ITEM_IMAGE_BUCKET)
       .getPublicUrl(filePath);
 
     return {
@@ -316,16 +316,16 @@ const ItemForm = (props: ItemFormProps) => {
             tagline: values.tagline,
             description: values.description,
             price: values.price,
-            menuCategoryId: chosenCategory?.id,
+            storeCategoryId: chosenCategory?.id,
             ...imagePayload,
           },
           {
             onSuccess: () => {
               queryClient.invalidateQueries({
-                queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
+                queryKey: trpc.storeCategoryItem.getSortedForCategory.queryKey(),
               });
               queryClient.invalidateQueries({
-                queryKey: trpc.menu.getPreview.queryKey(),
+                queryKey: trpc.store.getPreview.queryKey(),
               });
               toast.success("Item updated successfully!");
               onSuccess();
@@ -349,8 +349,8 @@ const ItemForm = (props: ItemFormProps) => {
         tagline: values.tagline,
         description: values.description,
         price: values.price,
-        menuCategoryId: chosenCategory.id,
-        menuId: activeMenu?.id || "",
+        storeCategoryId: chosenCategory.id,
+        storeId: store?.id || "",
       });
 
       if (selectedImageFile) {
@@ -365,16 +365,16 @@ const ItemForm = (props: ItemFormProps) => {
           tagline: values.tagline,
           description: values.description,
           price: values.price,
-          menuCategoryId: chosenCategory.id,
+          storeCategoryId: chosenCategory.id,
           ...imagePayload,
         });
       }
 
       queryClient.invalidateQueries({
-        queryKey: trpc.menuCategoryItem.getSortedForCategory.queryKey(),
+        queryKey: trpc.storeCategoryItem.getSortedForCategory.queryKey(),
       });
       queryClient.invalidateQueries({
-        queryKey: trpc.menu.getPreview.queryKey(),
+        queryKey: trpc.store.getPreview.queryKey(),
       });
       toast.success("Item created successfully!");
       onSuccess();
@@ -478,12 +478,12 @@ const ItemForm = (props: ItemFormProps) => {
                 <Textarea
                   maxLength={ITEM_TAGLINE_LIMIT}
                   className="field-sizing-content min-h-12 resize-none"
-                  placeholder="A short line customers see in the menu before opening the item."
+                  placeholder="A short line customers see before opening the item."
                   {...field}
                 />
               </FormControl>
               <FormDescription>
-                A short optional teaser shown in the menu list.{" "}
+                A short optional teaser shown on the food page.{" "}
                 {getRemainingCharacterLabel(taglineValue, ITEM_TAGLINE_LIMIT)}
               </FormDescription>
               <FormMessage />

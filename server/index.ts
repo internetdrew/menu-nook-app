@@ -8,15 +8,14 @@ import compression from "compression";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { createServerSupabaseClient } from "./supabase.js";
-import { menuRouter } from "./routers/menuRouter.js";
-import { menuQRCodeRouter } from "./routers/menuQRCodeRouter.js";
-import { menuCategoryRouter } from "./routers/menuCategoryRouter.js";
-import { menuCategoryItemRouter } from "./routers/menuCategoryItemRouter.js";
+import { storeRouter } from "./routers/storeRouter.js";
+import { storeQRCodeRouter } from "./routers/storeQRCodeRouter.js";
+import { storeCategoryRouter } from "./routers/storeCategoryRouter.js";
+import { storeCategoryItemRouter } from "./routers/storeCategoryItemRouter.js";
 import { stripeRouter } from "./routers/stripeRouter.js";
 import { subscriptionRouter } from "./routers/subscriptionRouter.js";
 import { stripeWebhookHandler } from "./utils/stripe.js";
 import { userFeedbackRouter } from "./routers/userFeedbackRouter.js";
-import { businessRouter } from "./routers/businessRouter.js";
 import { fileURLToPath } from "url";
 
 const serverDir = path.dirname(fileURLToPath(import.meta.url));
@@ -24,11 +23,10 @@ const serverDir = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(serverDir, "../.env"), quiet: true });
 
 export const appRouter = router({
-  business: businessRouter,
-  menu: menuRouter,
-  menuQRCode: menuQRCodeRouter,
-  menuCategory: menuCategoryRouter,
-  menuCategoryItem: menuCategoryItemRouter,
+  store: storeRouter,
+  storeQRCode: storeQRCodeRouter,
+  storeCategory: storeCategoryRouter,
+  storeCategoryItem: storeCategoryItemRouter,
   stripe: stripeRouter,
   userFeedback: userFeedbackRouter,
   subscription: subscriptionRouter,

@@ -1,0 +1,5 @@
+alter table if exists public.store_menu_category_item_sort_indexes
+  rename constraint store_menu_category_item_sort_indexes_store_menu_category_id_fk to smcis_category_id_fkey;
+
+alter table if exists public.store_menu_category_item_sort_indexes
+  rename constraint store_menu_category_item_sort_indexes_store_menu_category_item_ to smcis_item_id_fkey;
