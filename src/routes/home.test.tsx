@@ -5,9 +5,11 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
-import "./home";
-import "./Login";
-import "./storePreview";
+import "@/components/OnboardingChecklist";
+import "@/pages/HomePage";
+import "@/pages/HomeRoute";
+import "@/pages/LoginPage";
+import "@/pages/StorePage";
 
 const store = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -125,12 +127,6 @@ const useStoreHandlers = ({
 
 describe("home route", () => {
   it("redirects signed-out visitors to login", async () => {
-    server.use(
-      createTrpcQueryHandler({
-        "store.getForUser": () => ({ result: { data: null } }),
-      }),
-    );
-
     renderApp({
       initialEntries: ["/"],
       authMock: noUserState,

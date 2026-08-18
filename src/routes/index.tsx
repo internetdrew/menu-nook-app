@@ -1,28 +1,44 @@
 import RedirectIfAuthenticated from "@/components/RedirectIfAuthenticated";
-import { Navigate, Outlet } from "react-router";
 import { RouteFallback } from "@/components/RouteFallback";
+import { Navigate, Outlet } from "react-router";
+import { protectedLoader } from "@/loaders/protectedLoader";
+import { NotFound } from "@/pages/NotFoundPage";
+
+const notFoundElement = (
+  <NotFound
+    title="Page Not Found"
+    message="The page you're looking for does not exist."
+    href="/"
+    hrefText="Go back to Home"
+  />
+);
 
 export const routes = [
   {
     path: "/login",
+    HydrateFallback: RouteFallback,
     element: <RedirectIfAuthenticated />,
     children: [
       {
         index: true,
-        HydrateFallback: RouteFallback,
-        lazy: () => import("./Login"),
+        lazy: () =>
+          import("@/pages/LoginPage").then((module) => ({
+            Component: module.default,
+          })),
       },
     ],
   },
   {
     HydrateFallback: RouteFallback,
-    lazy: () => import("./protected"),
+    loader: protectedLoader,
     element: <Outlet />,
     children: [
       {
         index: true,
-        HydrateFallback: RouteFallback,
-        lazy: () => import("./home.tsx"),
+        lazy: () =>
+          import("@/pages/HomeRoute").then((module) => ({
+            Component: module.default,
+          })),
       },
       {
         path: "preview",
@@ -30,13 +46,14 @@ export const routes = [
       },
       {
         path: "preview/store",
-        HydrateFallback: RouteFallback,
-        lazy: () => import("./storePreview"),
+        lazy: () =>
+          import("@/pages/StorePage").then((module) => ({
+            Component: module.Store,
+          })),
       },
       {
         path: "*",
-        HydrateFallback: RouteFallback,
-        lazy: () => import("./NotFound"),
+        element: notFoundElement,
       },
     ],
   },

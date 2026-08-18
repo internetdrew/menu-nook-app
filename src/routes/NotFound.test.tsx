@@ -2,7 +2,6 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState } from "@/utils/test/userStates";
-import "./NotFound";
 
 describe("not found route", () => {
   it("shows a useful not-found message for unknown protected paths", async () => {
