@@ -13,7 +13,7 @@ export type StoreCategory = StorePreviewCategory;
 
 export const HomePage = () => {
   return (
-    <div className="pt-24 pb-10">
+    <div className="pt-32 pb-10">
       <Suspense
         fallback={
           <div className="mt-12">

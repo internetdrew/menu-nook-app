@@ -249,6 +249,40 @@ describe("home route", () => {
     expect(screen.getByText("Turkey Club")).toBeInTheDocument();
   });
 
+  it("shows the empty categories state when a store has no categories", async () => {
+    useStoreHandlers({ categories: [] });
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    expect(await screen.findByText("No categories created")).toBeInTheDocument();
+    expect(
+      screen.getByText(/You haven't created any item categories yet/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /expand sandwiches/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Add Category" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows existing categories instead of the empty state", async () => {
+    useStoreHandlers();
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    expect(
+      await screen.findByRole("button", { name: /expand sandwiches/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No categories created")).not.toBeInTheDocument();
+  });
+
   it("lets an owner open store profile and search appearance settings", async () => {
     const user = userEvent.setup();
     useStoreHandlers();
@@ -292,7 +326,7 @@ describe("home route", () => {
     });
 
     await user.click(
-      await screen.findByRole("button", { name: "New category" }),
+      await screen.findByRole("button", { name: "Add Category" }),
     );
     await user.type(screen.getByLabelText("Category Name"), "Breakfast");
     await user.type(

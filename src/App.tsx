@@ -110,20 +110,9 @@ function App() {
       <nav className="fixed inset-x-0 top-0 z-40">
         <div className="mx-auto mt-4 flex max-w-xl items-center justify-between px-4">
           <div>
-            <h1 className="title truncate font-[560] sm:text-lg">
+            <h1 className="title truncate font-[560]">
               {store?.name ?? "MenuNook"}
             </h1>
-            {store && (
-              <p className="text-muted-foreground mt-1 text-xs">
-                Powered by{" "}
-                <a
-                  href="https://menunook.com"
-                  className="text-neutral-700 underline decoration-neutral-400 underline-offset-4 transition duration-200 hover:decoration-neutral-600"
-                >
-                  MenuNook
-                </a>
-              </p>
-            )}
           </div>
           <div className="flex w-24 items-center justify-end">
             {loadingHeaderAction ? (
@@ -153,6 +142,7 @@ function App() {
                       <Button
                         asChild
                         variant="ghost"
+                        size={"sm"}
                         className="hover:bg-stone-200 focus-visible:bg-stone-200"
                       >
                         <Link to="/preview/store">
