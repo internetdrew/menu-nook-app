@@ -32,29 +32,33 @@ export function AuthProvider({
   useEffect(() => {
     if (initialMock) return;
 
-    supabaseBrowserClient.auth
-      .getSession()
-      .then(({ data: { session }, error }) => {
-        setUser(session?.user ?? null);
+    const loadUser = () => {
+      supabaseBrowserClient.auth.getUser().then(({ data: { user }, error }) => {
+        setUser(user);
         setIsLoading(false);
 
         if (error) {
           setError(error);
+        } else {
+          setError(null);
         }
       });
+    };
+
+    loadUser();
 
     const {
       data: { subscription },
-    } = supabaseBrowserClient.auth.onAuthStateChange((event, session) => {
+    } = supabaseBrowserClient.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         setUser(null);
         setError(null);
+        setIsLoading(false);
         queryClient.clear();
-      } else if (session) {
-        setUser(session.user);
+        return;
       }
 
-      setIsLoading(false);
+      loadUser();
     });
 
     return () => {

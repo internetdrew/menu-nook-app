@@ -24,6 +24,7 @@ import StorePreviewBanner from "@/components/StorePreviewBanner";
 import StoreLogo from "@/components/StoreLogo";
 import type { Database } from "../../shared/database.types";
 import { isStoreSubscriptionActive } from "@/utils/subscription";
+import { useAuth } from "@/contexts/auth";
 
 const publicStoreDomain =
   import.meta.env.VITE_PUBLIC_STORE_DOMAIN ||
@@ -40,9 +41,10 @@ export type StoreItem =
   Database["public"]["Tables"]["store_menu_category_items"]["Row"] & {
     order_index: number;
   };
-type StoreCategory = Database["public"]["Tables"]["store_menu_categories"]["Row"] & {
-  items: StoreItem[];
-};
+type StoreCategory =
+  Database["public"]["Tables"]["store_menu_categories"]["Row"] & {
+    items: StoreItem[];
+  };
 type StoreData = StoreRecord & {
   store_menu_categories: StoreCategory[];
 };
@@ -53,6 +55,7 @@ export const Store = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const prefersReducedMotion = useReducedMotion();
+  const { user, isLoading: authLoading } = useAuth();
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
 
   const isPreview = pathname.startsWith("/preview/");
@@ -61,7 +64,7 @@ export const Store = () => {
 
   const userStoreQuery = useQuery(
     trpc.store.getForUser.queryOptions(undefined, {
-      enabled: isPreview,
+      enabled: isPreview && !authLoading && !!user,
     }),
   );
 
@@ -90,7 +93,7 @@ export const Store = () => {
     | null
     | undefined;
   const storeIsLoading = isPreview
-    ? userStoreQuery.isLoading || previewStoreIsLoading
+    ? authLoading || userStoreQuery.isLoading || previewStoreIsLoading
     : publicStoreQuery.isLoading;
   const error = isPreview
     ? userStoreQuery.error || previewStoreError
