@@ -292,7 +292,7 @@ describe("home route", () => {
     });
 
     await user.click(
-      await screen.findByRole("button", { name: "New category" }),
+      await screen.findByRole("button", { name: "Add Category" }),
     );
     await user.type(screen.getByLabelText("Category Name"), "Breakfast");
     await user.type(
