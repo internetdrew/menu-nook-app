@@ -6,15 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { createSlug } from "@/utils/createSlug";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +17,12 @@ import { NotFound } from "./NotFoundPage";
 import StoreUnavailable from "../components/StoreUnavailable";
 import { toast } from "sonner";
 import { Dialog } from "radix-ui";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import {
+  AnimatePresence,
+  LayoutGroup,
+  motion,
+  useReducedMotion,
+} from "motion/react";
 import StorePreviewBanner from "@/components/StorePreviewBanner";
 import StoreLogo from "@/components/StoreLogo";
 import type { Database } from "../../shared/database.types";
@@ -41,6 +38,7 @@ const priceFormatter = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 const dialogEaseOut = [0.215, 0.61, 0.355, 1] as const;
+const getItemImageLayoutId = (itemId: number) => `store-item-image-${itemId}`;
 
 type StoreRecord = Database["public"]["Tables"]["stores"]["Row"];
 export type StoreItem =
@@ -59,7 +57,6 @@ export const Store = () => {
   const { storeSlug } = useParams<{ storeSlug: string }>();
   const { hash, pathname, search } = useLocation();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const prefersReducedMotion = useReducedMotion();
   const { user, isLoading: authLoading } = useAuth();
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
@@ -222,7 +219,8 @@ export const Store = () => {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col">
+    <LayoutGroup id="store-item-images">
+      <div className="relative flex min-h-dvh flex-col">
       <StorePreviewBanner
         subscriptionIsActive={subscriptionIsActive}
         publicStoreDomain={publicStoreDomain}
@@ -324,11 +322,24 @@ export const Store = () => {
                               aria-label={`View image for ${item.name}`}
                             >
                               <motion.img
+                                layoutId={getItemImageLayoutId(item.id)}
                                 src={item.image_url}
                                 alt={item.name}
                                 loading="lazy"
                                 decoding="async"
-                                className="size-full object-cover transition duration-200 group-hover/image:scale-105"
+                                className="size-full object-cover"
+                                style={{
+                                  borderRadius: 12,
+                                  willChange: "transform, opacity",
+                                }}
+                                transition={{
+                                  layout: {
+                                    duration: prefersReducedMotion
+                                      ? 0.01
+                                      : 0.28,
+                                    ease: dialogEaseOut,
+                                  },
+                                }}
                               />
                             </button>
                           )}
@@ -357,132 +368,94 @@ export const Store = () => {
           ))
         )}
 
-        {/* Item Dialog */}
-        {isMobile ? (
-          <Drawer
-            open={!!selectedItem}
-            onOpenChange={(open) => {
-              if (!open) {
-                setSelectedItem(null);
-              }
-            }}
-          >
+        {/* Item Image Dialog */}
+        <Dialog.Root
+          open={!!selectedItem}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedItem(null);
+            }
+          }}
+        >
+          <AnimatePresence>
             {selectedItem && (
-              <DrawerContent className="overflow-hidden">
-                <DrawerTitle className="sr-only">
-                  {selectedItem.name} image
-                </DrawerTitle>
-                <DrawerDescription className="sr-only">
-                  Full-size item image.
-                </DrawerDescription>
-                {selectedItem.image_url && (
-                  <div className="bg-muted relative aspect-[4/3] max-h-[70dvh] w-full shrink-0 overflow-hidden">
-                    <img
-                      src={selectedItem.image_url}
-                      alt={selectedItem.name}
-                      decoding="async"
-                      className="size-full object-cover"
-                    />
-                    <DrawerClose asChild>
-                      <button
-                        type="button"
-                        className="absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-white/75 text-neutral-700 shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 focus-visible:outline-none"
-                        aria-label="Close image"
-                      >
-                        <X className="size-4" />
-                      </button>
-                    </DrawerClose>
-                  </div>
-                )}
-              </DrawerContent>
+              <Dialog.Portal forceMount>
+                <Dialog.Overlay asChild>
+                  <motion.div
+                    className="fixed inset-0 z-50 bg-black/20"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{
+                      duration: prefersReducedMotion ? 0.01 : 0.16,
+                    }}
+                  />
+                </Dialog.Overlay>
+                <motion.div
+                  layoutRoot
+                  className="fixed inset-0 z-50 grid place-items-center overflow-y-auto p-4"
+                >
+                  <Dialog.Content forceMount asChild>
+                    <motion.div className="relative my-auto aspect-[4/3] w-full max-w-lg overflow-visible bg-transparent shadow-none outline-none">
+                      <Dialog.Title className="sr-only">
+                        {selectedItem.name} image
+                      </Dialog.Title>
+                      <Dialog.Description className="sr-only">
+                        Full-size item image.
+                      </Dialog.Description>
+                      {selectedItem.image_url && (
+                        <motion.img
+                          layoutId={getItemImageLayoutId(selectedItem.id)}
+                          src={selectedItem.image_url}
+                          alt={selectedItem.name}
+                          decoding="async"
+                          className="size-full object-cover shadow-xl"
+                          style={{
+                            borderRadius: 12,
+                            willChange: "transform, opacity",
+                          }}
+                          transition={{
+                            layout: {
+                              duration: prefersReducedMotion ? 0.01 : 0.28,
+                              ease: dialogEaseOut,
+                            },
+                          }}
+                        />
+                      )}
+                      <Dialog.Close asChild>
+                        <motion.button
+                          type="button"
+                          className="absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-white/70 text-neutral-700 shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 focus-visible:outline-none"
+                          aria-label="Close image"
+                          initial="hidden"
+                          animate="visible"
+                          exit="hidden"
+                          variants={{
+                            hidden: {
+                              opacity: 0,
+                              transition: {
+                                duration: prefersReducedMotion ? 0.01 : 0,
+                              },
+                            },
+                            visible: {
+                              opacity: 1,
+                              transition: {
+                                duration: prefersReducedMotion ? 0.01 : 0.12,
+                                delay: prefersReducedMotion ? 0 : 0.28,
+                              },
+                            },
+                          }}
+                        >
+                          <X className="size-4" />
+                        </motion.button>
+                      </Dialog.Close>
+                    </motion.div>
+                  </Dialog.Content>
+                </motion.div>
+              </Dialog.Portal>
             )}
-          </Drawer>
-        ) : (
-          <Dialog.Root
-            open={!!selectedItem}
-            onOpenChange={(open) => {
-              if (!open) {
-                setSelectedItem(null);
-              }
-            }}
-          >
-            <AnimatePresence>
-              {selectedItem && (
-                <Dialog.Portal forceMount>
-                  <Dialog.Overlay asChild>
-                    <motion.div
-                      className="fixed inset-0 z-50 bg-black/20"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{
-                        duration: prefersReducedMotion ? 0.01 : 0.16,
-                      }}
-                    />
-                  </Dialog.Overlay>
-                  <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto p-4">
-                    <Dialog.Content forceMount asChild>
-                      <motion.div
-                        key={selectedItem.id}
-                        initial={
-                          prefersReducedMotion
-                            ? { opacity: 0 }
-                            : { opacity: 0, y: 8, scale: 0.98 }
-                        }
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{
-                          opacity: 0,
-                          ...(prefersReducedMotion
-                            ? {}
-                            : { y: 6, scale: 0.99 }),
-                        }}
-                        transition={
-                          prefersReducedMotion
-                            ? { duration: 0.01 }
-                            : { duration: 0.22, ease: dialogEaseOut }
-                        }
-                        style={{
-                          borderRadius: 12,
-                          willChange: "transform, opacity",
-                        }}
-                        className="my-auto h-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-hidden bg-white shadow-xl outline-none"
-                      >
-                        <Dialog.Title className="sr-only">
-                          {selectedItem.name} image
-                        </Dialog.Title>
-                        <Dialog.Description className="sr-only">
-                          Full-size item image.
-                        </Dialog.Description>
-                        {selectedItem.image_url && (
-                          <div
-                            className="bg-muted relative aspect-[4/3] max-h-[calc(100dvh-2rem)] w-full shrink-0 overflow-hidden"
-                            style={{ borderRadius: 12 }}
-                          >
-                            <img
-                              src={selectedItem.image_url}
-                              alt={selectedItem.name}
-                              decoding="async"
-                              className="size-full object-cover"
-                            />
-                            <Dialog.Close asChild>
-                              <button
-                                type="button"
-                                className="absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-white/70 text-neutral-700 shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 focus-visible:outline-none"
-                                aria-label="Close image"
-                              >
-                                <X className="size-4" />
-                              </button>
-                            </Dialog.Close>
-                          </div>
-                        )}
-                      </motion.div>
-                    </Dialog.Content>
-                  </div>
-                </Dialog.Portal>
-              )}
-            </AnimatePresence>
-          </Dialog.Root>
-        )}
+          </AnimatePresence>
+        </Dialog.Root>
       </div>
       <footer className="mt-auto pt-12">
         <div className="text-muted-foreground mx-auto my-8 max-w-screen-sm px-4 text-center text-xs">
@@ -508,6 +481,7 @@ export const Store = () => {
       >
         <ArrowUp className="h-5 w-5" />
       </Button>
-    </div>
+      </div>
+    </LayoutGroup>
   );
 };
