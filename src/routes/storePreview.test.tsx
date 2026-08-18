@@ -1,4 +1,5 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
@@ -79,6 +80,36 @@ describe("store preview route", () => {
     expect(
       screen.getByRole("button", { name: "subscribe" }),
     ).toBeInTheDocument();
+  });
+
+  it("lets an owner inspect item details from the preview", async () => {
+    const user = userEvent.setup();
+    usePreviewHandlers();
+
+    renderApp({
+      initialEntries: ["/preview/store"],
+      authMock: authedUserState,
+    });
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: "View details for Turkey Club",
+      }),
+    );
+
+    const detailsDialog = await screen.findByRole("dialog", {
+      name: "Turkey Club",
+    });
+
+    expect(
+      within(detailsDialog).getByRole("heading", { name: "Turkey Club" }),
+    ).toBeInTheDocument();
+    expect(
+      within(detailsDialog).getByText(
+        "Turkey, lettuce, tomato, and house aioli.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(detailsDialog).getByText("$12.50")).toBeInTheDocument();
   });
 
   it("redirects the old preview path to the store preview", async () => {
