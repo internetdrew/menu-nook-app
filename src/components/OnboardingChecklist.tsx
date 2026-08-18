@@ -1,6 +1,5 @@
-import { ArrowLeft, Check, Circle, Play } from "lucide-react";
+import { Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { Button } from "@/components/ui/button";
@@ -12,8 +11,7 @@ interface OnboardingChecklistProps {
   onContinue: () => void;
 }
 
-const totalSteps = 1;
-type OnboardingPanel = "checklist" | "storeForm" | "success";
+type OnboardingPanel = "storeForm" | "success";
 
 const cardTransition = {
   type: "spring",
@@ -37,39 +35,19 @@ const panelVariants = {
   },
 } as const;
 
-const onboardingHeaderTitles = {
-  checklist: "Get Started",
-  storeForm: "Set up your store",
-} as const satisfies Record<Exclude<OnboardingPanel, "success">, string>;
-
 export function OnboardingChecklist({
   store,
   onContinue,
 }: OnboardingChecklistProps) {
-  const [panel, setPanel] = useState<OnboardingPanel>("checklist");
+  const [panel, setPanel] = useState<OnboardingPanel>(
+    store ? "success" : "storeForm",
+  );
   const [measureRef, bounds] = useMeasure();
   const hasStore = !!store;
-  const completedSteps = Number(hasStore);
-  const progress = completedSteps / totalSteps;
 
   useEffect(() => {
-    if (hasStore) {
-      setPanel("success");
-      return;
-    }
-
-    if (panel === "storeForm" && hasStore) {
-      setPanel("checklist");
-    }
-  }, [hasStore, panel]);
-
-  const openPanel = (nextPanel: Exclude<OnboardingPanel, "checklist">) => {
-    setPanel(nextPanel);
-  };
-
-  const returnToChecklist = () => {
-    setPanel("checklist");
-  };
+    setPanel(hasStore ? "success" : "storeForm");
+  }, [hasStore]);
 
   return (
     <motion.section
@@ -80,37 +58,7 @@ export function OnboardingChecklist({
     >
       <div ref={measureRef}>
         <AnimatePresence mode="popLayout" initial={false}>
-          {panel === "checklist" ? (
-            <motion.div
-              key="checklist"
-              variants={panelVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={panelTransition}
-            >
-              <OnboardingPanelHeader
-                title={onboardingHeaderTitles.checklist}
-                completedSteps={completedSteps}
-                progress={progress}
-              />
-
-              <div className="divide-y divide-neutral-200/50">
-                <OnboardingStep
-                  title={onboardingHeaderTitles.storeForm}
-                  isComplete={hasStore}
-                  isActive={!hasStore}
-                  onSelect={() => openPanel("storeForm")}
-                />
-
-                <div className="py-3 text-center text-sm font-medium text-[#807d78] select-none">
-                  {completedSteps === 0
-                    ? "Give customers one clear food page."
-                    : "You're ready to build your food page"}
-                </div>
-              </div>
-            </motion.div>
-          ) : panel === "success" ? (
+          {panel === "success" ? (
             <motion.div
               key="success"
               variants={panelVariants}
@@ -123,19 +71,14 @@ export function OnboardingChecklist({
             </motion.div>
           ) : (
             <motion.div
-              key={panel}
+              key="storeForm"
               variants={panelVariants}
               initial="initial"
               animate="animate"
               exit="exit"
               transition={panelTransition}
             >
-              <OnboardingFormPanel
-                title={onboardingHeaderTitles[panel]}
-                onBack={returnToChecklist}
-              >
-                <CreateStoreForm onSuccess={returnToChecklist} />
-              </OnboardingFormPanel>
+              <OnboardingFormPanel />
             </motion.div>
           )}
         </AnimatePresence>
@@ -146,39 +89,12 @@ export function OnboardingChecklist({
 
 function OnboardingPanelHeader({
   title,
-  completedSteps,
-  progress,
-  onBack,
 }: {
   title: string;
-  completedSteps?: number;
-  progress?: number;
-  onBack?: () => void;
 }) {
-  const showProgress = completedSteps !== undefined && progress !== undefined;
-
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-neutral-200/60 bg-white px-5 py-3">
+    <div className="border-b border-neutral-200/60 bg-white px-5 py-4">
       <div className="flex min-w-0 items-center gap-3">
-        {onBack ? (
-          <span className="relative size-5 shrink-0">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#78665e]"
-              onClick={onBack}
-              aria-label="Back to onboarding checklist"
-            >
-              <ArrowLeft className="size-4" />
-            </Button>
-          </span>
-        ) : showProgress ? (
-          <OnboardingProgressRing
-            completedSteps={completedSteps}
-            progress={progress}
-          />
-        ) : null}
         <h1
           id="onboarding-title"
           className="min-w-0 text-sm font-medium text-[#281513]"
@@ -186,133 +102,17 @@ function OnboardingPanelHeader({
           {title}
         </h1>
       </div>
-      {showProgress && (
-        <p className="shrink-0 text-xs text-neutral-500">
-          {completedSteps} of {totalSteps} Completed
-        </p>
-      )}
     </div>
   );
 }
 
-function OnboardingProgressRing({
-  completedSteps,
-  progress,
-}: {
-  completedSteps: number;
-  progress: number;
-}) {
-  const isComplete = completedSteps === totalSteps;
-
-  return (
-    <div
-      className="relative grid size-5 shrink-0 place-items-center rounded-full"
-      aria-label={`${completedSteps} of ${totalSteps} onboarding steps completed`}
-    >
-      <svg
-        className="absolute inset-0 size-full -rotate-90"
-        viewBox="0 0 32 32"
-        aria-hidden="true"
-      >
-        <circle
-          cx="16"
-          cy="16"
-          r="13.5"
-          fill="none"
-          stroke="#f2eee3"
-          strokeWidth="3"
-        />
-        <motion.circle
-          cx="16"
-          cy="16"
-          r="13.5"
-          fill="none"
-          stroke="oklch(59.2% 0.249 0.584)"
-          strokeLinecap="round"
-          strokeWidth="3"
-          initial={false}
-          animate={{ pathLength: progress }}
-          transition={{ duration: 0.35, ease: [0.215, 0.61, 0.355, 1] }}
-        />
-      </svg>
-      <div className="relative grid size-5 place-items-center rounded-full bg-transparent">
-        {isComplete && <Check className="size-4" />}
-      </div>
-    </div>
-  );
-}
-
-function OnboardingStep({
-  title,
-  isComplete,
-  isActive,
-  onSelect,
-  isLocked = false,
-}: {
-  title: string;
-  isComplete: boolean;
-  isActive: boolean;
-  onSelect: () => void;
-  isLocked?: boolean;
-}) {
-  const isDisabled = isComplete || isLocked;
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      disabled={isDisabled}
-      className={`w-full bg-white px-5 py-3 text-left transition-colors hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-neutral-900/15 focus-visible:outline-none disabled:cursor-default disabled:hover:bg-white ${isLocked ? "opacity-55" : ""} `}
-    >
-      <div className="flex items-center gap-3">
-        <div className="mt-0.5 grid size-5 shrink-0 place-items-center">
-          {isComplete ? (
-            <span className="grid size-5 place-items-center rounded-full bg-pink-600 text-white">
-              <Check className="size-4" />
-            </span>
-          ) : (
-            <Circle className="size-5 text-neutral-300" />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-3">
-            <h2
-              className={`text-sm font-medium select-none ${
-                isComplete
-                  ? "text-[#9a8c85] line-through decoration-pink-600"
-                  : "text-[#281513]"
-              }`}
-            >
-              {title}
-            </h2>
-            {!isComplete && (
-              <Play
-                fill="currentColor"
-                className={`size-3 shrink-0 ${
-                  isActive ? "text-[#78665e]" : "text-neutral-300"
-                }`}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function OnboardingFormPanel({
-  title,
-  onBack,
-  children,
-}: {
-  title: string;
-  onBack: () => void;
-  children: ReactNode;
-}) {
+function OnboardingFormPanel() {
   return (
     <div>
-      <OnboardingPanelHeader title={title} onBack={onBack} />
-      <div className="px-5 py-5">{children}</div>
+      <OnboardingPanelHeader title="Set up your store" />
+      <div className="px-5 py-5">
+        <CreateStoreForm onSuccess={() => undefined} />
+      </div>
     </div>
   );
 }

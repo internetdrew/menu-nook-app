@@ -37,7 +37,7 @@ describe("login route", () => {
     });
 
     expect(
-      await screen.findByRole("heading", { name: "Get Started" }),
+      await screen.findByRole("heading", { name: "Set up your store" }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /continue with google/i }),

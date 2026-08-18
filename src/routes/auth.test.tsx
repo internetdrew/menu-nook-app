@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "@/contexts/auth";
 import { signOut } from "@/lib/auth";
 import { authedUserState } from "@/utils/test/userStates";
-import { ProtectedRoute } from "./ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const authMockState = vi.hoisted(() => {
   type AuthEventCallback = (event: string) => void;
@@ -81,7 +81,7 @@ function renderProtectedRoute() {
   );
 }
 
-describe("ProtectedRoute", () => {
+describe("auth routes", () => {
   afterEach(() => {
     authMockState.user = null;
     authMockState.callbacks.clear();
@@ -94,12 +94,11 @@ describe("ProtectedRoute", () => {
     renderProtectedRoute();
 
     expect(await screen.findByText("Protected app content")).toBeInTheDocument();
-
     await user.click(screen.getByRole("button", { name: "Log out" }));
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "Continue with Google" }),
+        screen.getByRole("button", { name: /continue with google/i }),
       ).toBeInTheDocument();
     });
     expect(screen.queryByText("Protected app content")).not.toBeInTheDocument();

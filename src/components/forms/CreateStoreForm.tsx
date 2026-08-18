@@ -17,6 +17,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
 import {
+  createEditableStoreSlug,
   createStoreSlug,
   storeSlugSchema,
 } from "../../../shared/storeSlug";
@@ -137,6 +138,7 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
               <FormLabel>Store name</FormLabel>
               <FormControl>
                 <Input
+                  autoFocus
                   placeholder="E.g. Sunny Deli"
                   {...field}
                   onChange={(event) => {
@@ -179,7 +181,7 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
                     placeholder="sunny-deli"
                     {...field}
                     onChange={(event) => {
-                      field.onChange(createStoreSlug(event.target.value));
+                      field.onChange(createEditableStoreSlug(event.target.value));
                     }}
                   />
                 </div>
