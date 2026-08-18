@@ -16,7 +16,9 @@ export const getLoaderUser = async () => {
     return testAuthMock.isLoading ? null : testAuthMock.user;
   }
 
-  const sessionResult = await supabaseBrowserClient.auth.getSession();
+  const {
+    data: { user },
+  } = await supabaseBrowserClient.auth.getUser();
 
-  return sessionResult?.data?.session?.user ?? null;
+  return user;
 };

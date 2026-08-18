@@ -1,6 +1,7 @@
 import RedirectIfAuthenticated from "@/components/RedirectIfAuthenticated";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RouteFallback } from "@/components/RouteFallback";
-import { Navigate, Outlet } from "react-router";
+import { Navigate } from "react-router";
 import { protectedLoader } from "@/loaders/protectedLoader";
 import { NotFound } from "@/pages/NotFoundPage";
 
@@ -31,7 +32,7 @@ export const routes = [
   {
     HydrateFallback: RouteFallback,
     loader: protectedLoader,
-    element: <Outlet />,
+    element: <ProtectedRoute />,
     children: [
       {
         index: true,
