@@ -124,4 +124,30 @@ describe("store preview route", () => {
       await screen.findByRole("heading", { name: "Sunny Deli" }),
     ).toBeInTheDocument();
   });
+
+  it("links active store previews to the public menu slug URL", async () => {
+    server.use(
+      createTrpcQueryHandler({
+        "store.getForUser": () => ({ result: { data: store } }),
+        "store.getPreview": () => ({ result: { data: previewStore } }),
+        "subscription.getForStore": () => ({
+          result: {
+            data: {
+              status: "active",
+              current_period_end: "2099-01-01T00:00:00Z",
+            },
+          },
+        }),
+      }),
+    );
+
+    renderApp({
+      initialEntries: ["/preview/store"],
+      authMock: authedUserState,
+    });
+
+    expect(
+      await screen.findByRole("link", { name: "live food page" }),
+    ).toHaveAttribute("href", "https://menunook.com/m/sunny-deli");
+  });
 });

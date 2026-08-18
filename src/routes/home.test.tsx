@@ -138,8 +138,6 @@ describe("home route", () => {
   });
 
   it("lets a signed-in owner begin store setup when they have no store", async () => {
-    const user = userEvent.setup();
-
     server.use(
       createTrpcQueryHandler({
         "store.getForUser": () => ({ result: { data: null } }),
@@ -151,15 +149,87 @@ describe("home route", () => {
       authMock: authedUserState,
     });
 
-    await user.click(
-      await screen.findByRole("button", { name: /set up your store/i }),
-    );
-
     expect(
       await screen.findByRole("heading", { name: "Set up your store" }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Store name")).toBeInTheDocument();
     expect(screen.getByLabelText("Public store link")).toBeInTheDocument();
+  });
+
+  it("lets a signed-in owner append a hyphenated suffix after a store link is taken", async () => {
+    const user = userEvent.setup();
+    let createdSlug = "";
+
+    server.use(
+      createTrpcQueryHandler({
+        "store.getForUser": () => ({ result: { data: null } }),
+        "store.checkSlugAvailability": (input) => {
+          const values = input as { slug: string };
+
+          if (values.slug === "sunny-deli") {
+            return {
+              result: {
+                data: {
+                  available: false,
+                  slug: values.slug,
+                  message: "That link is already taken.",
+                },
+              },
+            };
+          }
+
+          return {
+            result: {
+              data: {
+                available: true,
+                slug: values.slug,
+              },
+            },
+          };
+        },
+        "store.create": (input) => {
+          const values = input as { name: string; slug: string };
+          createdSlug = values.slug;
+
+          return {
+            result: {
+              data: {
+                ...store,
+                name: values.name,
+                menu_slug: values.slug,
+              },
+            },
+          };
+        },
+      }),
+    );
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    await user.type(await screen.findByLabelText("Store name"), "Sunny Deli");
+
+    expect(
+      await screen.findByText("That link is already taken."),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Public store link"), "-xyz");
+
+    expect(screen.getByLabelText("Public store link")).toHaveValue(
+      "sunny-deli-xyz",
+    );
+    expect(
+      await screen.findByText("Available: https://menunook.com/m/sunny-deli-xyz"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Create" }));
+
+    expect(createdSlug).toBe("sunny-deli-xyz");
+    expect(
+      await screen.findByText("Sunny Deli created successfully."),
+    ).toBeInTheDocument();
   });
 
   it("lets an owner preview the food page after creating a store", async () => {

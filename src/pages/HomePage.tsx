@@ -1,7 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "react-router";
+import { lazy, Suspense } from "react";
 import type { StorePreviewCategory } from "@/types/store";
-import HomeHeader from "@/components/home/HomeHeader";
 import StoreCategoriesSkeleton from "@/components/skeletons/StoreCategoriesSkeleton";
 
 const CategoriesSection = lazy(
@@ -14,27 +12,8 @@ const HomeQuickActions = lazy(
 export type StoreCategory = StorePreviewCategory;
 
 export const HomePage = () => {
-  const [params, setSearchParams] = useSearchParams();
-  const [showLaunchSuccess, setShowLaunchSuccess] = useState(false);
-
-  useEffect(() => {
-    const successfulSubscription = params.get("success") === "true";
-
-    if (successfulSubscription) {
-      setShowLaunchSuccess(true);
-
-      const newParams = new URLSearchParams(params);
-      newParams.delete("success");
-      setSearchParams(newParams, { replace: true });
-    }
-  }, [params, setSearchParams]);
-
   return (
-    <div className="pb-10">
-      <HomeHeader
-        showLaunchSuccess={showLaunchSuccess}
-        onLaunchSuccessComplete={() => setShowLaunchSuccess(false)}
-      />
+    <div className="pt-24 pb-10">
       <Suspense
         fallback={
           <div className="mt-12">

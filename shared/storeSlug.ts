@@ -52,6 +52,19 @@ export const createStoreSlug = (text: string) => {
   return slug;
 };
 
+export const createEditableStoreSlug = (text: string) => {
+  const slug = text
+    .toLowerCase()
+    .replace(/['"’"]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+/g, "")
+    .slice(0, STORE_SLUG_MAX_LENGTH)
+    .replace(/^-+/g, "");
+
+  return slug;
+};
+
 export const createDefaultStoreSlug = (text: string) => {
   const baseSlug = createStoreSlug(text);
 
