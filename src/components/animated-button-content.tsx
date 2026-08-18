@@ -19,7 +19,7 @@ export function AnimatedButtonContent<State extends string>({
   state,
   labels,
   renderIcon,
-  iconSize = 20,
+  iconSize = 18,
   shouldShake = false,
 }: {
   state: State;
@@ -51,8 +51,7 @@ export function AnimatedButtonContent<State extends string>({
   return (
     <motion.span
       ref={contentRef}
-      className="inline-flex items-center justify-center overflow-hidden rounded-full font-medium"
-      animate={{ gap: icon ? 8 : 0 }}
+      className="inline-flex items-center justify-center gap-1 overflow-hidden rounded-full font-medium"
       transition={SPRING_CONFIG}
       style={{ willChange: "transform" }}
     >
