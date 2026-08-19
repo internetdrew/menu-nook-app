@@ -328,7 +328,8 @@ const ItemForm = (props: ItemFormProps) => {
           {
             onSuccess: () => {
               queryClient.invalidateQueries({
-                queryKey: trpc.storeCategoryItem.getSortedForCategory.queryKey(),
+                queryKey:
+                  trpc.storeCategoryItem.getSortedForCategory.queryKey(),
               });
               queryClient.invalidateQueries({
                 queryKey: trpc.store.getPreview.queryKey(),
@@ -481,7 +482,7 @@ const ItemForm = (props: ItemFormProps) => {
               <FormControl>
                 <Textarea
                   maxLength={ITEM_DESCRIPTION_LIMIT}
-                  className="h-32 resize-none"
+                  className="h-20 resize-none"
                   placeholder="A short description customers see under the item name."
                   {...field}
                 />
