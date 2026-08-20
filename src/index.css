@@ -4,6 +4,7 @@
 @import "@fontsource-variable/eb-garamond/wght.css";
 @import "@fontsource-variable/playfair-display/wght.css";
 @import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/bricolage-grotesque/wght.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -160,7 +161,11 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply text-foreground;
+    @apply text-foreground bg-[#fffefb];
     font-family: "Geist Variable", sans-serif;
   }
+}
+
+.menu-header {
+  font-family: "Bricolage Grotesque Variable", sans-serif;
 }
