@@ -13,6 +13,9 @@ const ItemImageDialog = ({
   setSelectedItem,
 }: ItemImageDialogProps) => {
   const prefersReducedMotion = useReducedMotion();
+  const layoutTransition = prefersReducedMotion
+    ? { duration: 0.01 }
+    : { type: "spring" as const, bounce: 0.1, visualDuration: 0.125 };
 
   return (
     <Dialog.Root
@@ -42,7 +45,12 @@ const ItemImageDialog = ({
               className="fixed inset-0 z-50 grid place-items-center overflow-y-auto p-4"
             >
               <Dialog.Content forceMount asChild>
-                <motion.div className="relative my-auto aspect-[4/3] w-full max-w-lg overflow-visible bg-transparent shadow-none outline-none">
+                <motion.div
+                  className="relative my-auto w-full max-w-lg overflow-visible bg-transparent outline-none"
+                  style={{
+                    aspectRatio: "4 / 3",
+                  }}
+                >
                   <Dialog.Title className="sr-only">
                     {selectedItem.name} image
                   </Dialog.Title>
@@ -55,17 +63,16 @@ const ItemImageDialog = ({
                       src={selectedItem.image_url}
                       alt={selectedItem.name}
                       decoding="async"
-                      className="size-full object-cover shadow-xl"
+                      className="object-cover"
                       style={{
+                        aspectRatio: "4 / 3",
                         borderRadius: 12,
-                        willChange: "transform, opacity",
+                        boxShadow:
+                          "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+                        height: "100%",
+                        width: "100%",
                       }}
-                      transition={{
-                        layout: {
-                          duration: prefersReducedMotion ? 0.01 : 0.28,
-                          ease: [0.215, 0.61, 0.355, 1],
-                        },
-                      }}
+                      transition={{ layout: layoutTransition }}
                     />
                   )}
                   <Dialog.Close asChild>
@@ -86,8 +93,8 @@ const ItemImageDialog = ({
                         visible: {
                           opacity: 1,
                           transition: {
-                            duration: prefersReducedMotion ? 0.01 : 0.12,
-                            delay: prefersReducedMotion ? 0 : 0.28,
+                            duration: prefersReducedMotion ? 0.01 : 0.1,
+                            delay: prefersReducedMotion ? 0 : 0.15,
                           },
                         },
                       }}
