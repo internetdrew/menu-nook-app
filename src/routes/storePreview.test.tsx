@@ -5,6 +5,7 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState } from "@/utils/test/userStates";
+import type { StoreCategory } from "@/pages/StorePage";
 import "@/pages/StorePage";
 
 const store = {
@@ -19,7 +20,11 @@ const store = {
   user_id: "user-1",
 };
 
-const previewStore = {
+type PreviewStore = typeof store & {
+  store_menu_categories: StoreCategory[];
+};
+
+const previewStore: PreviewStore = {
   ...store,
   store_menu_categories: [
     {
@@ -27,8 +32,6 @@ const previewStore = {
       created_at: "2026-01-01T00:00:00Z",
       description: "Fresh lunch favorites.",
       name: "Sandwiches",
-      order_index: 0,
-      sort_index_id: 10,
       store_id: store.id,
       items: [
         {
@@ -38,13 +41,12 @@ const previewStore = {
           image_path:
             "store/11111111-1111-4111-8111-111111111111/item/101/image.webp",
           image_url: "https://example.com/turkey-club.webp",
-          is_available: true,
           name: "Turkey Club",
           order_index: 0,
           price: 12.5,
-          sort_index_id: 1001,
           store_id: store.id,
           store_menu_category_id: 1,
+          updated_at: "2026-01-01T00:00:00Z",
         },
       ],
     },
@@ -118,8 +120,8 @@ describe("store preview route", () => {
           items: [
             {
               ...previewStore.store_menu_categories[0].items[0],
-              image_path: "null",
-              image_url: "null",
+              image_path: null,
+              image_url: null,
             },
           ],
         },
@@ -156,23 +158,20 @@ describe("store preview route", () => {
           created_at: "2026-01-01T00:00:00Z",
           description: "Lighter options.",
           name: "Salads",
-          order_index: 1,
-          sort_index_id: 20,
           store_id: store.id,
           items: [
             {
               id: 201,
               created_at: "2026-01-01T00:00:00Z",
               description: "Greens, cucumber, tomato, and vinaigrette.",
-              image_path: "null",
-              image_url: "null",
-              is_available: true,
+              image_path: null,
+              image_url: null,
               name: "House Salad",
               order_index: 0,
               price: 9,
-              sort_index_id: 2001,
               store_id: store.id,
               store_menu_category_id: 2,
+              updated_at: "2026-01-01T00:00:00Z",
             },
           ],
         },
