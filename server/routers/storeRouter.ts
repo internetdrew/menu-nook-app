@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "../trpc.js";
 import { supabaseAdminClient } from "../supabase.js";
+import { storeNameSchema } from "../../shared/storeName.js";
 import { storeSlugSchema } from "../../shared/storeSlug.js";
 import {
   checkStoreSlugAvailability,
@@ -13,7 +14,7 @@ export const storeRouter = router({
   create: protectedProcedure
     .input(
       z.object({
-        name: z.string().min(1).max(32),
+        name: storeNameSchema,
         slug: storeSlugSchema,
       }),
     )
@@ -114,7 +115,7 @@ export const storeRouter = router({
           id: z.uuid(),
           imagePath: z.string().nullable().optional(),
           imageUrl: z.url().nullable().optional(),
-          name: z.string().min(1).max(32).optional(),
+          name: storeNameSchema.optional(),
           seoTitle: z.string().max(80).nullable().optional(),
           seoDescription: z.string().max(180).nullable().optional(),
         })
