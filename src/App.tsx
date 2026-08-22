@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { AnimatePresence, motion } from "motion/react";
-import { OnboardingChecklist } from "./components/OnboardingChecklist";
+import { Onboarding } from "./components/Onboarding.tsx";
 import { HomePage } from "./pages/HomePage";
 import HeaderTitle from "./components/home/HeaderTitle";
 import StoreViewerOptions from "./components/home/StoreViewerOptions.tsx";
@@ -62,7 +62,7 @@ function App() {
               exit={{ opacity: 0, y: -4 }}
               transition={appViewTransition}
             >
-              <OnboardingChecklist />
+              <Onboarding />
             </motion.div>
           )}
         </AnimatePresence>
