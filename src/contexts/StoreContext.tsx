@@ -1,11 +1,13 @@
 import { createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./auth";
-import type { StoreRecord } from "@/types/store";
+import type { StorePreviewData, StoreRecord } from "@/types/store";
 import { storeForUserQueryOptions } from "@/utils/setupQueries";
+import { trpc } from "@/utils/trpc";
 
 interface StoreContextValue {
   store: StoreRecord | null;
+  storePreview: StorePreviewData | null;
   storeId: string | null;
   loading: boolean;
 }
@@ -20,11 +22,19 @@ export const StoreProvider: React.FC<React.PropsWithChildren> = ({
     ...storeForUserQueryOptions(),
     enabled: !!user && !authLoading,
   });
+  const { data: storePreview, isLoading: storePreviewLoading } = useQuery(
+    trpc.store.getPreview.queryOptions(
+      { storeId: store?.id ?? "" },
+      { enabled: !!store?.id },
+    ),
+  );
 
-  const loading = authLoading || (!!user && storeLoading);
+  const loading =
+    authLoading || (!!user && storeLoading) || (!!store && storePreviewLoading);
 
   const value: StoreContextValue = {
     store: store ?? null,
+    storePreview: storePreview ?? null,
     storeId: store?.id ?? null,
     loading,
   };

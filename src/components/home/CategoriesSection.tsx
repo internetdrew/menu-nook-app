@@ -1,75 +1,24 @@
-import { useStoreContext } from "@/contexts/StoreContext";
-import StoreCategoriesSkeleton from "../skeletons/StoreCategoriesSkeleton";
-import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentProps,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import type { StorePreviewCategory, StorePreviewItem } from "@/types/store";
-import FormDialog from "../dialogs/FormDialog";
-import CategoryForm from "../forms/CategoryForm";
-import {
-  AnimatePresence,
-  motion,
-  MotionConfig,
-  useIsPresent,
-  useReducedMotion,
-} from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { accordionEaseOut } from "@/constants";
 import DeleteCategoryAlertDialog from "../dialogs/DeleteCategoryAlertDialog";
 import DeleteItemAlertDialog from "../dialogs/DeleteItemAlertDialog";
-import ItemForm from "../forms/ItemForm";
 import CategoryDragAndDrop from "./CategoryDragAndDrop";
 import { Button } from "@/components/ui/button";
 import EmptyCategoriesState from "./EmptyCategoriesState";
+import CategoryDialog from "./CategoryDialog";
+import ItemDialog from "./ItemDialog";
 
-const categoriesPanelTransition = {
-  duration: 0.22,
-  ease: accordionEaseOut,
-} as const;
-
-const categoriesPanelVariants = {
-  initial: { opacity: 0, y: 8, filter: "blur(3px)" },
-  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-  exit: {
-    opacity: 0,
-    y: -4,
-    filter: "blur(3px)",
-    transition: { duration: 0.14, ease: "easeIn" },
-  },
-} as const;
-
-type CategoryPanelMotionProps = Pick<
-  ComponentProps<typeof motion.div>,
-  "initial" | "animate" | "exit" | "transition" | "variants"
->;
-
-const LoadingCategoriesPanel = ({
-  className,
-  motionProps,
-}: {
-  className?: string;
-  motionProps: CategoryPanelMotionProps;
-}) => {
-  const isPresent = useIsPresent();
-
-  return (
-    <motion.div aria-hidden={!isPresent} className={className} {...motionProps}>
-      <StoreCategoriesSkeleton />
-    </motion.div>
-  );
+type CategoriesSectionProps = {
+  categories: StorePreviewCategory[];
 };
 
-const CategoriesSection = () => {
-  const { storeId, loading: loadingStore } = useStoreContext();
+const CategoriesSection = ({ categories }: CategoriesSectionProps) => {
   const shouldReduceMotion = useReducedMotion();
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState("");
-  const initializedOpenCategoryStoreIdRef = useRef<string | null>(null);
+  const initializedOpenCategoryIdRef = useRef<number | null>(null);
   const [selectedCategory, setSelectedCategory] =
     useState<StorePreviewCategory | null>(null);
   const [selectedItem, setSelectedItem] = useState<StorePreviewItem | null>(
@@ -79,56 +28,21 @@ const CategoriesSection = () => {
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
   const [isDeleteCategoryDialogOpen, setIsDeleteCategoryDialogOpen] =
     useState(false);
-  const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] =
-    useState(false);
-
-  const { data: storePreview, isLoading } = useQuery(
-    trpc.store.getPreview.queryOptions(
-      { storeId: storeId ?? "" },
-      { enabled: !!storeId },
-    ),
-  );
-
-  const fetchedStoreCategories = useMemo(
-    () => storePreview?.store_menu_categories ?? [],
-    [storePreview?.store_menu_categories],
-  );
 
   useEffect(() => {
-    if (!storeId) {
-      initializedOpenCategoryStoreIdRef.current = null;
+    const firstCategory = categories[0];
+
+    if (!firstCategory) {
+      initializedOpenCategoryIdRef.current = null;
       setOpenCategory("");
       return;
     }
 
-    if (initializedOpenCategoryStoreIdRef.current === storeId) return;
-
-    const firstCategory = fetchedStoreCategories[0];
-    if (!firstCategory) return;
+    if (initializedOpenCategoryIdRef.current === firstCategory.id) return;
 
     setOpenCategory(String(firstCategory.id));
-    initializedOpenCategoryStoreIdRef.current = storeId;
-  }, [fetchedStoreCategories, storeId]);
-
-  const areStoreCategoriesLoading = loadingStore || (!!storeId && isLoading);
-  const categoryPanelMotion: CategoryPanelMotionProps = shouldReduceMotion
-    ? {
-        initial: false,
-        animate: "animate",
-        exit: "exit",
-        variants: {
-          animate: { opacity: 1 },
-          exit: { opacity: 0 },
-        },
-        transition: { duration: 0 },
-      }
-    : {
-        initial: "initial",
-        animate: "animate",
-        exit: "exit",
-        variants: categoriesPanelVariants,
-        transition: categoriesPanelTransition,
-      };
+    initializedOpenCategoryIdRef.current = firstCategory.id;
+  }, [categories]);
 
   const handleAddItem = (category: StorePreviewCategory) => {
     setSelectedCategory(category);
@@ -136,9 +50,13 @@ const CategoriesSection = () => {
     setIsItemDialogOpen(true);
   };
 
+  const handleCreateCategory = () => {
+    setSelectedCategory(null);
+    setIsCategoryDialogOpen(true);
+  };
+
   const handleEditCategory = (category: StorePreviewCategory) => {
     setSelectedCategory(category);
-    setIsCreateCategoryDialogOpen(false);
     setIsCategoryDialogOpen(true);
   };
 
@@ -165,118 +83,111 @@ const CategoriesSection = () => {
     setRenderDeleteDialog(true);
   };
 
-  useEffect(() => {
-    if (isCreateCategoryDialogOpen) {
-      setSelectedCategory(null);
-      setIsCategoryDialogOpen(false);
-    }
-  }, [isCreateCategoryDialogOpen]);
+  const handleCloseItemDialog = () => {
+    setIsItemDialogOpen(false);
+    setSelectedItem(null);
+    setSelectedCategory(null);
+  };
 
   return (
     <>
-      <motion.div aria-busy={areStoreCategoriesLoading} layout>
-        <AnimatePresence mode="wait" initial={false}>
-          {areStoreCategoriesLoading ? (
-            <LoadingCategoriesPanel
-              key="categories-loading"
-              motionProps={categoryPanelMotion}
-            />
-          ) : (
-            <motion.div
-              key="categories-loaded"
-              className="pr-1 pl-3"
-              layout
-              {...categoryPanelMotion}
-            >
-              <MotionConfig
+      <motion.div layout>
+        <motion.div
+          className="pr-1 pl-3"
+          layout
+          initial={
+            shouldReduceMotion
+              ? false
+              : { opacity: 0, y: 8, filter: "blur(3px)" }
+          }
+          animate={
+            shouldReduceMotion
+              ? { opacity: 1 }
+              : { opacity: 1, y: 0, filter: "blur(0px)" }
+          }
+          exit={
+            shouldReduceMotion
+              ? { opacity: 0, transition: { duration: 0 } }
+              : {
+                  opacity: 0,
+                  y: -4,
+                  filter: "blur(3px)",
+                  transition: { duration: 0.14, ease: "easeIn" },
+                }
+          }
+          transition={
+            shouldReduceMotion
+              ? { duration: 0 }
+              : { duration: 0.22, ease: accordionEaseOut }
+          }
+        >
+          <AnimatePresence mode="wait">
+            {categories.length > 0 ? (
+              <motion.div
+                key="categories"
+                layout
                 transition={{ duration: 0.24, ease: accordionEaseOut }}
               >
-                {fetchedStoreCategories.length > 0 ? (
-                  <>
-                    <div className="mb-4 flex">
-                      <Button
-                        size={"sm"}
-                        className="ml-auto"
-                        onClick={() => setIsCreateCategoryDialogOpen(true)}
-                      >
-                        Add Category
-                      </Button>
-                    </div>
-                    <CategoryDragAndDrop
-                      categories={fetchedStoreCategories}
-                      openCategory={openCategory}
-                      onOpenCategoryChange={setOpenCategory}
-                      onAddItem={handleAddItem}
-                      onEditCategory={handleEditCategory}
-                      onDeleteCategory={handleDeleteCategory}
-                      onEditItem={handleEditItem}
-                      onDeleteItem={handleDeleteItem}
-                    />
-                  </>
-                ) : (
-                  <EmptyCategoriesState
-                    setIsCreateCategoryDialogOpen={
-                      setIsCreateCategoryDialogOpen
-                    }
-                  />
-                )}
-              </MotionConfig>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <div className="mb-4 flex">
+                  <Button
+                    size={"sm"}
+                    className="ml-auto"
+                    onClick={handleCreateCategory}
+                  >
+                    Add Category
+                  </Button>
+                </div>
+                <CategoryDragAndDrop
+                  categories={categories}
+                  openCategory={openCategory}
+                  onOpenCategoryChange={setOpenCategory}
+                  onAddItem={handleAddItem}
+                  onEditCategory={handleEditCategory}
+                  onDeleteCategory={handleDeleteCategory}
+                  onEditItem={handleEditItem}
+                  onDeleteItem={handleDeleteItem}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty-categories"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={
+                  shouldReduceMotion
+                    ? { opacity: 0, y: 0, transition: { duration: 0 } }
+                    : {
+                        opacity: 0,
+                        y: -8,
+                        transition: { duration: 0.14, ease: "easeIn" },
+                      }
+                }
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : { duration: 0.26, ease: [0.215, 0.61, 0.355, 1] }
+                }
+              >
+                <EmptyCategoriesState onCreateCategory={handleCreateCategory} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </motion.div>
 
-      <FormDialog
-        title={
-          selectedCategory
-            ? `Edit ${selectedCategory?.name}`
-            : "Create a new category"
-        }
-        description={
-          selectedCategory
-            ? `Edit details for ${selectedCategory.name}`
-            : "Fill in the details below to create a new category."
-        }
-        isDialogOpen={isCategoryDialogOpen || isCreateCategoryDialogOpen}
-        setIsDialogOpen={(open) => {
-          if (open) return;
-
-          setIsCategoryDialogOpen(false);
-          setIsCreateCategoryDialogOpen(false);
-          setSelectedCategory(null);
-        }}
-        formComponent={
-          <CategoryForm
-            category={selectedCategory}
-            onSuccess={() => {
-              setSelectedCategory(null);
-              setIsCategoryDialogOpen(false);
-              setIsCreateCategoryDialogOpen(false);
-            }}
-          />
-        }
+      <CategoryDialog
+        selectedCategory={selectedCategory}
+        isDialogOpen={isCategoryDialogOpen}
+        setIsDialogOpen={setIsCategoryDialogOpen}
+        setSelectedCategory={setSelectedCategory}
       />
 
-      <FormDialog
-        title={selectedItem ? `Edit ${selectedItem.name}` : `Add Item`}
-        description={
-          selectedItem
-            ? `Edit ${selectedItem.name}.`
-            : `Add a new item to ${selectedCategory?.name}.`
-        }
+      <ItemDialog
+        selectedCategory={selectedCategory}
+        selectedItem={selectedItem}
         isDialogOpen={isItemDialogOpen}
         setIsDialogOpen={setIsItemDialogOpen}
-        formComponent={
-          <ItemForm
-            item={selectedItem}
-            chosenCategory={selectedCategory}
-            onSuccess={() => {
-              setIsItemDialogOpen(false);
-              setSelectedItem(null);
-              setSelectedCategory(null);
-            }}
-          />
-        }
+        onClose={handleCloseItemDialog}
       />
 
       <DeleteCategoryAlertDialog

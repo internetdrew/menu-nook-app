@@ -5,7 +5,7 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
-import "@/components/OnboardingChecklist";
+import "@/components/Onboarding";
 import "@/pages/HomePage";
 import "@/pages/HomeRoute";
 import "@/pages/LoginPage";
@@ -218,7 +218,9 @@ describe("home route", () => {
       "sunny-deli-xyz",
     );
     expect(
-      await screen.findByText("Available: https://menunook.com/m/sunny-deli-xyz"),
+      await screen.findByText(
+        "Available: https://menunook.com/m/sunny-deli-xyz",
+      ),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Create" }));
@@ -240,10 +242,10 @@ describe("home route", () => {
 
     await user.click(await screen.findByRole("link", { name: /preview/i }));
 
+    expect(await screen.findByText("Turkey Club")).toBeInTheDocument();
     expect(
-      await screen.findByRole("heading", { name: "Sunny Deli" }),
+      screen.getByRole("heading", { name: "Sunny Deli" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Turkey Club")).toBeInTheDocument();
   });
 
   it("shows the empty categories state when a store has no categories", async () => {
@@ -254,7 +256,9 @@ describe("home route", () => {
       authMock: authedUserState,
     });
 
-    expect(await screen.findByText("No categories created")).toBeInTheDocument();
+    expect(
+      await screen.findByText("No categories created"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/You haven't created any item categories yet/i),
     ).toBeInTheDocument();
@@ -263,6 +267,47 @@ describe("home route", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Add Category" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the menu loader visible until categories load", async () => {
+    let resolvePreview: (
+      storePreview: ReturnType<typeof createPreviewStore>,
+    ) => void;
+    const previewRequest = new Promise<ReturnType<typeof createPreviewStore>>(
+      (resolve) => {
+        resolvePreview = resolve;
+      },
+    );
+
+    server.use(
+      createTrpcQueryHandler({
+        "store.getForUser": () => ({ result: { data: store } }),
+        "store.getPreview": async () => ({
+          result: { data: await previewRequest },
+        }),
+        "subscription.getForStore": () => ({ result: { data: null } }),
+      }),
+    );
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    expect(
+      await screen.findByRole("status", { name: "Loading MenuNook" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Sunny Deli" })).toBeNull();
+    expect(screen.queryByText("No categories created")).not.toBeInTheDocument();
+
+    resolvePreview!(createPreviewStore([]));
+
+    expect(
+      await screen.findByRole("heading", { name: "Sunny Deli" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("No categories created"),
     ).toBeInTheDocument();
   });
 
