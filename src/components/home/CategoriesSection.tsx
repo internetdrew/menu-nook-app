@@ -12,13 +12,7 @@ import {
 import type { StorePreviewCategory, StorePreviewItem } from "@/types/store";
 import FormDialog from "../dialogs/FormDialog";
 import CategoryForm from "../forms/CategoryForm";
-import {
-  AnimatePresence,
-  motion,
-  MotionConfig,
-  useIsPresent,
-  useReducedMotion,
-} from "motion/react";
+import { motion, MotionConfig, useReducedMotion } from "motion/react";
 import { accordionEaseOut } from "@/constants";
 import DeleteCategoryAlertDialog from "../dialogs/DeleteCategoryAlertDialog";
 import DeleteItemAlertDialog from "../dialogs/DeleteItemAlertDialog";
@@ -47,22 +41,6 @@ type CategoryPanelMotionProps = Pick<
   ComponentProps<typeof motion.div>,
   "initial" | "animate" | "exit" | "transition" | "variants"
 >;
-
-const LoadingCategoriesPanel = ({
-  className,
-  motionProps,
-}: {
-  className?: string;
-  motionProps: CategoryPanelMotionProps;
-}) => {
-  const isPresent = useIsPresent();
-
-  return (
-    <motion.div aria-hidden={!isPresent} className={className} {...motionProps}>
-      <StoreCategoriesSkeleton />
-    </motion.div>
-  );
-};
 
 const CategoriesSection = () => {
   const { storeId, loading: loadingStore } = useStoreContext();
@@ -175,55 +153,43 @@ const CategoriesSection = () => {
   return (
     <>
       <motion.div aria-busy={areStoreCategoriesLoading} layout>
-        <AnimatePresence mode="wait" initial={false}>
-          {areStoreCategoriesLoading ? (
-            <LoadingCategoriesPanel
-              key="categories-loading"
-              motionProps={categoryPanelMotion}
-            />
-          ) : (
-            <motion.div
-              key="categories-loaded"
-              className="pr-1 pl-3"
-              layout
-              {...categoryPanelMotion}
+        {areStoreCategoriesLoading ? (
+          <StoreCategoriesSkeleton />
+        ) : (
+          <motion.div className="pr-1 pl-3" layout {...categoryPanelMotion}>
+            <MotionConfig
+              transition={{ duration: 0.24, ease: accordionEaseOut }}
             >
-              <MotionConfig
-                transition={{ duration: 0.24, ease: accordionEaseOut }}
-              >
-                {fetchedStoreCategories.length > 0 ? (
-                  <>
-                    <div className="mb-4 flex">
-                      <Button
-                        size={"sm"}
-                        className="ml-auto"
-                        onClick={() => setIsCreateCategoryDialogOpen(true)}
-                      >
-                        Add Category
-                      </Button>
-                    </div>
-                    <CategoryDragAndDrop
-                      categories={fetchedStoreCategories}
-                      openCategory={openCategory}
-                      onOpenCategoryChange={setOpenCategory}
-                      onAddItem={handleAddItem}
-                      onEditCategory={handleEditCategory}
-                      onDeleteCategory={handleDeleteCategory}
-                      onEditItem={handleEditItem}
-                      onDeleteItem={handleDeleteItem}
-                    />
-                  </>
-                ) : (
-                  <EmptyCategoriesState
-                    setIsCreateCategoryDialogOpen={
-                      setIsCreateCategoryDialogOpen
-                    }
+              {fetchedStoreCategories.length > 0 ? (
+                <>
+                  <div className="mb-4 flex">
+                    <Button
+                      size={"sm"}
+                      className="ml-auto"
+                      onClick={() => setIsCreateCategoryDialogOpen(true)}
+                    >
+                      Add Category
+                    </Button>
+                  </div>
+                  <CategoryDragAndDrop
+                    categories={fetchedStoreCategories}
+                    openCategory={openCategory}
+                    onOpenCategoryChange={setOpenCategory}
+                    onAddItem={handleAddItem}
+                    onEditCategory={handleEditCategory}
+                    onDeleteCategory={handleDeleteCategory}
+                    onEditItem={handleEditItem}
+                    onDeleteItem={handleDeleteItem}
                   />
-                )}
-              </MotionConfig>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                </>
+              ) : (
+                <EmptyCategoriesState
+                  setIsCreateCategoryDialogOpen={setIsCreateCategoryDialogOpen}
+                />
+              )}
+            </MotionConfig>
+          </motion.div>
+        )}
       </motion.div>
 
       <FormDialog

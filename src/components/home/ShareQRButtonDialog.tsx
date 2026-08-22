@@ -34,11 +34,6 @@ interface ShareQRButtonDialogProps {
   onLaunchSuccessComplete?: () => void;
 }
 
-const SHARE_TITLE = "Share food page";
-const SHARE_DESCRIPTION = "Scan the QR code or copy the food page link.";
-const LAUNCH_SUCCESS_TITLE = "Your food page is live";
-const LAUNCH_SUCCESS_DESCRIPTION =
-  "Customers can now view it from this link or scan the QR code.";
 const TEXT_SWAP_DURATION_MS = 120;
 const QR_HEIGHT_TRANSITION = {
   duration: 0.27,
@@ -58,9 +53,6 @@ const ShareQRButtonDialog = ({
   storeId,
   storeSlug,
   storeName,
-  mode = "share",
-  openOnMount = false,
-  onLaunchSuccessComplete,
 }: ShareQRButtonDialogProps) => {
   const isMobile = useIsMobile();
   const prefersReducedMotion = useReducedMotion();
@@ -75,10 +67,7 @@ const ShareQRButtonDialog = ({
   const copyTimeoutRef = useRef<number | undefined>(undefined);
   const textSwapTimeoutRef = useRef<number | undefined>(undefined);
   const qrRevealTimeoutRef = useRef<number | undefined>(undefined);
-  const autoOpenedStoreIdRef = useRef<string | null>(null);
-  const title = mode === "launch-success" ? LAUNCH_SUCCESS_TITLE : SHARE_TITLE;
-  const description =
-    mode === "launch-success" ? LAUNCH_SUCCESS_DESCRIPTION : SHARE_DESCRIPTION;
+
   const storeUrl = `${PUBLIC_STORE_DOMAIN}/m/${storeSlug}`;
 
   useEffect(() => {
@@ -129,19 +118,10 @@ const ShareQRButtonDialog = ({
     };
   }, [open, prefersReducedMotion]);
 
-  useEffect(() => {
-    if (!openOnMount || autoOpenedStoreIdRef.current === storeId) {
-      return;
-    }
-
-    autoOpenedStoreIdRef.current = storeId;
-    openShareSurface();
-  }, [openOnMount, storeId]);
-
   const { data, isLoading } = useQuery(
     trpc.storeQRCode.getPublicUrlForStore.queryOptions(
       { storeId },
-      { enabled: !!storeId && (open || openOnMount) },
+      { enabled: !!storeId && open },
     ),
   );
   const publicUrl = data?.public_url;
@@ -267,10 +247,6 @@ const ShareQRButtonDialog = ({
 
     setShouldRevealQr(false);
     setOpen(false);
-
-    if (!nextOpen && mode === "launch-success") {
-      onLaunchSuccessComplete?.();
-    }
   };
 
   const qrCode = (
@@ -334,23 +310,19 @@ const ShareQRButtonDialog = ({
   );
 
   const actionsDisabled = !publicUrl;
-  const descriptionClassName =
-    mode === "launch-success" ? undefined : "sr-only";
-  const dialogDescription =
-    mode === "launch-success" ? (
-      <>
-        {description}{" "}
-        <a
-          href={storeUrl}
-          className="inline-flex items-center gap-1 font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-4 transition-colors hover:decoration-neutral-600"
-        >
-          View live food page.
-          <ExternalLink className="size-3.5" />
-        </a>
-      </>
-    ) : (
-      description
-    );
+
+  const dialogDescription = (
+    <>
+      {"description here"}
+      <a
+        href={storeUrl}
+        className="inline-flex items-center gap-1 font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-4 transition-colors hover:decoration-neutral-600"
+      >
+        View live food page.
+        <ExternalLink className="size-3.5" />
+      </a>
+    </>
+  );
 
   const QRActions = (
     <div className="flex w-full flex-col gap-2">
@@ -382,8 +354,8 @@ const ShareQRButtonDialog = ({
         <DrawerTrigger asChild>{trigger}</DrawerTrigger>
         <DrawerContent>
           <DrawerHeader className="px-6 pt-6 pb-2 text-left">
-            <DrawerTitle className="text-base">{title}</DrawerTitle>
-            <DrawerDescription className={descriptionClassName}>
+            <DrawerTitle className="text-base">{"title"}</DrawerTitle>
+            <DrawerDescription className={""}>
               {dialogDescription}
             </DrawerDescription>
           </DrawerHeader>
@@ -399,8 +371,8 @@ const ShareQRButtonDialog = ({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-base">{title}</DialogTitle>
-          <DialogDescription className={`${descriptionClassName} text-sm`}>
+          <DialogTitle className="text-base">{"title"}</DialogTitle>
+          <DialogDescription className={""}>
             {dialogDescription}
           </DialogDescription>
         </DialogHeader>
