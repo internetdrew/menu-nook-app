@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const STATES = {
   idle: "Continue with Google",
-  processing: "Connecting to Google...",
+  processing: "Connecting...",
 } as const;
 
 const loginContainerVariants = {
@@ -71,13 +71,14 @@ const Login = () => {
             className="text-lg font-semibold text-pretty"
             variants={loginItemVariants}
           >
-            Let's get your menu online.
+            Let's get your menu out there.
           </motion.p>
           <motion.p
             className="text-[15px] font-medium text-neutral-600"
             variants={loginItemVariants}
           >
-            You can have it available to your customers in just a few minutes.
+            You're just a few easy steps away from sharing it with your
+            customers.
           </motion.p>
           <motion.div
             className="mt-4"

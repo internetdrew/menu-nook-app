@@ -17,7 +17,7 @@ const HeaderTitle = () => {
     <AnimatePresence mode="wait" initial={false}>
       <motion.h1
         key={appTitle}
-        className="title truncate font-[560]"
+        className="title menu-header truncate font-[560]"
         initial={
           shouldReduceMotion
             ? { opacity: 0 }
