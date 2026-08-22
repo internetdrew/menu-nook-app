@@ -1,9 +1,9 @@
 import { Button } from "../ui/button";
 
 const EmptyCategoriesState = ({
-  setIsCreateCategoryDialogOpen,
+  onCreateCategory,
 }: {
-  setIsCreateCategoryDialogOpen: (open: boolean) => void;
+  onCreateCategory: () => void;
 }) => {
   return (
     <div className="mx-auto mt-12 max-w-md text-center">
@@ -12,11 +12,7 @@ const EmptyCategoriesState = ({
         You haven't created any item categories yet. Once you do, you'll be able
         to add items to them and manage your menu.
       </p>
-      <Button
-        size={"sm"}
-        className="mt-4"
-        onClick={() => setIsCreateCategoryDialogOpen(true)}
-      >
+      <Button size={"sm"} className="mt-4" onClick={onCreateCategory}>
         Add Category
       </Button>
     </div>

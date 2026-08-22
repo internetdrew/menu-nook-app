@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { StorePreviewCategory, StorePreviewItem } from "@/types/store";
-import FormDialog from "../dialogs/FormDialog";
-import CategoryForm from "../forms/CategoryForm";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { accordionEaseOut } from "@/constants";
 import DeleteCategoryAlertDialog from "../dialogs/DeleteCategoryAlertDialog";
 import DeleteItemAlertDialog from "../dialogs/DeleteItemAlertDialog";
-import ItemForm from "../forms/ItemForm";
 import CategoryDragAndDrop from "./CategoryDragAndDrop";
 import { Button } from "@/components/ui/button";
 import EmptyCategoriesState from "./EmptyCategoriesState";
+import CategoryDialog from "./CategoryDialog";
+import ItemDialog from "./ItemDialog";
 
 type CategoriesSectionProps = {
   categories: StorePreviewCategory[];
@@ -28,8 +27,6 @@ const CategoriesSection = ({ categories }: CategoriesSectionProps) => {
   const [renderDeleteDialog, setRenderDeleteDialog] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
   const [isDeleteCategoryDialogOpen, setIsDeleteCategoryDialogOpen] =
-    useState(false);
-  const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] =
     useState(false);
 
   useEffect(() => {
@@ -53,9 +50,13 @@ const CategoriesSection = ({ categories }: CategoriesSectionProps) => {
     setIsItemDialogOpen(true);
   };
 
+  const handleCreateCategory = () => {
+    setSelectedCategory(null);
+    setIsCategoryDialogOpen(true);
+  };
+
   const handleEditCategory = (category: StorePreviewCategory) => {
     setSelectedCategory(category);
-    setIsCreateCategoryDialogOpen(false);
     setIsCategoryDialogOpen(true);
   };
 
@@ -82,12 +83,11 @@ const CategoriesSection = ({ categories }: CategoriesSectionProps) => {
     setRenderDeleteDialog(true);
   };
 
-  useEffect(() => {
-    if (isCreateCategoryDialogOpen) {
-      setSelectedCategory(null);
-      setIsCategoryDialogOpen(false);
-    }
-  }, [isCreateCategoryDialogOpen]);
+  const handleCloseItemDialog = () => {
+    setIsItemDialogOpen(false);
+    setSelectedItem(null);
+    setSelectedCategory(null);
+  };
 
   return (
     <>
@@ -132,7 +132,7 @@ const CategoriesSection = ({ categories }: CategoriesSectionProps) => {
                   <Button
                     size={"sm"}
                     className="ml-auto"
-                    onClick={() => setIsCreateCategoryDialogOpen(true)}
+                    onClick={handleCreateCategory}
                   >
                     Add Category
                   </Button>
@@ -168,66 +168,26 @@ const CategoriesSection = ({ categories }: CategoriesSectionProps) => {
                     : { duration: 0.26, ease: [0.215, 0.61, 0.355, 1] }
                 }
               >
-                <EmptyCategoriesState
-                  setIsCreateCategoryDialogOpen={setIsCreateCategoryDialogOpen}
-                />
+                <EmptyCategoriesState onCreateCategory={handleCreateCategory} />
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
       </motion.div>
 
-      <FormDialog
-        title={
-          selectedCategory
-            ? `Edit ${selectedCategory?.name}`
-            : "Create a new category"
-        }
-        description={
-          selectedCategory
-            ? `Edit details for ${selectedCategory.name}`
-            : "Fill in the details below to create a new category."
-        }
-        isDialogOpen={isCategoryDialogOpen || isCreateCategoryDialogOpen}
-        setIsDialogOpen={(open) => {
-          if (open) return;
-
-          setIsCategoryDialogOpen(false);
-          setIsCreateCategoryDialogOpen(false);
-          setSelectedCategory(null);
-        }}
-        formComponent={
-          <CategoryForm
-            category={selectedCategory}
-            onSuccess={() => {
-              setSelectedCategory(null);
-              setIsCategoryDialogOpen(false);
-              setIsCreateCategoryDialogOpen(false);
-            }}
-          />
-        }
+      <CategoryDialog
+        selectedCategory={selectedCategory}
+        isDialogOpen={isCategoryDialogOpen}
+        setIsDialogOpen={setIsCategoryDialogOpen}
+        setSelectedCategory={setSelectedCategory}
       />
 
-      <FormDialog
-        title={selectedItem ? `Edit ${selectedItem.name}` : `Add Item`}
-        description={
-          selectedItem
-            ? `Edit ${selectedItem.name}.`
-            : `Add a new item to ${selectedCategory?.name}.`
-        }
+      <ItemDialog
+        selectedCategory={selectedCategory}
+        selectedItem={selectedItem}
         isDialogOpen={isItemDialogOpen}
         setIsDialogOpen={setIsItemDialogOpen}
-        formComponent={
-          <ItemForm
-            item={selectedItem}
-            chosenCategory={selectedCategory}
-            onSuccess={() => {
-              setIsItemDialogOpen(false);
-              setSelectedItem(null);
-              setSelectedCategory(null);
-            }}
-          />
-        }
+        onClose={handleCloseItemDialog}
       />
 
       <DeleteCategoryAlertDialog
