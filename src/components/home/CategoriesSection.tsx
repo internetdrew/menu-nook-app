@@ -1,18 +1,13 @@
-import { useStoreContext } from "@/contexts/StoreContext";
-import StoreCategoriesSkeleton from "../skeletons/StoreCategoriesSkeleton";
-import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentProps,
-} from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import type { StorePreviewCategory, StorePreviewItem } from "@/types/store";
 import FormDialog from "../dialogs/FormDialog";
 import CategoryForm from "../forms/CategoryForm";
-import { motion, MotionConfig, useReducedMotion } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  MotionConfig,
+  useReducedMotion,
+} from "motion/react";
 import { accordionEaseOut } from "@/constants";
 import DeleteCategoryAlertDialog from "../dialogs/DeleteCategoryAlertDialog";
 import DeleteItemAlertDialog from "../dialogs/DeleteItemAlertDialog";
@@ -37,17 +32,35 @@ const categoriesPanelVariants = {
   },
 } as const;
 
+const emptyCategoriesVariants = {
+  initial: { opacity: 0, y: 18 },
+  animate: { opacity: 1, y: 0 },
+  exit: {
+    opacity: 0,
+    y: -8,
+    transition: { duration: 0.14, ease: "easeIn" },
+  },
+} as const;
+
+const emptyCategoriesTransition = {
+  duration: 0.26,
+  ease: [0.215, 0.61, 0.355, 1],
+} as const;
+
 type CategoryPanelMotionProps = Pick<
   ComponentProps<typeof motion.div>,
   "initial" | "animate" | "exit" | "transition" | "variants"
 >;
 
-const CategoriesSection = () => {
-  const { storeId, loading: loadingStore } = useStoreContext();
+type CategoriesSectionProps = {
+  categories: StorePreviewCategory[];
+};
+
+const CategoriesSection = ({ categories }: CategoriesSectionProps) => {
   const shouldReduceMotion = useReducedMotion();
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState("");
-  const initializedOpenCategoryStoreIdRef = useRef<string | null>(null);
+  const initializedOpenCategoryIdRef = useRef<number | null>(null);
   const [selectedCategory, setSelectedCategory] =
     useState<StorePreviewCategory | null>(null);
   const [selectedItem, setSelectedItem] = useState<StorePreviewItem | null>(
@@ -60,35 +73,21 @@ const CategoriesSection = () => {
   const [isCreateCategoryDialogOpen, setIsCreateCategoryDialogOpen] =
     useState(false);
 
-  const { data: storePreview, isLoading } = useQuery(
-    trpc.store.getPreview.queryOptions(
-      { storeId: storeId ?? "" },
-      { enabled: !!storeId },
-    ),
-  );
-
-  const fetchedStoreCategories = useMemo(
-    () => storePreview?.store_menu_categories ?? [],
-    [storePreview?.store_menu_categories],
-  );
-
   useEffect(() => {
-    if (!storeId) {
-      initializedOpenCategoryStoreIdRef.current = null;
+    const firstCategory = categories[0];
+
+    if (!firstCategory) {
+      initializedOpenCategoryIdRef.current = null;
       setOpenCategory("");
       return;
     }
 
-    if (initializedOpenCategoryStoreIdRef.current === storeId) return;
-
-    const firstCategory = fetchedStoreCategories[0];
-    if (!firstCategory) return;
+    if (initializedOpenCategoryIdRef.current === firstCategory.id) return;
 
     setOpenCategory(String(firstCategory.id));
-    initializedOpenCategoryStoreIdRef.current = storeId;
-  }, [fetchedStoreCategories, storeId]);
+    initializedOpenCategoryIdRef.current = firstCategory.id;
+  }, [categories]);
 
-  const areStoreCategoriesLoading = loadingStore || (!!storeId && isLoading);
   const categoryPanelMotion: CategoryPanelMotionProps = shouldReduceMotion
     ? {
         initial: false,
@@ -106,6 +105,24 @@ const CategoriesSection = () => {
         exit: "exit",
         variants: categoriesPanelVariants,
         transition: categoriesPanelTransition,
+      };
+  const emptyCategoryMotion: CategoryPanelMotionProps = shouldReduceMotion
+    ? {
+        initial: false,
+        animate: "animate",
+        exit: "exit",
+        variants: {
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: 0 },
+        },
+        transition: { duration: 0 },
+      }
+    : {
+        initial: "initial",
+        animate: "animate",
+        exit: "exit",
+        variants: emptyCategoriesVariants,
+        transition: emptyCategoriesTransition,
       };
 
   const handleAddItem = (category: StorePreviewCategory) => {
@@ -152,16 +169,12 @@ const CategoriesSection = () => {
 
   return (
     <>
-      <motion.div aria-busy={areStoreCategoriesLoading} layout>
-        {areStoreCategoriesLoading ? (
-          <StoreCategoriesSkeleton />
-        ) : (
-          <motion.div className="pr-1 pl-3" layout {...categoryPanelMotion}>
-            <MotionConfig
-              transition={{ duration: 0.24, ease: accordionEaseOut }}
-            >
-              {fetchedStoreCategories.length > 0 ? (
-                <>
+      <motion.div layout>
+        <motion.div className="pr-1 pl-3" layout {...categoryPanelMotion}>
+          <MotionConfig transition={{ duration: 0.24, ease: accordionEaseOut }}>
+            <AnimatePresence mode="wait" initial={false}>
+              {categories.length > 0 ? (
+                <motion.div key="categories" layout>
                   <div className="mb-4 flex">
                     <Button
                       size={"sm"}
@@ -172,7 +185,7 @@ const CategoriesSection = () => {
                     </Button>
                   </div>
                   <CategoryDragAndDrop
-                    categories={fetchedStoreCategories}
+                    categories={categories}
                     openCategory={openCategory}
                     onOpenCategoryChange={setOpenCategory}
                     onAddItem={handleAddItem}
@@ -181,15 +194,17 @@ const CategoriesSection = () => {
                     onEditItem={handleEditItem}
                     onDeleteItem={handleDeleteItem}
                   />
-                </>
+                </motion.div>
               ) : (
-                <EmptyCategoriesState
-                  setIsCreateCategoryDialogOpen={setIsCreateCategoryDialogOpen}
-                />
+                <motion.div key="empty-categories" {...emptyCategoryMotion}>
+                  <EmptyCategoriesState
+                    setIsCreateCategoryDialogOpen={setIsCreateCategoryDialogOpen}
+                  />
+                </motion.div>
               )}
-            </MotionConfig>
-          </motion.div>
-        )}
+            </AnimatePresence>
+          </MotionConfig>
+        </motion.div>
       </motion.div>
 
       <FormDialog

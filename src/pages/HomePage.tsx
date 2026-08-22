@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useStoreContext } from "@/contexts/StoreContext";
 
 const CategoriesSection = lazy(
   () => import("@/components/home/CategoriesSection"),
@@ -23,6 +24,7 @@ export type StoreCategory = StorePreviewCategory;
 export const HomePage = () => {
   const [showLaunchSuccess, setShowLaunchSuccess] = useState(false);
   const [params, setSearchParams] = useSearchParams();
+  const { storePreview } = useStoreContext();
 
   useEffect(() => {
     const successfulSubscription = params.get("success") === "true";
@@ -36,9 +38,11 @@ export const HomePage = () => {
     }
   }, [params, setSearchParams]);
 
+  const categories = storePreview?.store_menu_categories ?? [];
+
   return (
     <div className="pt-32 pb-10">
-      <CategoriesSection />
+      <CategoriesSection categories={categories} />
 
       <HomeQuickActions />
 

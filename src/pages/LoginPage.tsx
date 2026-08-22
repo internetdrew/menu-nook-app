@@ -77,7 +77,7 @@ const Login = () => {
             className="text-[15px] font-medium text-neutral-600"
             variants={loginItemVariants}
           >
-            You'll have something to share in just a few minutes.
+            You can have it available to your customers in just a few minutes.
           </motion.p>
           <motion.div
             className="mt-4"

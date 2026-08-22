@@ -242,10 +242,10 @@ describe("home route", () => {
 
     await user.click(await screen.findByRole("link", { name: /preview/i }));
 
+    expect(await screen.findByText("Turkey Club")).toBeInTheDocument();
     expect(
-      await screen.findByRole("heading", { name: "Sunny Deli" }),
+      screen.getByRole("heading", { name: "Sunny Deli" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Turkey Club")).toBeInTheDocument();
   });
 
   it("shows the empty categories state when a store has no categories", async () => {
@@ -270,7 +270,7 @@ describe("home route", () => {
     ).toBeInTheDocument();
   });
 
-  it("keeps the store shell visible while categories load", async () => {
+  it("keeps the menu loader visible until categories load", async () => {
     let resolvePreview: (
       storePreview: ReturnType<typeof createPreviewStore>,
     ) => void;
@@ -296,14 +296,16 @@ describe("home route", () => {
     });
 
     expect(
-      await screen.findByRole("heading", { name: "Sunny Deli" }),
+      await screen.findByRole("status", { name: "Loading MenuNook" }),
     ).toBeInTheDocument();
-    expect(
-      await screen.findByRole("status", { name: "Loading store categories" }),
-    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Sunny Deli" })).toBeNull();
+    expect(screen.queryByText("No categories created")).not.toBeInTheDocument();
 
     resolvePreview!(createPreviewStore([]));
 
+    expect(
+      await screen.findByRole("heading", { name: "Sunny Deli" }),
+    ).toBeInTheDocument();
     expect(
       await screen.findByText("No categories created"),
     ).toBeInTheDocument();
