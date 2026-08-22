@@ -5,6 +5,10 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
+import {
+  CATEGORY_DESCRIPTION_LIMIT,
+  CATEGORY_NAME_LIMIT,
+} from "../../shared/storeCategory";
 import "@/components/Onboarding";
 import "@/pages/HomePage";
 import "@/pages/HomeRoute";
@@ -384,6 +388,36 @@ describe("home route", () => {
     expect(
       await screen.findByRole("button", { name: /collapse breakfast/i }),
     ).toBeInTheDocument();
+  });
+
+  it("caps category name and description inputs at their shared limits", async () => {
+    const user = userEvent.setup();
+    useStoreHandlers({ categories: [] });
+    const longCategoryName = "Weekend Brunch Specials and Morning Plates";
+    const longCategoryDescription =
+      "A rotating selection of breakfast sandwiches, pastries, fresh fruit, coffee drinks, and warm plates for guests who want something quick before work or a slower weekend meal.";
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: "Add Category" }),
+    );
+    await user.type(screen.getByLabelText("Category Name"), longCategoryName);
+    await user.type(
+      screen.getByLabelText("Category Description"),
+      longCategoryDescription,
+    );
+
+    expect(screen.getByLabelText("Category Name")).toHaveValue(
+      longCategoryName.slice(0, CATEGORY_NAME_LIMIT),
+    );
+    expect(screen.getByLabelText("Category Description")).toHaveValue(
+      longCategoryDescription.slice(0, CATEGORY_DESCRIPTION_LIMIT),
+    );
+    expect(screen.getAllByText("0 left")).toHaveLength(2);
   });
 
   it("lets an owner add a new item to an existing category", async () => {
