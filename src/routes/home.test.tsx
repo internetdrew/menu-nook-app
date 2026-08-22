@@ -218,7 +218,9 @@ describe("home route", () => {
       "sunny-deli-xyz",
     );
     expect(
-      await screen.findByText("Available: https://menunook.com/m/sunny-deli-xyz"),
+      await screen.findByText(
+        "Available: https://menunook.com/m/sunny-deli-xyz",
+      ),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Create" }));
@@ -254,7 +256,9 @@ describe("home route", () => {
       authMock: authedUserState,
     });
 
-    expect(await screen.findByText("No categories created")).toBeInTheDocument();
+    expect(
+      await screen.findByText("No categories created"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/You haven't created any item categories yet/i),
     ).toBeInTheDocument();
@@ -263,6 +267,45 @@ describe("home route", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Add Category" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the store shell visible while categories load", async () => {
+    let resolvePreview: (
+      storePreview: ReturnType<typeof createPreviewStore>,
+    ) => void;
+    const previewRequest = new Promise<ReturnType<typeof createPreviewStore>>(
+      (resolve) => {
+        resolvePreview = resolve;
+      },
+    );
+
+    server.use(
+      createTrpcQueryHandler({
+        "store.getForUser": () => ({ result: { data: store } }),
+        "store.getPreview": async () => ({
+          result: { data: await previewRequest },
+        }),
+        "subscription.getForStore": () => ({ result: { data: null } }),
+      }),
+    );
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: "Sunny Deli" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("status", { name: "Loading store categories" }),
+    ).toBeInTheDocument();
+
+    resolvePreview!(createPreviewStore([]));
+
+    expect(
+      await screen.findByText("No categories created"),
     ).toBeInTheDocument();
   });
 
