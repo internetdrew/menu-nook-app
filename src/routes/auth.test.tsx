@@ -81,6 +81,37 @@ function renderProtectedRoute() {
   );
 }
 
+function renderGuestOnlyRoute() {
+  const queryClient = new QueryClient();
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/login",
+        element: <ProtectedRoute requireAuth={false} />,
+        children: [
+          {
+            index: true,
+            element: <button type="button">Continue with Google</button>,
+          },
+        ],
+      },
+      {
+        path: "/",
+        element: <p>Protected app content</p>,
+      },
+    ],
+    { initialEntries: ["/login"] },
+  );
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+}
+
 describe("auth routes", () => {
   afterEach(() => {
     authMockState.user = null;
@@ -102,5 +133,16 @@ describe("auth routes", () => {
       ).toBeInTheDocument();
     });
     expect(screen.queryByText("Protected app content")).not.toBeInTheDocument();
+  });
+
+  it("redirects authenticated users away from guest-only routes", async () => {
+    authMockState.user = authedUserState.user;
+
+    renderGuestOnlyRoute();
+
+    expect(await screen.findByText("Protected app content")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /continue with google/i }),
+    ).not.toBeInTheDocument();
   });
 });

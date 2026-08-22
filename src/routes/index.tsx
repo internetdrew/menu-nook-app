@@ -1,4 +1,3 @@
-import RedirectIfAuthenticated from "@/components/RedirectIfAuthenticated";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Navigate } from "react-router";
 import { protectedLoader } from "@/loaders/protectedLoader";
@@ -16,7 +15,7 @@ const notFoundElement = (
 export const routes = [
   {
     path: "/login",
-    element: <RedirectIfAuthenticated />,
+    element: <ProtectedRoute requireAuth={false} />,
     children: [
       {
         index: true,
