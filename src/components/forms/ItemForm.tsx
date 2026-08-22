@@ -41,6 +41,7 @@ const formSchema = storeItemFieldsSchema.extend({
   categoryId: z.number(),
 });
 
+const PRICE_INPUT_PATTERN = /^\d*(?:\.\d{0,2})?$/;
 const STORE_ITEM_IMAGE_BUCKET = "store_item_images";
 const MAX_RAW_IMAGE_BYTES = 25 * 1024 * 1024;
 const MAX_UPLOAD_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -521,6 +522,8 @@ const ItemForm = (props: ItemFormProps) => {
                   placeholder="0.00"
                   {...field}
                   onChange={(e) => {
+                    if (!PRICE_INPUT_PATTERN.test(e.target.value)) return;
+
                     const value =
                       e.target.value === "" ? "" : parseFloat(e.target.value);
                     field.onChange(value);

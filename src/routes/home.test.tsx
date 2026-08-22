@@ -408,7 +408,10 @@ describe("home route", () => {
       "Eggs, cheddar, salsa, wrapped warm and ready to go.",
     );
     await user.clear(screen.getByLabelText("Price"));
-    await user.type(screen.getByLabelText("Price"), "9.75");
+    await user.type(screen.getByLabelText("Price"), "9.756");
+
+    expect(screen.getByLabelText("Price")).toHaveValue(9.75);
+
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     expect(await screen.findByText("Breakfast Burrito")).toBeInTheDocument();
