@@ -16,16 +16,17 @@ import { trpc } from "@/utils/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
+import { Badge } from "../ui/badge";
+import { LockIcon } from "lucide-react";
 import {
   createEditableStoreSlug,
   createStoreSlug,
   storeSlugSchema,
 } from "../../../shared/storeSlug";
+import { storeNameSchema } from "../../../shared/storeName";
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Store name must be at least 2 characters.",
-  }),
+  name: storeNameSchema,
   slug: storeSlugSchema,
 });
 
@@ -145,10 +146,14 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
                     field.onChange(event);
 
                     if (!form.getFieldState("slug").isDirty) {
-                      form.setValue("slug", createStoreSlug(event.target.value), {
-                        shouldDirty: false,
-                        shouldValidate: true,
-                      });
+                      form.setValue(
+                        "slug",
+                        createStoreSlug(event.target.value),
+                        {
+                          shouldDirty: false,
+                          shouldValidate: true,
+                        },
+                      );
                     }
                   }}
                 />
@@ -165,9 +170,18 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
           name="slug"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Public store link</FormLabel>
+              <div className="flex items-center gap-2">
+                <FormLabel>Public store link</FormLabel>
+                <Badge
+                  variant="outline"
+                  className="text-muted-foreground inline-flex items-center text-xs"
+                >
+                  <LockIcon aria-hidden="true" />
+                  Permanent
+                </Badge>
+              </div>
               <FormControl>
-                <div className="flex overflow-hidden rounded-md border border-input bg-background">
+                <div className="border-input bg-background flex overflow-hidden rounded-md border">
                   <span className="border-input bg-muted text-muted-foreground flex items-center border-r px-3 text-sm whitespace-nowrap">
                     {PUBLIC_STORE_DOMAIN}/m/
                   </span>
@@ -181,13 +195,16 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
                     placeholder="sunny-deli"
                     {...field}
                     onChange={(event) => {
-                      field.onChange(createEditableStoreSlug(event.target.value));
+                      field.onChange(
+                        createEditableStoreSlug(event.target.value),
+                      );
                     }}
                   />
                 </div>
               </FormControl>
               <FormDescription>
-                Choose a simple link customers will recognize.
+                Choose carefully. You can rename your store later, but{" "}
+                <strong>this public link cannot be changed after setup</strong>.
               </FormDescription>
               {slugStatusMessage ? (
                 <p

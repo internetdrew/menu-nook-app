@@ -130,7 +130,7 @@ describe("home route", () => {
     });
 
     expect(
-      await screen.findByText("Let's get your menu online."),
+      await screen.findByText("Let's get your menu out there."),
     ).toBeInTheDocument();
   });
 
@@ -151,6 +151,12 @@ describe("home route", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Store name")).toBeInTheDocument();
     expect(screen.getByLabelText("Public store link")).toBeInTheDocument();
+    expect(screen.getByText("Permanent")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Choose carefully. You can rename your store later, but this public link cannot be changed after setup.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("lets a signed-in owner append a hyphenated suffix after a store link is taken", async () => {

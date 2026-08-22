@@ -22,9 +22,10 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
+import { storeNameSchema } from "../../../shared/storeName";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Store name is required.").max(32),
+  name: storeNameSchema,
 });
 
 const PUBLIC_STORE_DOMAIN =
