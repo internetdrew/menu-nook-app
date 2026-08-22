@@ -1,15 +1,14 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc.js";
+import { storeCategoryFieldsSchema } from "../../shared/storeCategory.js";
 
 export const storeCategoryRouter = router({
   create: protectedProcedure
     .input(
       z.object({
         storeId: z.uuid(),
-        name: z.string().min(1).max(100),
-        description: z.string().max(255).optional(),
-      }),
+      }).extend(storeCategoryFieldsSchema.shape),
     )
     .mutation(async ({ input, ctx }) => {
       const { name, storeId, description } = input;
@@ -94,9 +93,7 @@ export const storeCategoryRouter = router({
     .input(
       z.object({
         categoryId: z.number(),
-        name: z.string().min(1).max(100),
-        description: z.string().max(255).optional(),
-      }),
+      }).extend(storeCategoryFieldsSchema.shape),
     )
     .mutation(async ({ input, ctx }) => {
       const { categoryId, name, description } = input;

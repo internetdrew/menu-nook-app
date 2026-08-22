@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const STORE_SLUG_MIN_LENGTH = 3;
 export const STORE_SLUG_MAX_LENGTH = 60;
+export const STORE_SLUG_WARNING_THRESHOLD = 10;
 
 export const RESERVED_STORE_SLUGS = [
   "new",

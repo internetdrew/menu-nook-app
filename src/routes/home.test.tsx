@@ -5,6 +5,10 @@ import { server } from "@/mocks/node";
 import { createTrpcQueryHandler } from "@/utils/test/createTrpcQueryHandler";
 import { renderApp } from "@/utils/test/renderApp";
 import { authedUserState, noUserState } from "@/utils/test/userStates";
+import {
+  CATEGORY_DESCRIPTION_LIMIT,
+  CATEGORY_NAME_LIMIT,
+} from "../../shared/storeCategory";
 import "@/components/Onboarding";
 import "@/pages/HomePage";
 import "@/pages/HomeRoute";
@@ -130,7 +134,7 @@ describe("home route", () => {
     });
 
     expect(
-      await screen.findByText("Let's get your menu online."),
+      await screen.findByText("Let's get your menu out there."),
     ).toBeInTheDocument();
   });
 
@@ -151,6 +155,10 @@ describe("home route", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Store name")).toBeInTheDocument();
     expect(screen.getByLabelText("Public store link")).toBeInTheDocument();
+    expect(screen.getByText("Permanent")).toBeInTheDocument();
+    expect(
+      screen.getByText("this public link cannot be changed after setup"),
+    ).toBeInTheDocument();
   });
 
   it("lets a signed-in owner append a hyphenated suffix after a store link is taken", async () => {
@@ -382,6 +390,36 @@ describe("home route", () => {
     ).toBeInTheDocument();
   });
 
+  it("caps category name and description inputs at their shared limits", async () => {
+    const user = userEvent.setup();
+    useStoreHandlers({ categories: [] });
+    const longCategoryName = "Weekend Brunch Specials and Morning Plates";
+    const longCategoryDescription =
+      "A rotating selection of breakfast sandwiches, pastries, fresh fruit, coffee drinks, and warm plates for guests who want something quick before work or a slower weekend meal.";
+
+    renderApp({
+      initialEntries: ["/"],
+      authMock: authedUserState,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: "Add Category" }),
+    );
+    await user.type(screen.getByLabelText("Category Name"), longCategoryName);
+    await user.type(
+      screen.getByLabelText("Category Description"),
+      longCategoryDescription,
+    );
+
+    expect(screen.getByLabelText("Category Name")).toHaveValue(
+      longCategoryName.slice(0, CATEGORY_NAME_LIMIT),
+    );
+    expect(screen.getByLabelText("Category Description")).toHaveValue(
+      longCategoryDescription.slice(0, CATEGORY_DESCRIPTION_LIMIT),
+    );
+    expect(screen.getAllByText("0 left")).toHaveLength(2);
+  });
+
   it("lets an owner add a new item to an existing category", async () => {
     const user = userEvent.setup();
     useStoreHandlers({ categories: [{ ...sandwichCategory, items: [] }] });
@@ -404,7 +442,10 @@ describe("home route", () => {
       "Eggs, cheddar, salsa, wrapped warm and ready to go.",
     );
     await user.clear(screen.getByLabelText("Price"));
-    await user.type(screen.getByLabelText("Price"), "9.75");
+    await user.type(screen.getByLabelText("Price"), "9.756");
+
+    expect(screen.getByLabelText("Price")).toHaveValue(9.75);
+
     await user.click(screen.getByRole("button", { name: "Create" }));
 
     expect(await screen.findByText("Breakfast Burrito")).toBeInTheDocument();

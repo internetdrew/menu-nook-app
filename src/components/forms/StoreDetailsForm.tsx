@@ -22,9 +22,15 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
+import {
+  STORE_NAME_MAX_LENGTH,
+  STORE_NAME_WARNING_THRESHOLD,
+  storeNameSchema,
+} from "../../../shared/storeName";
+import RemainingCharacters from "./RemainingCharacters";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Store name is required.").max(32),
+  name: storeNameSchema,
 });
 
 const PUBLIC_STORE_DOMAIN =
@@ -157,6 +163,7 @@ export const StoreDetailsForm = ({
 
   const hasUnsavedChanges =
     form.formState.isDirty || selectedImageFile !== null || removedImage;
+  const nameValue = form.watch("name");
 
   useEffect(() => {
     if (selectedImageFile) {
@@ -324,11 +331,22 @@ export const StoreDetailsForm = ({
               <FormItem>
                 <FormLabel>Store Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="The Blonde Wolf" {...field} />
+                  <Input
+                    maxLength={STORE_NAME_MAX_LENGTH}
+                    placeholder="The Blonde Wolf"
+                    {...field}
+                  />
                 </FormControl>
-                <FormDescription>
-                  This is the store name customers see on your food page.
-                </FormDescription>
+                <div className="flex items-start justify-between gap-4">
+                  <FormDescription>
+                    This is the store name customers see on your food page.
+                  </FormDescription>
+                  <RemainingCharacters
+                    value={nameValue}
+                    limit={STORE_NAME_MAX_LENGTH}
+                    warningThreshold={STORE_NAME_WARNING_THRESHOLD}
+                  />
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -416,9 +434,7 @@ export const StoreDetailsForm = ({
           <div className="flex justify-end">
             <AnimatedSubmitButton
               isSubmitting={form.formState.isSubmitting || isProcessingImage}
-              disabled={
-                !hasUnsavedChanges
-              }
+              disabled={!hasUnsavedChanges}
               idleLabel="Save"
             />
           </div>

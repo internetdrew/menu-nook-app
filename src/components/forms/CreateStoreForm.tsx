@@ -16,16 +16,24 @@ import { trpc } from "@/utils/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
+import { Badge } from "../ui/badge";
+import { LockIcon } from "lucide-react";
 import {
   createEditableStoreSlug,
   createStoreSlug,
+  STORE_SLUG_MAX_LENGTH,
+  STORE_SLUG_WARNING_THRESHOLD,
   storeSlugSchema,
 } from "../../../shared/storeSlug";
+import {
+  STORE_NAME_MAX_LENGTH,
+  STORE_NAME_WARNING_THRESHOLD,
+  storeNameSchema,
+} from "../../../shared/storeName";
+import RemainingCharacters from "./RemainingCharacters";
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Store name must be at least 2 characters.",
-  }),
+  name: storeNameSchema,
   slug: storeSlugSchema,
 });
 
@@ -49,6 +57,7 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
   });
 
   const slugValue = form.watch("slug");
+  const nameValue = form.watch("name");
   const slugHasValidShape = storeSlugSchema.safeParse(slugValue).success;
   const shouldCheckSlugAvailability =
     slugHasValidShape && !form.formState.errors.slug;
@@ -139,23 +148,35 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
               <FormControl>
                 <Input
                   autoFocus
+                  maxLength={STORE_NAME_MAX_LENGTH}
                   placeholder="E.g. Sunny Deli"
                   {...field}
                   onChange={(event) => {
                     field.onChange(event);
 
                     if (!form.getFieldState("slug").isDirty) {
-                      form.setValue("slug", createStoreSlug(event.target.value), {
-                        shouldDirty: false,
-                        shouldValidate: true,
-                      });
+                      form.setValue(
+                        "slug",
+                        createStoreSlug(event.target.value),
+                        {
+                          shouldDirty: false,
+                          shouldValidate: true,
+                        },
+                      );
                     }
                   }}
                 />
               </FormControl>
-              <FormDescription>
-                Use the name customers see on your storefront.
-              </FormDescription>
+              <div className="flex items-start justify-between gap-4">
+                <FormDescription>
+                  Use the name customers see on your storefront.
+                </FormDescription>
+                <RemainingCharacters
+                  value={nameValue}
+                  limit={STORE_NAME_MAX_LENGTH}
+                  warningThreshold={STORE_NAME_WARNING_THRESHOLD}
+                />
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -165,9 +186,18 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
           name="slug"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Public store link</FormLabel>
+              <div className="flex items-center gap-2">
+                <FormLabel>Public store link</FormLabel>
+                <Badge
+                  variant="outline"
+                  className="text-muted-foreground inline-flex items-center text-xs"
+                >
+                  <LockIcon aria-hidden="true" />
+                  Permanent
+                </Badge>
+              </div>
               <FormControl>
-                <div className="flex overflow-hidden rounded-md border border-input bg-background">
+                <div className="border-input bg-background flex overflow-hidden rounded-md border">
                   <span className="border-input bg-muted text-muted-foreground flex items-center border-r px-3 text-sm whitespace-nowrap">
                     {PUBLIC_STORE_DOMAIN}/m/
                   </span>
@@ -177,18 +207,32 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="none"
+                    maxLength={STORE_SLUG_MAX_LENGTH}
                     spellCheck={false}
                     placeholder="sunny-deli"
                     {...field}
                     onChange={(event) => {
-                      field.onChange(createEditableStoreSlug(event.target.value));
+                      field.onChange(
+                        createEditableStoreSlug(event.target.value),
+                      );
                     }}
                   />
                 </div>
               </FormControl>
-              <FormDescription>
-                Choose a simple link customers will recognize.
-              </FormDescription>
+              <div className="flex items-start justify-between gap-4">
+                <FormDescription>
+                  Choose carefully. You can rename your store later, but{" "}
+                  <strong>
+                    this public link cannot be changed after setup
+                  </strong>
+                  .
+                </FormDescription>
+                <RemainingCharacters
+                  value={slugValue}
+                  limit={STORE_SLUG_MAX_LENGTH}
+                  warningThreshold={STORE_SLUG_WARNING_THRESHOLD}
+                />
+              </div>
               {slugStatusMessage ? (
                 <p
                   className={`text-sm ${

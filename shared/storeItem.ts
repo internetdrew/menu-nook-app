@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export const ITEM_NAME_LIMIT = 40;
+export const ITEM_NAME_WARNING_THRESHOLD = 10;
 export const ITEM_DESCRIPTION_LIMIT = 160;
+export const ITEM_DESCRIPTION_WARNING_THRESHOLD = 20;
 
 export const storeItemFieldsSchema = z.object({
   name: z

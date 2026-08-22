@@ -17,24 +17,12 @@ import {
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { AnimatedSubmitButton } from "./AnimatedSubmitButton";
+import RemainingCharacters from "./RemainingCharacters";
 
 const SEO_TITLE_LIMIT = 60;
 const SEO_DESCRIPTION_LIMIT = 160;
 const SEO_TITLE_WARNING_THRESHOLD = 10;
 const SEO_DESCRIPTION_WARNING_THRESHOLD = 20;
-
-const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
-  `${Math.max(limit - (value?.length ?? 0), 0)} characters left.`;
-
-const getRemainingCharacterClassName = (
-  value: string | undefined,
-  limit: number,
-  warningThreshold: number,
-) => {
-  const remaining = Math.max(limit - (value?.length ?? 0), 0);
-
-  return remaining <= warningThreshold ? "text-destructive" : "";
-};
 
 const formSchema = z.object({
   seoTitle: z
@@ -132,20 +120,16 @@ export const StoreDiscoveryForm = ({
                     {...field}
                   />
                 </FormControl>
-                <div className="space-y-1">
+                <div className="flex items-start justify-between gap-4">
                   <FormDescription>
                     Use your store name, what you sell, and where you're
                     located.
                   </FormDescription>
-                  <p
-                    className={`text-xs text-muted-foreground ${getRemainingCharacterClassName(
-                      seoTitleValue,
-                      SEO_TITLE_LIMIT,
-                      SEO_TITLE_WARNING_THRESHOLD,
-                    )}`}
-                  >
-                    {getRemainingCharacterLabel(seoTitleValue, SEO_TITLE_LIMIT)}
-                  </p>
+                  <RemainingCharacters
+                    value={seoTitleValue}
+                    limit={SEO_TITLE_LIMIT}
+                    warningThreshold={SEO_TITLE_WARNING_THRESHOLD}
+                  />
                 </div>
                 <FormMessage />
               </FormItem>
@@ -166,23 +150,16 @@ export const StoreDiscoveryForm = ({
                     {...field}
                   />
                 </FormControl>
-                <div className="space-y-1">
+                <div className="flex items-start justify-between gap-4">
                   <FormDescription>
                     Keep it short and specific so it reads well in search
                     results.
                   </FormDescription>
-                  <p
-                    className={`text-xs text-muted-foreground ${getRemainingCharacterClassName(
-                      seoDescriptionValue,
-                      SEO_DESCRIPTION_LIMIT,
-                      SEO_DESCRIPTION_WARNING_THRESHOLD,
-                    )}`}
-                  >
-                    {getRemainingCharacterLabel(
-                      seoDescriptionValue,
-                      SEO_DESCRIPTION_LIMIT,
-                    )}
-                  </p>
+                  <RemainingCharacters
+                    value={seoDescriptionValue}
+                    limit={SEO_DESCRIPTION_LIMIT}
+                    warningThreshold={SEO_DESCRIPTION_WARNING_THRESHOLD}
+                  />
                 </div>
                 <FormMessage />
               </FormItem>

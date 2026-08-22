@@ -17,7 +17,7 @@ describe("login route", () => {
     });
 
     expect(
-      await screen.findByText("Let's get your menu online."),
+      await screen.findByText("Let's get your menu out there."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /continue with google/i }),
