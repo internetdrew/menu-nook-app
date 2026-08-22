@@ -1,16 +1,23 @@
 import { Navigate, Outlet } from "react-router";
 import { useAuth } from "@/contexts/auth";
-import { Spinner } from "./ui/spinner";
 
-export function ProtectedRoute() {
+type ProtectedRouteProps = {
+  requireAuth?: boolean;
+  redirectTo?: string;
+};
+
+export function ProtectedRoute({
+  requireAuth = true,
+  redirectTo = requireAuth ? "/login" : "/",
+}: ProtectedRouteProps = {}) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <Spinner className="mx-auto mt-36 size-6 text-pink-600" />;
+    return null;
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if ((requireAuth && !user) || (!requireAuth && user)) {
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <Outlet />;
