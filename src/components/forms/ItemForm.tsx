@@ -23,19 +23,19 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Field, FieldDescription, FieldLabel } from "../ui/field";
 import {
   ITEM_DESCRIPTION_LIMIT,
+  ITEM_DESCRIPTION_WARNING_THRESHOLD,
   ITEM_NAME_LIMIT,
+  ITEM_NAME_WARNING_THRESHOLD,
   storeItemFieldsSchema,
 } from "../../../shared/storeItem";
 import type { StorePreviewCategory, StorePreviewItem } from "@/types/store";
+import RemainingCharacters from "./RemainingCharacters";
 
 interface ItemFormProps {
   onSuccess: () => void;
   item?: StorePreviewItem | null;
   chosenCategory: StorePreviewCategory | null;
 }
-
-const getRemainingCharacterLabel = (value: string | undefined, limit: number) =>
-  `${Math.max(limit - (value?.length ?? 0), 0)} characters left`;
 
 const formSchema = storeItemFieldsSchema.extend({
   categoryId: z.number(),
@@ -465,10 +465,16 @@ const ItemForm = (props: ItemFormProps) => {
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                The item name as it will appear to customers.{" "}
-                {getRemainingCharacterLabel(nameValue, ITEM_NAME_LIMIT)}
-              </FormDescription>
+              <div className="flex items-start justify-between gap-4">
+                <FormDescription>
+                  The item name as it will appear to customers.
+                </FormDescription>
+                <RemainingCharacters
+                  value={nameValue}
+                  limit={ITEM_NAME_LIMIT}
+                  warningThreshold={ITEM_NAME_WARNING_THRESHOLD}
+                />
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -487,13 +493,16 @@ const ItemForm = (props: ItemFormProps) => {
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                Keep it short: ingredients, style, or what makes it special.{" "}
-                {getRemainingCharacterLabel(
-                  descriptionValue,
-                  ITEM_DESCRIPTION_LIMIT,
-                )}
-              </FormDescription>
+              <div className="flex items-start justify-between gap-4">
+                <FormDescription>
+                  Keep it short: ingredients, style, or what makes it special.
+                </FormDescription>
+                <RemainingCharacters
+                  value={descriptionValue}
+                  limit={ITEM_DESCRIPTION_LIMIT}
+                  warningThreshold={ITEM_DESCRIPTION_WARNING_THRESHOLD}
+                />
+              </div>
               <FormMessage />
             </FormItem>
           )}

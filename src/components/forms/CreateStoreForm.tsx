@@ -21,9 +21,16 @@ import { LockIcon } from "lucide-react";
 import {
   createEditableStoreSlug,
   createStoreSlug,
+  STORE_SLUG_MAX_LENGTH,
+  STORE_SLUG_WARNING_THRESHOLD,
   storeSlugSchema,
 } from "../../../shared/storeSlug";
-import { storeNameSchema } from "../../../shared/storeName";
+import {
+  STORE_NAME_MAX_LENGTH,
+  STORE_NAME_WARNING_THRESHOLD,
+  storeNameSchema,
+} from "../../../shared/storeName";
+import RemainingCharacters from "./RemainingCharacters";
 
 const formSchema = z.object({
   name: storeNameSchema,
@@ -50,6 +57,7 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
   });
 
   const slugValue = form.watch("slug");
+  const nameValue = form.watch("name");
   const slugHasValidShape = storeSlugSchema.safeParse(slugValue).success;
   const shouldCheckSlugAvailability =
     slugHasValidShape && !form.formState.errors.slug;
@@ -140,6 +148,7 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
               <FormControl>
                 <Input
                   autoFocus
+                  maxLength={STORE_NAME_MAX_LENGTH}
                   placeholder="E.g. Sunny Deli"
                   {...field}
                   onChange={(event) => {
@@ -158,9 +167,16 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
                   }}
                 />
               </FormControl>
-              <FormDescription>
-                Use the name customers see on your storefront.
-              </FormDescription>
+              <div className="flex items-start justify-between gap-4">
+                <FormDescription>
+                  Use the name customers see on your storefront.
+                </FormDescription>
+                <RemainingCharacters
+                  value={nameValue}
+                  limit={STORE_NAME_MAX_LENGTH}
+                  warningThreshold={STORE_NAME_WARNING_THRESHOLD}
+                />
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -191,6 +207,7 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="none"
+                    maxLength={STORE_SLUG_MAX_LENGTH}
                     spellCheck={false}
                     placeholder="sunny-deli"
                     {...field}
@@ -202,10 +219,20 @@ export const CreateStoreForm = ({ onSuccess }: { onSuccess: () => void }) => {
                   />
                 </div>
               </FormControl>
-              <FormDescription>
-                Choose carefully. You can rename your store later, but{" "}
-                <strong>this public link cannot be changed after setup</strong>.
-              </FormDescription>
+              <div className="flex items-start justify-between gap-4">
+                <FormDescription>
+                  Choose carefully. You can rename your store later, but{" "}
+                  <strong>
+                    this public link cannot be changed after setup
+                  </strong>
+                  .
+                </FormDescription>
+                <RemainingCharacters
+                  value={slugValue}
+                  limit={STORE_SLUG_MAX_LENGTH}
+                  warningThreshold={STORE_SLUG_WARNING_THRESHOLD}
+                />
+              </div>
               {slugStatusMessage ? (
                 <p
                   className={`text-sm ${

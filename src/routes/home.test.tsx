@@ -153,9 +153,7 @@ describe("home route", () => {
     expect(screen.getByLabelText("Public store link")).toBeInTheDocument();
     expect(screen.getByText("Permanent")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Choose carefully. You can rename your store later, but this public link cannot be changed after setup.",
-      ),
+      screen.getByText("this public link cannot be changed after setup"),
     ).toBeInTheDocument();
   });
 

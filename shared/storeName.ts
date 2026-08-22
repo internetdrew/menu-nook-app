@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const STORE_NAME_MIN_LENGTH = 3;
 export const STORE_NAME_MAX_LENGTH = 32;
+export const STORE_NAME_WARNING_THRESHOLD = 10;
 
 export const storeNameSchema = z
   .string()

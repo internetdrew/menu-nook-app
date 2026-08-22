@@ -18,28 +18,21 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useStoreContext } from "@/contexts/StoreContext";
 import type { StoreCategoryRecord } from "@/types/store";
+import {
+  CATEGORY_DESCRIPTION_LIMIT,
+  CATEGORY_DESCRIPTION_WARNING_THRESHOLD,
+  CATEGORY_NAME_LIMIT,
+  CATEGORY_NAME_WARNING_THRESHOLD,
+  storeCategoryFieldsSchema,
+} from "../../../shared/storeCategory";
+import RemainingCharacters from "./RemainingCharacters";
 
 interface CategoryFormProps {
   onSuccess: () => void;
   category?: StoreCategoryRecord | null;
 }
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, {
-      message: "Please add a category name.",
-    })
-    .max(100, {
-      message: "Category name must be less than 100 characters long.",
-    }),
-  description: z
-    .string()
-    .max(255, {
-      message: "Description must less than 255 characters long.",
-    })
-    .optional(),
-});
+const formSchema = storeCategoryFieldsSchema;
 
 const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
   const createCategory = useMutation(
@@ -58,6 +51,8 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
       description: category?.description ?? "",
     },
   });
+  const nameValue = form.watch("name");
+  const descriptionValue = form.watch("description");
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (category) {
@@ -122,15 +117,23 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
               <FormLabel>Category Name</FormLabel>
               <FormControl>
                 <Input
+                  maxLength={CATEGORY_NAME_LIMIT}
                   placeholder="e.g. Appetizers, Main Courses, Desserts"
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                {category
-                  ? "Update the name of this category."
-                  : "Once created, you can add items to this category."}
-              </FormDescription>
+              <div className="flex items-start justify-between gap-4">
+                <FormDescription>
+                  {category
+                    ? "Update the name of this category."
+                    : "Once created, you can add items to this category."}
+                </FormDescription>
+                <RemainingCharacters
+                  value={nameValue}
+                  limit={CATEGORY_NAME_LIMIT}
+                  warningThreshold={CATEGORY_NAME_WARNING_THRESHOLD}
+                />
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -143,15 +146,22 @@ const CategoryForm = ({ onSuccess, category }: CategoryFormProps) => {
               <FormLabel>Category Description</FormLabel>
               <FormControl>
                 <Textarea
-                  className="field-sizing-content resize-none"
+                  maxLength={CATEGORY_DESCRIPTION_LIMIT}
+                  className="h-20 resize-none"
                   placeholder="A brief description of this category."
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                You can (optionally) provide additional details about this
-                category . This will be displayed to customers.
-              </FormDescription>
+              <div className="flex items-start justify-between gap-4">
+                <FormDescription>
+                  Optional context customers see near this category.
+                </FormDescription>
+                <RemainingCharacters
+                  value={descriptionValue}
+                  limit={CATEGORY_DESCRIPTION_LIMIT}
+                  warningThreshold={CATEGORY_DESCRIPTION_WARNING_THRESHOLD}
+                />
+              </div>
               <FormMessage />
             </FormItem>
           )}
